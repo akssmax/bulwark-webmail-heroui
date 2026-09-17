@@ -23,13 +23,43 @@ const VARIANT_MAP = {
   secondary: "secondary",
 } as const;
 
-function bridgeOnClick(onClick?: React.MouseEventHandler<HTMLButtonElement>) {
+function mergeRefs<T>(
+  ...refs: Array<React.Ref<T> | undefined>
+): React.RefCallback<T> {
+  return (node) => {
+    for (const ref of refs) {
+      if (!ref) continue;
+      if (typeof ref === "function") ref(node);
+      else ref.current = node;
+    }
+  };
+}
+
+function resolveButtonElement(
+  event: PressEvent,
+  buttonRef: React.RefObject<HTMLButtonElement | null>,
+): HTMLButtonElement {
+  if (buttonRef.current) return buttonRef.current;
+  const target = event.target as HTMLElement;
+  return (
+    (target.closest("button,[data-slot='button']") as HTMLButtonElement | null) ??
+    (target as HTMLButtonElement)
+  );
+}
+
+function bridgeOnClick(
+  onClick: React.MouseEventHandler<HTMLButtonElement> | undefined,
+  buttonRef: React.RefObject<HTMLButtonElement | null>,
+) {
   if (!onClick) return undefined;
-  return (_event: PressEvent) => {
+  return (event: PressEvent) => {
+    const currentTarget = resolveButtonElement(event, buttonRef);
     onClick({
       preventDefault: () => {},
       stopPropagation: () => {},
-    } as React.MouseEvent<HTMLButtonElement>);
+      currentTarget,
+      target: event.target,
+    } as unknown as React.MouseEvent<HTMLButtonElement>);
   };
 }
 
@@ -51,6 +81,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     },
     ref,
   ) => {
+    const buttonRef = React.useRef<HTMLButtonElement>(null);
     const heroSize = size === "icon" ? "sm" : size;
     const tooltipDisabled = tooltip === false;
     const tooltipContent =
@@ -59,14 +90,14 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         : undefined;
     const button = (
       <HeroButton
-        ref={ref}
+        ref={mergeRefs(ref, buttonRef)}
         type={type}
         variant={VARIANT_MAP[variant]}
         size={heroSize}
         isIconOnly={size === "icon"}
         isDisabled={disabled}
         className={cn(className)}
-        onPress={bridgeOnClick(onClick)}
+        onPress={bridgeOnClick(onClick, buttonRef)}
         aria-label={ariaLabel ?? (size === "icon" && typeof title === "string" ? title : undefined)}
         {...(props as React.ComponentPropsWithoutRef<typeof HeroButton>)}
       >

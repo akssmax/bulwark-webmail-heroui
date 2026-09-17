@@ -258,15 +258,11 @@ export function ContactsSidebar({
       <div className="px-3 border-b border-border flex items-center justify-between" style={{ paddingBlock: 'var(--density-header-py)' }}>
         <span className="text-sm font-semibold truncate">{t("title")}</span>
         <Dropdown>
-          <Dropdown.Trigger>
-            <Button
-              size="icon"
-              variant="ghost"
-              className="h-7 w-7"
-              aria-label={t("create_new")}
-            >
-              <Plus className="w-4 h-4" />
-            </Button>
+          <Dropdown.Trigger
+            aria-label={t("create_new")}
+            className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+          >
+            <Plus className="w-4 h-4" />
           </Dropdown.Trigger>
           <Dropdown.Popover placement="bottom end" className="w-44">
             <Dropdown.Menu>

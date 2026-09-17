@@ -246,16 +246,9 @@ function PlaceholderDropdown({ onSelect }: { onSelect: (name: string) => void })
 
   return (
     <Dropdown>
-      <Dropdown.Trigger>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          className="h-6 px-2 text-xs"
-        >
-          <Plus className="w-3 h-3 me-1" />
-          {t('placeholder')}
-        </Button>
+      <Dropdown.Trigger className="inline-flex h-6 items-center gap-1 rounded-md px-2 text-xs text-muted-foreground hover:bg-muted hover:text-foreground">
+        <Plus className="w-3 h-3" />
+        {t('placeholder')}
       </Dropdown.Trigger>
       <Dropdown.Popover className="min-w-[180px]">
         <Dropdown.Menu aria-label={t('placeholder')}>

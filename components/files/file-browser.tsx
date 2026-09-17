@@ -1666,16 +1666,12 @@ export function FileBrowser({
                   </td>
                   <td className="px-2 py-2.5">
                     <Dropdown>
-                      <Dropdown.Trigger>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7"
-                          aria-label={t("context_menu")}
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <MoreVertical className="w-4 h-4" />
-                        </Button>
+                      <Dropdown.Trigger
+                        aria-label={t("context_menu")}
+                        className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <MoreVertical className="w-4 h-4" />
                       </Dropdown.Trigger>
                       <Dropdown.Popover placement="bottom end">
                         <Dropdown.Menu aria-label={t("context_menu")}>
