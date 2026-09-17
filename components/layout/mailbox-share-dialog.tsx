@@ -1,7 +1,8 @@
 "use client";
+import { Loader } from "@/components/ui/loader";
 
 import { useCallback, useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
+
 import type { IJMAPClient } from "@/lib/jmap/client-interface";
 import type { Mailbox, MailboxRights } from "@/lib/jmap/types";
 import { ShareCollectionDialog } from "@/components/settings/share-collection-dialog";
@@ -51,7 +52,7 @@ export function MailboxShareDialog({ client, mailbox, onClose }: MailboxShareDia
       <div className="fixed inset-0 z-50 flex items-center justify-center">
         <div className="absolute inset-0 bg-black/50 backdrop-blur-[1px]" onClick={onClose} aria-hidden="true" />
         <div className="relative rounded-lg border border-border bg-background px-6 py-4 shadow-xl">
-          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" aria-label={t("loading_principals")} />
+          <Loader size="md" color="current" />
         </div>
       </div>
     );

@@ -245,7 +245,7 @@ export function CalendarMonthView({
         {dayHeaderKeys.map((d) => (
           <div key={d} role="columnheader" className={cn(
             "text-center text-xs font-medium text-muted-foreground py-2 border-e border-border last:border-e-0",
-            isMobile && "py-1.5 text-[11px]"
+            isMobile && "py-1.5 text-xs"
           )}>
             {isMobile ? t(`days.${d}`).slice(0, 2) : t(`days.${d}`)}
           </div>
@@ -297,7 +297,7 @@ export function CalendarMonthView({
                 >
                   <div className="flex items-center justify-center gap-1 mb-0.5">
                     {firstOfMonth && (
-                      <span className={cn("text-[10px] font-medium", inMonth ? "text-muted-foreground" : "text-muted-foreground/60")}>
+                      <span className={cn("text-xs font-medium", inMonth ? "text-muted-foreground" : "text-muted-foreground/60")}>
                         {t(`months.${monthLabelKeys[getMonth(day)]}`)}
                       </span>
                     )}
@@ -363,7 +363,7 @@ export function CalendarMonthView({
                   >
                     <div
                       className={cn(
-                        "h-full rounded text-[10px] font-medium truncate border-2 border-dashed",
+                        "h-full rounded text-xs font-medium truncate border-2 border-dashed",
                         isMobile ? "leading-[16px] px-1" : "leading-[20px] px-1.5"
                       )}
                       style={{ borderColor: color, color, backgroundColor: `${color}10` }}
@@ -401,7 +401,7 @@ export function CalendarMonthView({
                         onMouseLeave={onHoverLeave}
                         onContextMenu={onContextMenuEvent}
                         draggable
-                        className={isMobile ? "text-[10px] px-1" : undefined}
+                        className={isMobile ? "text-xs px-1" : undefined}
                       />
                     </div>
                   );

@@ -1,8 +1,10 @@
 'use client';
+import { Loader } from "@/components/ui/loader";
 
 import { useState } from 'react';
-import { MailCheck, Loader2, CheckCircle, X } from 'lucide-react';
+import { MailCheck, CheckCircle, X } from "lucide-react";
 import { useTranslations } from 'next-intl';
+import { Button } from "@/components/ui/button";
 
 interface ReadReceiptBannerProps {
   /** Address that requested the receipt (Disposition-Notification-To). */
@@ -17,8 +19,6 @@ export function ReadReceiptBanner({ requestedBy, onSend, onIgnore }: ReadReceipt
   const t = useTranslations('email_viewer.read_receipt');
   const [state, setState] = useState<'idle' | 'sending' | 'sent'>('idle');
 
-  // Matches the host's "External Content" banner row: a round tinted icon chip,
-  // an uppercase eyebrow, a foreground message, and neutral bordered actions.
   if (state === 'sent') {
     return (
       <div className="flex items-center gap-3 py-1">
@@ -37,7 +37,7 @@ export function ReadReceiptBanner({ requestedBy, onSend, onIgnore }: ReadReceipt
       </div>
       <div className="flex-1 min-w-0 space-y-2">
         <div>
-          <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Read receipt
           </div>
           <div className="text-sm font-medium text-foreground break-words">
@@ -48,7 +48,9 @@ export function ReadReceiptBanner({ requestedBy, onSend, onIgnore }: ReadReceipt
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
-          <button
+          <Button
+            variant="outline"
+            size="sm"
             onClick={async () => {
               setState('sending');
               try {
@@ -59,18 +61,20 @@ export function ReadReceiptBanner({ requestedBy, onSend, onIgnore }: ReadReceipt
               }
             }}
             disabled={state === 'sending'}
-            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground px-3 py-1.5 rounded-md border border-border hover:bg-muted transition-colors min-h-[36px] disabled:opacity-50 disabled:cursor-not-allowed"
+            className="min-h-9 gap-1.5"
           >
-            {state === 'sending' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <MailCheck className="w-3.5 h-3.5" />}
+            {state === 'sending' ? <Loader size="sm" color="current" /> : <MailCheck className="w-3.5 h-3.5" />}
             {t('send')}
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
             onClick={onIgnore}
-            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground px-3 py-1.5 rounded-md border border-border hover:bg-muted transition-colors min-h-[36px]"
+            className="min-h-9 gap-1.5"
           >
             <X className="w-3.5 h-3.5" />
             {t('ignore')}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

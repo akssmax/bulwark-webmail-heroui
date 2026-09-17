@@ -6,6 +6,8 @@ import { Shield } from 'lucide-react';
 import { useConfig } from '@/hooks/use-config';
 import { useThemeStore } from '@/stores/theme-store';
 import { apiFetch, withBasePath } from '@/lib/browser-navigation';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -63,12 +65,12 @@ export default function AdminLoginPage() {
             <label htmlFor="password" className="block text-sm font-medium text-foreground mb-1.5">
               Password
             </label>
-            <input
+            <Input
               id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground transition-all duration-200 placeholder:text-muted-foreground hover:border-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:border-ring"
+              className="h-10"
               placeholder="Enter admin password"
               required
               autoFocus
@@ -82,13 +84,13 @@ export default function AdminLoginPage() {
             </div>
           )}
 
-          <button
+          <Button
             type="submit"
             disabled={loading || !password}
-            className="w-full h-10 rounded-md bg-primary text-primary-foreground font-medium text-sm hover:bg-primary/90 disabled:opacity-50 disabled:pointer-events-none transition-all duration-200 shadow-sm"
+            className="w-full h-10"
           >
             {loading ? 'Signing in...' : 'Sign in'}
-          </button>
+          </Button>
         </form>
       </div>
     </div>

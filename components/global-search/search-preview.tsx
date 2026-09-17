@@ -3,6 +3,7 @@
 import { AlignLeft, Building2, CalendarDays, Clock, ExternalLink, FileText, Folder, HardDrive, Mail, MapPin, Phone, Repeat, Users } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Avatar } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import { ProEmailView } from "@/components/pro/pro-email-tab-body";
 import type { CalendarHit, ContactHit, FileHit, GlobalSearchHit } from "@/lib/global-search/types";
 import { getContactDisplayName, getContactPhotoUri, getContactPrimaryEmail } from "@/stores/contact-store";
@@ -18,14 +19,15 @@ function formatDateTime(iso: string | null): string {
 
 function OpenButton({ hit, onOpen, label }: { hit: GlobalSearchHit; onOpen: (hit: GlobalSearchHit) => void; label: string }) {
   return (
-    <button
-      type="button"
+    <Button
+      variant="outline"
+      size="sm"
       onClick={() => onOpen(hit)}
-      className="inline-flex shrink-0 items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-border text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
+      className="h-auto min-h-0 shrink-0 gap-1.5 px-2.5 py-1.5 text-xs font-medium text-muted-foreground"
     >
       <ExternalLink className="w-3.5 h-3.5" />
       {label}
-    </button>
+    </Button>
   );
 }
 

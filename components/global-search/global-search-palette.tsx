@@ -1,7 +1,8 @@
 "use client";
+import { Loader } from "@/components/ui/loader";
 
 import { useEffect, useMemo, useRef } from "react";
-import { AlertTriangle, Clock3, CornerDownLeft, Loader2, Search } from "lucide-react";
+import { AlertTriangle, Clock3, CornerDownLeft, Search } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { useGlobalSearch } from "@/hooks/use-global-search";
@@ -14,6 +15,9 @@ import { useProTabStore } from "@/stores/pro-tab-store";
 import { useSearchHistoryStore } from "@/stores/search-history-store";
 import { PaletteResultRow } from "@/components/global-search/palette-result-row";
 import { SearchScopeChips } from "@/components/global-search/search-scope-chips";
+import { AppModal } from "@/components/ui/modal";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 export const PALETTE_LOCAL_LIMIT = 10;
 export const PALETTE_REMOTE_LIMIT = 25;
@@ -64,8 +68,6 @@ export function GlobalSearchPalette({ proShell = true }: { proShell?: boolean })
     return () => cancelAnimationFrame(frame);
   }, [isOpen]);
 
-  if (!isOpen) return null;
-
   const trimmed = query.trim();
 
   const submit = () => {
@@ -112,10 +114,10 @@ export function GlobalSearchPalette({ proShell = true }: { proShell?: boolean })
       <div key={kind} className="py-1">
         <div className="flex items-center gap-2 px-3 pt-2 pb-1 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
           {t(`scope_${kind}`)}
-          <span className="inline-flex min-w-[18px] h-[18px] items-center justify-center rounded-full bg-muted px-1.5 text-[10px] font-semibold tabular-nums normal-case">
+          <span className="inline-flex min-w-[18px] h-[18px] items-center justify-center rounded-full bg-muted px-1.5 text-xs font-semibold tabular-nums normal-case">
             {hits.length}
           </span>
-          {status.status === 'loading' && <Loader2 className="w-3 h-3 animate-spin" aria-label={t('searching')} />}
+          {status.status === 'loading' && <Loader size="sm" color="current" />}
         </div>
         {hits.slice(0, MAX_ROWS_PER_KIND).map((hit) => (
           <PaletteResultRow key={`${hit.localAccountId}-${hit.id}`} hit={hit} onOpen={handleOpenHit} />
@@ -131,21 +133,34 @@ export function GlobalSearchPalette({ proShell = true }: { proShell?: boolean })
   };
 
   return (
-    <div
-      className="fixed inset-0 bg-black/50 backdrop-blur-[1px] z-[60] flex items-start justify-center pt-[12vh] p-4 animate-in fade-in duration-150"
-      onMouseDown={(e) => { if (e.target === e.currentTarget) closePalette(); }}
+    <AppModal
+      isOpen={isOpen}
+      onClose={closePalette}
+      size="lg"
+      className="max-w-2xl max-h-[70vh]"
+      bodyClassName="p-0 flex flex-col min-h-0 overflow-hidden"
+      footer={proShell && trimmed ? (
+        <Button
+          variant="ghost"
+          role="option"
+          aria-selected={false}
+          onClick={submit}
+          className="h-auto min-h-0 w-full justify-start gap-2 rounded-none border-t border-border px-3 py-2 text-sm font-normal text-muted-foreground hover:bg-muted hover:text-foreground"
+        >
+          <CornerDownLeft className="w-3.5 h-3.5" />
+          {t('show_all')}
+        </Button>
+      ) : undefined}
     >
       <div
         ref={menuRef}
-        role="dialog"
-        aria-modal="true"
         aria-label={t('title')}
         onKeyDown={handleKeyDown}
-        className="bg-background border border-border rounded-lg shadow-xl w-full max-w-2xl flex flex-col max-h-[70vh] animate-in zoom-in-95 duration-150"
+        className="flex flex-col min-h-0 flex-1"
       >
         <div className="flex items-center gap-2.5 px-3 py-2.5 border-b border-border">
           <Search className="w-4 h-4 shrink-0 text-muted-foreground" />
-          <input
+          <Input
             ref={inputRef}
             data-global-search-input
             type="text"
@@ -153,9 +168,9 @@ export function GlobalSearchPalette({ proShell = true }: { proShell?: boolean })
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t('placeholder')}
             aria-label={t('title')}
-            className="flex-1 min-w-0 bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+            className="flex-1 min-w-0 border-0 bg-transparent shadow-none focus-visible:ring-0 px-0"
           />
-          {isSearching && <Loader2 className="w-4 h-4 shrink-0 animate-spin text-muted-foreground" aria-label={t('searching')} />}
+          {isSearching && <Loader size="sm" color="current" />}
         </div>
 
         <div className="px-3 py-2 border-b border-border">
@@ -173,17 +188,17 @@ export function GlobalSearchPalette({ proShell = true }: { proShell?: boolean })
             <div className="py-1">
               <div className="px-3 py-1 text-xs font-medium text-muted-foreground uppercase tracking-wide">{t('recent_searches')}</div>
               {recentSearches.map((term) => (
-                <button
+                <Button
                   key={term}
-                  type="button"
+                  variant="ghost"
                   role="option"
                   aria-selected={false}
                   onClick={() => setQuery(term)}
-                  className="w-full flex items-center gap-2.5 px-3 py-1.5 text-left text-sm text-foreground rounded-md hover:bg-muted focus:bg-muted focus:outline-none"
+                  className="h-auto min-h-0 w-full justify-start gap-2.5 rounded-md px-3 py-1.5 text-sm font-normal text-foreground hover:bg-muted focus:bg-muted"
                 >
                   <Clock3 className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />
                   <span className="truncate">{term}</span>
-                </button>
+                </Button>
               ))}
             </div>
           )}
@@ -198,20 +213,7 @@ export function GlobalSearchPalette({ proShell = true }: { proShell?: boolean })
             </div>
           )}
         </div>
-
-        {proShell && trimmed && (
-          <button
-            type="button"
-            role="option"
-            aria-selected={false}
-            onClick={submit}
-            className="flex items-center gap-2 px-3 py-2 border-t border-border text-sm text-muted-foreground hover:bg-muted hover:text-foreground focus:bg-muted focus:outline-none cursor-pointer"
-          >
-            <CornerDownLeft className="w-3.5 h-3.5" />
-            {t('show_all')}
-          </button>
-        )}
       </div>
-    </div>
+    </AppModal>
   );
 }

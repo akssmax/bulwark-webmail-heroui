@@ -10,6 +10,7 @@ import {
   Home,
   Share2,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useFileStore, type FileResource } from "@/stores/file-store";
 
@@ -35,14 +36,11 @@ export function FolderTreeSidebar({ currentPath, onNavigate, listByParentId, wid
   const [rootChildren, setRootChildren] = useState<FolderNode[] | null>(null);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set(["root"]));
   const [loadingIds, setLoadingIds] = useState<Set<string>>(new Set());
-  // Cache: parentId (or "root") -> FolderNode[]
   const [childrenCache, setChildrenCache] = useState<Map<string, FolderNode[]>>(new Map());
-  // Map folder path -> id for reverse lookup
   const pathToIdRef = useRef<Map<string, string>>(new Map());
 
   const loadChildren = useCallback(async (parentId: string | null, parentPath: string) => {
     const cacheKey = parentId ?? "root";
-    // Skip if already loading or cached
     if (childrenCache.has(cacheKey)) return;
 
     setLoadingIds(prev => new Set(prev).add(cacheKey));
@@ -61,7 +59,6 @@ export function FolderTreeSidebar({ currentPath, onNavigate, listByParentId, wid
           };
         });
 
-      // Don't cache empty root results - empty root likely means client wasn't ready yet
       if (folders.length > 0 || parentId !== null) {
         setChildrenCache(prev => new Map(prev).set(cacheKey, folders));
       }
@@ -80,22 +77,18 @@ export function FolderTreeSidebar({ currentPath, onNavigate, listByParentId, wid
     }
   }, [childrenCache, listByParentId]);
 
-  // Load root folders when client is available (handles page refresh timing)
   useEffect(() => {
     if (client) {
       loadChildren(null, "/");
-      // Discover folders shared with the user by other principals.
       loadSharedRoots();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [client]);
 
-  // Auto-expand along the current path when navigating
   useEffect(() => {
     if (currentPath === "/") return;
     const segments = currentPath.split("/").filter(Boolean);
 
-    // Walk down the path and expand + load each ancestor
     let ancestorPath = "";
     for (let i = 0; i < segments.length; i++) {
       ancestorPath = "/" + segments.slice(0, i + 1).join("/");
@@ -135,13 +128,12 @@ export function FolderTreeSidebar({ currentPath, onNavigate, listByParentId, wid
   return (
     <div
       className={cn(
-        "border-e border-border bg-secondary overflow-hidden shrink-0 flex flex-col h-full",
+        "border-e border-sidebar-border bg-sidebar overflow-hidden shrink-0 flex flex-col h-full",
         !isResizing && "transition-[width] duration-300"
       )}
       style={{ width: `${width}px` }}
     >
       <div className="flex-1 overflow-y-auto py-1">
-        {/* Root / Home entry */}
         <div
           style={{ paddingBlock: "var(--density-sidebar-py)" }}
           className={cn(
@@ -152,17 +144,17 @@ export function FolderTreeSidebar({ currentPath, onNavigate, listByParentId, wid
             "font-medium"
           )}
         >
-          <button
+          <Button
+            variant="ghost"
             onClick={() => handleFolderClick("/", null)}
-            className="flex items-center px-1 rounded transition-colors duration-150 flex-1 text-start"
+            className="flex items-center justify-start px-1 flex-1 h-auto min-h-0 font-medium"
             style={{ paddingBlock: "var(--density-sidebar-py)", paddingLeft: "24px" }}
           >
-            <Home className={cn("w-4 h-4 flex-shrink-0 me-2 transition-colors")} />
+            <Home className="w-4 h-4 flex-shrink-0 me-2 transition-colors" />
             <span className="truncate">{t("breadcrumb_root")}</span>
-          </button>
+          </Button>
         </div>
 
-        {/* Folder tree */}
         {rootChildren === null && loadingIds.has("root") ? (
           <div className="px-3 py-2 space-y-2">
             <div className="h-4 w-24 bg-muted animate-pulse rounded" />
@@ -186,10 +178,9 @@ export function FolderTreeSidebar({ currentPath, onNavigate, listByParentId, wid
           ))
         )}
 
-        {/* Shared with me: folders another principal has shared with the user */}
         {sharedRoots.filter(r => r.isDirectory).length > 0 && (
           <div className="mt-2 pt-2 border-t border-border/60">
-            <div className="px-3 py-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground flex items-center gap-1.5">
+            <div className="px-3 py-1 text-xs font-medium uppercase tracking-wide text-muted-foreground flex items-center gap-1.5">
               <Share2 className="w-3 h-3" />
               <span className="truncate">{t("shared_with_me")}</span>
             </div>
@@ -205,15 +196,16 @@ export function FolderTreeSidebar({ currentPath, onNavigate, listByParentId, wid
                     isSelected ? "bg-accent text-accent-foreground" : "hover:bg-muted text-foreground"
                   )}
                 >
-                  <button
+                  <Button
+                    variant="ghost"
                     onClick={() => handleFolderClick(path, r.id)}
-                    className="flex items-center px-1 rounded transition-colors duration-150 flex-1 text-start min-w-0"
+                    className="flex items-center justify-start px-1 flex-1 h-auto min-h-0 min-w-0"
                     style={{ paddingBlock: "var(--density-sidebar-py)", paddingLeft: "24px" }}
                     title={r.ownerName ? t("shared_by", { name: r.ownerName }) : r.name}
                   >
                     <Folder className="w-4 h-4 flex-shrink-0 me-2 text-primary" />
                     <span className="truncate">{r.name}</span>
-                  </button>
+                  </Button>
                 </div>
               );
             })}
@@ -253,7 +245,6 @@ function FolderTreeItem({
   const indentPx = depth * 16;
   const Icon = isExpanded && hasChildren ? FolderOpen : Folder;
 
-  // Eagerly load children on mount to know if subfolders exist
   useEffect(() => {
     if (children === undefined && !loadingIds.has(node.id)) {
       onLoadChildren(node.id, node.path);
@@ -273,31 +264,33 @@ function FolderTreeItem({
           depth === 0 && "font-medium"
         )}
       >
-        {/* Expand/collapse chevron */}
         {hasChildren ? (
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 me-1 shrink-0"
+            style={{ marginLeft: `${indentPx}px` }}
             onClick={(e) => {
               e.stopPropagation();
               onToggleExpand(node.id, node.path);
             }}
-            className={cn(
-              "p-0.5 rounded me-1 transition-all duration-200",
-              "hover:bg-muted active:bg-accent"
-            )}
-            style={{ marginLeft: `${indentPx}px` }}
+            aria-label={isExpanded ? "Collapse" : "Expand"}
           >
             {isExpanded ? (
               <ChevronDown className="w-3 h-3 text-muted-foreground" />
             ) : (
               <ChevronRight className="w-3 h-3 text-muted-foreground" />
             )}
-          </button>
+          </Button>
         ) : null}
 
-        {/* Folder name */}
-        <button
+        <Button
+          variant="ghost"
           onClick={() => onFolderClick(node.path, node.id)}
-          className="flex items-center px-1 rounded transition-colors duration-150 flex-1 text-start"
+          className={cn(
+            "flex items-center justify-start px-1 flex-1 h-auto min-h-0",
+            depth === 0 && "font-medium",
+          )}
           style={{
             paddingBlock: "var(--density-sidebar-py)",
             paddingLeft: hasChildren ? "4px" : `${indentPx + 24}px`,
@@ -309,10 +302,9 @@ function FolderTreeItem({
             !hasChildren && depth > 0 && "text-muted-foreground"
           )} />
           <span className="truncate">{node.name}</span>
-        </button>
+        </Button>
       </div>
 
-      {/* Children */}
       {isExpanded && children && (
         <div className="relative">
           {children.map(child => (

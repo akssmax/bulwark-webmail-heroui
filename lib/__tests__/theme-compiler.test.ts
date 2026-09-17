@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { compileAdvancedTheme, isAdvancedManifest } from '../theme-compiler';
+import { toOklchCss } from '../color-transform';
 import type { ThemeManifest } from '../plugin-types';
 
 const baseManifest = (overrides: Partial<ThemeManifest> = {}): ThemeManifest => ({
@@ -42,8 +43,9 @@ describe('compileAdvancedTheme', () => {
       }),
     );
     expect(errors).toHaveLength(0);
-    expect(css).toMatch(/:root\s*\{[\s\S]*--color-primary:\s*#1373d9/);
-    expect(css).toMatch(/\.dark\s*\{[\s\S]*--color-primary:\s*#58c9ff/);
+    expect(css).toContain(`--color-primary: ${toOklchCss('#1373d9')}`);
+    expect(css).toContain(`--color-primary: ${toOklchCss('#58c9ff')}`);
+    expect(css).toContain(`--accent: ${toOklchCss('#1373d9')}`);
   });
 
   it('omits .dark block for light-only themes', () => {
@@ -54,7 +56,7 @@ describe('compileAdvancedTheme', () => {
       }),
     );
     expect(css).toContain(':root');
-    expect(css).not.toContain('.dark');
+    expect(css).not.toMatch(/\.dark/);
   });
 
   it('emits common tokens into both :root and .dark', () => {
@@ -67,10 +69,10 @@ describe('compileAdvancedTheme', () => {
         },
       }),
     );
-    const rootMatch = css.match(/:root\s*\{([\s\S]*?)\}/)?.[1] ?? '';
-    const darkMatch = css.match(/\.dark\s*\{([\s\S]*?)\}/)?.[1] ?? '';
-    expect(rootMatch).toContain('--color-ring: #abc');
-    expect(darkMatch).toContain('--color-ring: #abc');
+    const rootMatch = css.match(/:root(?:,\s*\[data-theme="light"\])?\s*\{([\s\S]*?)\}/)?.[1] ?? '';
+    const darkMatch = css.match(/\.dark(?:,\s*\[data-theme="dark"\])?\s*\{([\s\S]*?)\}/)?.[1] ?? '';
+    expect(rootMatch).toContain(`--color-ring: ${toOklchCss('#abc')}`);
+    expect(darkMatch).toContain(`--color-ring: ${toOklchCss('#abc')}`);
   });
 
   it('derives a contrasting *-foreground when derive: true', () => {
@@ -80,8 +82,8 @@ describe('compileAdvancedTheme', () => {
         tokens: { light: { primary: '#000000' }, dark: { primary: '#ffffff' } },
       }),
     );
-    expect(css).toMatch(/:root\s*\{[\s\S]*--color-primary-foreground:\s*#ffffff/);
-    expect(css).toMatch(/\.dark\s*\{[\s\S]*--color-primary-foreground:\s*#0f172a/);
+    expect(css).toContain(`--color-primary-foreground: ${toOklchCss('#ffffff')}`);
+    expect(css).toContain(`--color-primary-foreground: ${toOklchCss('#0f172a')}`);
   });
 
   it('respects an author-provided *-foreground over derive', () => {
@@ -93,7 +95,7 @@ describe('compileAdvancedTheme', () => {
         },
       }),
     );
-    expect(css).toContain('--color-primary-foreground: #ff00ff');
+    expect(css).toContain(`--color-primary-foreground: ${toOklchCss('#ff00ff')}`);
   });
 
   it('emits radii, typography, and density vars', () => {
@@ -109,7 +111,9 @@ describe('compileAdvancedTheme', () => {
     expect(css).toContain('--radius-full: 9999px');
     expect(css).toContain('--font-sans: Inter, sans-serif');
     expect(css).toContain('--font-size-base: 15px');
-    expect(css).toContain('--density-row-height: 28px');
+    expect(css).toContain('--density-row-height: 36px');
+    expect(css).toContain('--density-sidebar-row: 36px');
+    expect(css).toContain('--density-touch-target: 36px');
   });
 
   it('drops tokens with unsafe values and warns', () => {
@@ -123,7 +127,7 @@ describe('compileAdvancedTheme', () => {
         },
       }),
     );
-    expect(css).toContain('--color-primary: #000');
+    expect(css).toContain(`--color-primary: ${toOklchCss('#000')}`);
     expect(css).not.toContain('https://x.com');
     expect(warnings.some((w) => w.includes('evil'))).toBe(true);
   });
@@ -134,7 +138,7 @@ describe('compileAdvancedTheme', () => {
         tokens: { light: { 'primary }; body { background: red': '#fff', primary: '#000' } },
       }),
     );
-    expect(css).toContain('--color-primary: #000');
+    expect(css).toContain(`--color-primary: ${toOklchCss('#000')}`);
     expect(css).not.toContain('body { background');
     expect(warnings.some((w) => w.includes('invalid key'))).toBe(true);
   });
@@ -153,7 +157,7 @@ describe('compileAdvancedTheme', () => {
       { resolveExtends: (id) => (id === 'parent-theme' ? ':root { --x: 1; }' : null) },
     );
     expect(css).toContain('--x: 1');
-    expect(css).toContain('--color-primary: #fff');
+    expect(css).toContain(`--color-primary: ${toOklchCss('#fff')}`);
     expect(warnings).toHaveLength(0);
   });
 

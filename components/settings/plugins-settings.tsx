@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import { AlertTriangle, Puzzle, Lock, Server } from 'lucide-react';
 import { toast } from '@/stores/toast-store';
 import type { InstalledPlugin, PluginStatus, SettingFieldSchema } from '@/lib/plugin-types';
+import { AppSelect } from '@/components/ui/select';
 
 const STATUS_COLORS: Record<PluginStatus, string> = {
   installed: 'bg-muted text-muted-foreground',
@@ -138,21 +139,21 @@ function PluginCard({ plugin, isExpanded, isForceEnabled, isManaged, needsApprov
         <div className="flex-1 min-w-0 cursor-pointer" onClick={onToggleExpand}>
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-foreground truncate">{plugin.name}</span>
-            <span className={cn('text-[10px] px-1.5 py-0.5 rounded-full font-medium', STATUS_COLORS[plugin.status])}>
+            <span className={cn('text-xs px-1.5 py-0.5 rounded-full font-medium', STATUS_COLORS[plugin.status])}>
               {plugin.status}
             </span>
             {isForceEnabled && (
-              <span className="text-[10px] px-1.5 py-0.5 rounded-full font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 flex items-center gap-0.5">
+              <span className="text-xs px-1.5 py-0.5 rounded-full font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 flex items-center gap-0.5">
                 <Lock className="w-2.5 h-2.5" /> Forced
               </span>
             )}
             {isManaged && (
-              <span className="text-[10px] px-1.5 py-0.5 rounded-full font-medium bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400 flex items-center gap-0.5">
+              <span className="text-xs px-1.5 py-0.5 rounded-full font-medium bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400 flex items-center gap-0.5">
                 <Server className="w-2.5 h-2.5" /> Managed
               </span>
             )}
             {needsApproval && (
-              <span className="text-[10px] px-1.5 py-0.5 rounded-full font-medium bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400">
+              <span className="text-xs px-1.5 py-0.5 rounded-full font-medium bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400">
                 Awaiting approval
               </span>
             )}
@@ -199,7 +200,7 @@ function PluginCard({ plugin, isExpanded, isForceEnabled, isManaged, needsApprov
               <span className="text-xs font-medium text-foreground">Permissions:</span>
               <div className="flex flex-wrap gap-1 mt-1">
                 {plugin.permissions.map(perm => (
-                  <span key={perm} className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                  <span key={perm} className="text-xs px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
                     {perm}
                   </span>
                 ))}
@@ -244,7 +245,7 @@ function PluginSettingField({ schema, value, onChange }: PluginSettingFieldProps
         <div data-search-label={schema.label} className="flex items-center justify-between">
           <div>
             <span className="text-xs text-foreground">{schema.label}</span>
-            {schema.description && <p className="text-[10px] text-muted-foreground">{schema.description}</p>}
+            {schema.description && <p className="text-xs text-muted-foreground">{schema.description}</p>}
           </div>
           <ToggleSwitch checked={value as boolean} onChange={(v) => onChange(v)} />
         </div>
@@ -255,17 +256,14 @@ function PluginSettingField({ schema, value, onChange }: PluginSettingFieldProps
         <div data-search-label={schema.label} className="flex items-center justify-between">
           <div>
             <span className="text-xs text-foreground">{schema.label}</span>
-            {schema.description && <p className="text-[10px] text-muted-foreground">{schema.description}</p>}
+            {schema.description && <p className="text-xs text-muted-foreground">{schema.description}</p>}
           </div>
-          <select
+          <AppSelect
             value={String(value)}
-            onChange={(e) => onChange(e.target.value)}
-            className="text-xs bg-background border border-border rounded px-2 py-1 text-foreground"
-          >
-            {schema.options?.map(opt => (
-              <option key={opt} value={opt}>{opt}</option>
-            ))}
-          </select>
+            onChange={(v) => onChange(v)}
+            options={schema.options?.map(opt => ({ value: opt, label: opt })) ?? []}
+            className="w-auto min-w-[8rem]"
+          />
         </div>
       );
 
@@ -273,7 +271,7 @@ function PluginSettingField({ schema, value, onChange }: PluginSettingFieldProps
       return (
         <div data-search-label={schema.label}>
           <span className="text-xs text-foreground">{schema.label}</span>
-          {schema.description && <p className="text-[10px] text-muted-foreground">{schema.description}</p>}
+          {schema.description && <p className="text-xs text-muted-foreground">{schema.description}</p>}
           <input
             type="text"
             value={String(value ?? '')}
@@ -288,7 +286,7 @@ function PluginSettingField({ schema, value, onChange }: PluginSettingFieldProps
         <div data-search-label={schema.label} className="flex items-center justify-between">
           <div>
             <span className="text-xs text-foreground">{schema.label}</span>
-            {schema.description && <p className="text-[10px] text-muted-foreground">{schema.description}</p>}
+            {schema.description && <p className="text-xs text-muted-foreground">{schema.description}</p>}
           </div>
           <input
             type="number"

@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Lock } from 'lucide-react';
 import { apiFetch } from '@/lib/browser-navigation';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 export default function ChangePasswordPage() {
   const router = useRouter();
@@ -59,13 +61,13 @@ export default function ChangePasswordPage() {
         <div className="space-y-1.5">
           <label className="text-sm font-medium text-foreground">Current Password</label>
           <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <input
+            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none z-10" />
+            <Input
               type="password"
               value={currentPassword}
-              onChange={e => setCurrentPassword(e.target.value)}
+              onChange={(e) => setCurrentPassword(e.target.value)}
               required
-              className="w-full h-9 ps-9 pe-3 rounded-md border border-input bg-background text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="h-9 ps-9"
               autoComplete="current-password"
             />
           </div>
@@ -73,26 +75,26 @@ export default function ChangePasswordPage() {
 
         <div className="space-y-1.5">
           <label className="text-sm font-medium text-foreground">New Password</label>
-          <input
+          <Input
             type="password"
             value={newPassword}
-            onChange={e => setNewPassword(e.target.value)}
+            onChange={(e) => setNewPassword(e.target.value)}
             required
             minLength={8}
-            className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="h-9"
             autoComplete="new-password"
           />
         </div>
 
         <div className="space-y-1.5">
           <label className="text-sm font-medium text-foreground">Confirm New Password</label>
-          <input
+          <Input
             type="password"
             value={confirmPassword}
-            onChange={e => setConfirmPassword(e.target.value)}
+            onChange={(e) => setConfirmPassword(e.target.value)}
             required
             minLength={8}
-            className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="h-9"
             autoComplete="new-password"
           />
         </div>
@@ -104,13 +106,13 @@ export default function ChangePasswordPage() {
           <p className="text-sm text-green-600">Password changed. Redirecting...</p>
         )}
 
-        <button
+        <Button
           type="submit"
           disabled={loading}
-          className="w-full h-9 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
+          className="w-full h-9"
         >
           {loading ? 'Changing...' : 'Change Password'}
-        </button>
+        </Button>
       </form>
     </div>
   );

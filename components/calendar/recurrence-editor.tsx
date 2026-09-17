@@ -5,6 +5,9 @@ import { useLocale, useTranslations } from "next-intl";
 import { addYears, format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { AppSelect } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
+import { DatePickerField } from "@/components/ui/date-picker";
 import type { CalendarRecurrenceRule } from "@/lib/jmap/types";
 import { createRecurrenceRule } from "@/lib/recurrence-rule";
 
@@ -238,7 +241,18 @@ export function RecurrenceEditor({ rule, eventStart, onSave, onCancel }: Recurre
 
   const summary = buildRecurrenceSummary(buildRule(), t, locale);
 
-  const selectCls = "rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring";
+  const monthOptions = Array.from({ length: 12 }, (_, i) => i + 1).map((m) => ({
+    value: String(m),
+    label: capitalize(monthName(m, locale)),
+  }));
+  const nthOptions = [1, 2, 3, 4, -1].map((n) => ({
+    value: String(n),
+    label: capitalize(nthLabel(n, t)),
+  }));
+  const weekdayOptions = WEEKDAYS.map((d) => ({
+    value: d,
+    label: capitalize(weekdayName(d, locale)),
+  }));
 
   return (
     <div className="mt-2 rounded-md border border-border bg-muted/20 p-3 space-y-3">
@@ -256,35 +270,32 @@ export function RecurrenceEditor({ rule, eventStart, onSave, onCancel }: Recurre
           className="w-16 shrink-0"
           aria-label={t("recurrence.editor_every")}
         />
-        <select
+        <AppSelect
           value={frequency}
-          onChange={(e) => setFrequency(e.target.value as EditorFrequency)}
-          className={`${selectCls} flex-1 min-w-0`}
+          onChange={(v) => setFrequency(v as EditorFrequency)}
+          options={EDITOR_FREQUENCIES.map((f) => ({ value: f, label: t(UNIT_LABEL_KEYS[f]) }))}
+          className="flex-1 min-w-0"
           aria-label={t("recurrence.title")}
-        >
-          {EDITOR_FREQUENCIES.map((f) => (
-            <option key={f} value={f}>{t(UNIT_LABEL_KEYS[f])}</option>
-          ))}
-        </select>
+        />
       </div>
 
       {frequency === "weekly" && (
         <div className="flex gap-1">
           {WEEKDAYS.map((day) => (
-            <button
+            <Button
               key={day}
               type="button"
+              variant={weekDays.includes(day) ? "default" : "outline"}
               onClick={() => toggleWeekDay(day)}
               title={weekdayName(day, locale)}
               aria-pressed={weekDays.includes(day)}
-              className={
-                weekDays.includes(day)
-                  ? "flex-1 min-w-0 px-1 py-1.5 text-xs font-medium rounded-md border border-primary text-primary bg-primary/10 transition-colors"
-                  : "flex-1 min-w-0 px-1 py-1.5 text-xs font-medium rounded-md border border-input text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-              }
+              className={cn(
+                "flex-1 min-w-0 px-1 py-1.5 h-auto text-xs font-medium",
+                weekDays.includes(day) && "bg-primary/10 text-primary border-primary",
+              )}
             >
               {weekdayName(day, locale, "short")}
-            </button>
+            </Button>
           ))}
         </div>
       )}
@@ -292,30 +303,28 @@ export function RecurrenceEditor({ rule, eventStart, onSave, onCancel }: Recurre
       {frequency === "yearly" && (
         <div className="flex items-center gap-2 text-sm">
           <span className="shrink-0">{capitalize(t("recurrence.editor_in"))}</span>
-          <select
-            value={month}
-            onChange={(e) => setMonth(parseInt(e.target.value, 10))}
-            className={`${selectCls} flex-1 min-w-0`}
+          <AppSelect
+            value={String(month)}
+            onChange={(v) => setMonth(parseInt(v, 10))}
+            options={monthOptions}
+            className="flex-1 min-w-0"
             aria-label={t("recurrence.editor_in")}
-          >
-            {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
-              <option key={m} value={m}>{capitalize(monthName(m, locale))}</option>
-            ))}
-          </select>
+          />
         </div>
       )}
 
       {(frequency === "monthly" || frequency === "yearly") && (
         <div className="flex items-center gap-2 text-sm">
-          <select
+          <AppSelect
             value={monthlyMode}
-            onChange={(e) => setMonthlyMode(e.target.value as MonthlyMode)}
-            className={`${selectCls} shrink-0`}
+            onChange={(v) => setMonthlyMode(v as MonthlyMode)}
+            options={[
+              { value: "day", label: capitalize(t("recurrence.editor_on_day")) },
+              { value: "nth", label: capitalize(t("recurrence.editor_on_the")) },
+            ]}
+            className="shrink-0 w-auto min-w-[7rem]"
             aria-label={t("recurrence.editor_repeats_on")}
-          >
-            <option value="day">{capitalize(t("recurrence.editor_on_day"))}</option>
-            <option value="nth">{capitalize(t("recurrence.editor_on_the"))}</option>
-          </select>
+          />
           {monthlyMode === "day" ? (
             <Input
               type="number"
@@ -331,26 +340,20 @@ export function RecurrenceEditor({ rule, eventStart, onSave, onCancel }: Recurre
             />
           ) : (
             <>
-              <select
-                value={nth}
-                onChange={(e) => setNth(parseInt(e.target.value, 10))}
-                className={`${selectCls} flex-1 min-w-0`}
+              <AppSelect
+                value={String(nth)}
+                onChange={(v) => setNth(parseInt(v, 10))}
+                options={nthOptions}
+                className="flex-1 min-w-0"
                 aria-label={t("recurrence.editor_on_the")}
-              >
-                {[1, 2, 3, 4, -1].map((n) => (
-                  <option key={n} value={n}>{capitalize(nthLabel(n, t))}</option>
-                ))}
-              </select>
-              <select
+              />
+              <AppSelect
                 value={nthDay}
-                onChange={(e) => setNthDay(e.target.value)}
-                className={`${selectCls} flex-1 min-w-0`}
+                onChange={setNthDay}
+                options={weekdayOptions}
+                className="flex-1 min-w-0"
                 aria-label={t("recurrence.editor_on_the")}
-              >
-                {WEEKDAYS.map((d) => (
-                  <option key={d} value={d}>{capitalize(weekdayName(d, locale))}</option>
-                ))}
-              </select>
+              />
             </>
           )}
         </div>
@@ -358,22 +361,22 @@ export function RecurrenceEditor({ rule, eventStart, onSave, onCancel }: Recurre
 
       <div className="flex items-center gap-2 text-sm">
         <span className="shrink-0">{t("recurrence.editor_ends")}</span>
-        <select
+        <AppSelect
           value={endsMode}
-          onChange={(e) => setEndsMode(e.target.value as EndsMode)}
-          className={`${selectCls} ${endsMode === "never" ? "flex-1" : "shrink-0"} min-w-0`}
+          onChange={(v) => setEndsMode(v as EndsMode)}
+          options={[
+            { value: "never", label: t("recurrence.editor_never") },
+            { value: "on", label: t("recurrence.until") },
+            { value: "after", label: t("recurrence.editor_ends_after") },
+          ]}
+          className={endsMode === "never" ? "flex-1 min-w-0" : "shrink-0 w-auto min-w-[7rem]"}
           aria-label={t("recurrence.editor_ends")}
-        >
-          <option value="never">{t("recurrence.editor_never")}</option>
-          <option value="on">{t("recurrence.until")}</option>
-          <option value="after">{t("recurrence.editor_ends_after")}</option>
-        </select>
+        />
         {endsMode === "on" && (
-          <input
-            type="date"
+          <DatePickerField
             value={untilDate}
             onChange={(e) => setUntilDate(e.target.value)}
-            className={`${selectCls} flex-1 min-w-0`}
+            className="flex-1 min-w-0"
             aria-label={t("recurrence.editor_ends_on")}
           />
         )}

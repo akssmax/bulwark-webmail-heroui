@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useKeywordFormat } from "@/hooks/use-keyword-format";
 import { useShortenedText } from "@/hooks/use-shortened-text";
@@ -17,7 +18,7 @@ export type TagBadgeVariant = "badge" | "dot";
  * it rather than approximating its padding and text size.
  */
 export const TAG_LOZENGE_CLASS =
-  "inline-flex min-w-0 shrink-0 items-center rounded-full px-2 py-0.5 text-[11px] font-medium";
+  "inline-flex min-w-0 shrink-0 items-center rounded-full px-2 py-0.5 text-xs font-medium";
 
 /**
  * The row a group of tags sits in. Using it for neighbouring lozenges too keeps
@@ -85,15 +86,16 @@ export function TagBadge({
         {shortenedName}
       </span>
       {onRemove && (
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          size="icon"
           onClick={onRemove}
-          className="ms-0.5 shrink-0 rounded-full p-0.5 hover:bg-black/10 dark:hover:bg-white/10"
+          className="ms-0.5 h-5 w-5 min-w-5 shrink-0 rounded-full hover:bg-black/10 dark:hover:bg-white/10"
           title={t("remove_tag")}
           aria-label={t("remove_tag")}
         >
           <X className="w-3 h-3" />
-        </button>
+        </Button>
       )}
     </span>
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import { FileText, FileSpreadsheet, FileImage, FileArchive, File as FileIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { Attachment } from "@/lib/jmap/types";
 
@@ -61,18 +62,18 @@ export function AttachmentChips({ attachments, onOpen, max = 2, className }: Att
       {shown.map((a) => {
         const { icon: Icon, className: iconClass } = iconFor(a.type, a.name ?? "");
         return (
-          <button
+          <Button
             key={a.blobId + a.partId}
-            type="button"
+            variant="outline"
             // The row itself opens the message; a chip must not do both.
             onClick={(e) => { e.stopPropagation(); onOpen(a); }}
             onDoubleClick={(e) => e.stopPropagation()}
             title={a.name}
-            className="inline-flex max-w-[12rem] items-center gap-1.5 rounded-md border border-border bg-background/60 px-2 py-0.5 text-xs text-foreground/80 hover:bg-muted hover:text-foreground"
+            className="inline-flex h-auto max-w-[12rem] min-h-0 items-center gap-1.5 rounded-md border-border bg-background/60 px-2 py-0.5 text-xs font-normal text-foreground/80 hover:bg-muted hover:text-foreground"
           >
             <Icon className={cn("h-3.5 w-3.5 flex-shrink-0", iconClass)} />
             <span className="truncate">{shortName(a.name ?? "")}</span>
-          </button>
+          </Button>
         );
       })}
       {overflow > 0 && (

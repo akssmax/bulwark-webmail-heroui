@@ -32,9 +32,9 @@ describe('BUILTIN_THEMES', () => {
     }
   });
 
-  it('all themes set --color-primary', () => {
+  it('all themes set --color-primary as oklch', () => {
     for (const theme of BUILTIN_THEMES) {
-      expect(theme.css).toContain('--color-primary:');
+      expect(theme.css).toMatch(/--color-primary:\s*oklch\(/);
     }
   });
 

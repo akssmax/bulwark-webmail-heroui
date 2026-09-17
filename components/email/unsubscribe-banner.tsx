@@ -1,9 +1,11 @@
 'use client';
+import { Loader } from "@/components/ui/loader";
 
 import { useState, useRef, useEffect } from 'react';
-import { Loader2, CheckCircle, AlertCircle } from 'lucide-react';
+import { CheckCircle, AlertCircle } from "lucide-react";
 import { useTranslations } from 'next-intl';
 import { isValidUnsubscribeUrl, parseMailtoUrl } from '@/lib/validation';
+import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useIsDesktop } from '@/hooks/use-media-query';
 
@@ -123,12 +125,14 @@ export function UnsubscribeBanner({
     return (
       <span className="inline-flex items-center gap-1 ms-1">
         <AlertCircle className="w-3 h-3 text-red-500 dark:text-red-400" />
-        <button
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={onDismiss}
-          className="text-xs text-red-500 dark:text-red-400 hover:underline bg-transparent p-0 min-h-0"
+          className="h-auto min-h-0 p-0 text-xs text-red-500 dark:text-red-400 hover:underline"
         >
           {t('email_viewer.unsubscribe_banner.error')}
-        </button>
+        </Button>
       </span>
     );
   }
@@ -137,12 +141,14 @@ export function UnsubscribeBanner({
     <>
       <span className="relative inline-flex items-center">
         <span className="text-muted-foreground/40 mx-1">·</span>
-        <button
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={() => setShowConfirm(true)}
-          className="text-xs text-blue-600 dark:text-blue-400 hover:underline bg-transparent p-0 min-h-0 leading-normal"
+          className="h-auto min-h-0 p-0 text-xs text-blue-600 dark:text-blue-400 hover:underline leading-normal"
         >
           {t('email_viewer.unsubscribe_banner.button')}
-        </button>
+        </Button>
         {/* Desktop popover */}
         {showConfirm && isDesktop && (
           <div
@@ -153,20 +159,24 @@ export function UnsubscribeBanner({
               {t('email_viewer.unsubscribe_banner.confirm_title')}
             </p>
             <div className="flex items-center gap-2">
-              <button
+              <Button
+                variant="destructive"
+                size="sm"
                 onClick={handleUnsubscribe}
                 disabled={processing}
-                className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-md bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="gap-1.5 text-xs"
               >
-                {processing && <Loader2 className="w-3 h-3 animate-spin" />}
+                {processing && <Loader size="sm" color="current" />}
                 {t('email_viewer.unsubscribe_banner.confirm_button')}
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => setShowConfirm(false)}
-                className="text-xs px-3 py-1.5 rounded-md text-muted-foreground hover:bg-muted transition-colors"
+                className="text-xs"
               >
                 {t('email_viewer.unsubscribe_banner.cancel')}
-              </button>
+              </Button>
             </div>
           </div>
         )}

@@ -1,4 +1,5 @@
 "use client";
+import { Loader } from "@/components/ui/loader";
 
 import React, { useCallback } from "react";
 import { formatDate, formatDateTime, stripInvisibleLeading } from "@/lib/utils";
@@ -7,7 +8,9 @@ import { cn } from "@/lib/utils";
 import { AttachmentChips } from "./attachment-chips";
 import type { Attachment } from "@/lib/jmap/types";
 import { SelectableAvatar } from "@/components/email/selectable-avatar";
-import { Paperclip, Star, Pin, Circle, ChevronRight, ChevronDown, Loader2, MessageSquare, CheckSquare, Square, Reply, Forward, CalendarClock, Folder, Archive, Trash2, MailOpen, ShieldAlert } from "lucide-react";
+import { Paperclip, Star, Pin, Circle, ChevronRight, ChevronDown, MessageSquare, Reply, Forward, CalendarClock, Folder, Archive, Trash2, MailOpen, ShieldAlert } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import type { LucideIcon } from "lucide-react";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useUIStore } from "@/stores/ui-store";
@@ -73,7 +76,7 @@ function describeAccount(label: string | undefined, account: AccountEntry | unde
 function SourceFolderTag({ name }: { name: string }) {
   return (
     <span
-      className="inline-flex max-w-[8rem] shrink-0 items-center gap-1 truncate rounded-full border border-border bg-muted/40 px-1.5 py-0.5 text-[11px] text-muted-foreground"
+      className="inline-flex max-w-[8rem] shrink-0 items-center gap-1 truncate rounded-full border border-border bg-muted/40 px-1.5 py-0.5 text-xs text-muted-foreground"
       title={name}
     >
       <Folder className="h-3 w-3 shrink-0" />
@@ -349,26 +352,16 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
         >
           {/* Checkbox - only for extra-compact density (no avatar) while in selection mode */}
           {density === 'extra-compact' && selectedEmailIds.size > 0 && (
-            <button
-              onClick={handleCheckboxClick}
-              role="checkbox"
-              aria-checked={isChecked}
+            <Checkbox
+              isSelected={isChecked}
               aria-label={tBatch('select')}
-              className={cn(
-                "p-3 lg:p-1 rounded flex-shrink-0 transition-all duration-200",
-                !isFocusedMailLayout && 'mt-2',
-                "hover:bg-muted/50 hover:scale-110",
-                "active:scale-95",
-                "animate-in fade-in zoom-in-95 duration-150",
-                isChecked && "text-primary"
-              )}
-            >
-              {isChecked ? (
-                <CheckSquare className="w-4 h-4 animate-in zoom-in-50 duration-200" />
-              ) : (
-                <Square className="w-4 h-4 text-muted-foreground opacity-60 hover:opacity-100 transition-opacity" />
-              )}
-            </button>
+              className={cn("flex-shrink-0", !isFocusedMailLayout && "mt-2")}
+              contentClassName="p-3 lg:p-1"
+              onToggle={({ shiftKey }) => {
+                if (shiftKey) selectRangeEmails(email.id);
+                else toggleEmailSelection(email.id);
+              }}
+            />
           )}
 
           {density !== 'extra-compact' && (
@@ -515,7 +508,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                     {showSourceFolder && <SourceFolderTag name={email.sourceFolder!} />}
                     {scheduledSendLabel ? (
                       <span
-                        className="inline-flex max-w-[11rem] shrink-0 items-center gap-1 truncate rounded-full border border-sky-500/20 bg-sky-500/10 px-2 py-0.5 text-[11px] font-medium tabular-nums text-sky-700 dark:text-sky-300"
+                        className="inline-flex max-w-[11rem] shrink-0 items-center gap-1 truncate rounded-full border border-sky-500/20 bg-sky-500/10 px-2 py-0.5 text-xs font-medium tabular-nums text-sky-700 dark:text-sky-300"
                         title={scheduledSendLabel}
                       >
                         <CalendarClock className="h-3 w-3 shrink-0" />
@@ -813,26 +806,16 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
           >
             {/* Checkbox for thread selection - only for extra-compact density (no avatar) while in selection mode */}
             {density === 'extra-compact' && selectedEmailIds.size > 0 && (
-              <button
-                onClick={handleThreadCheckboxClick}
-                role="checkbox"
-                aria-checked={isChecked}
+              <Checkbox
+                isSelected={isChecked}
                 aria-label={tBatch('select')}
-                className={cn(
-                  "p-3 lg:p-1 rounded flex-shrink-0 transition-all duration-200",
-                  !isFocusedMailLayout && 'mt-2',
-                  "hover:bg-muted/50 hover:scale-110",
-                  "active:scale-95",
-                  "animate-in fade-in zoom-in-95 duration-150",
-                  isChecked && "text-primary"
-                )}
-              >
-                {isChecked ? (
-                  <CheckSquare className="w-4 h-4 animate-in zoom-in-50 duration-200" />
-                ) : (
-                  <Square className="w-4 h-4 text-muted-foreground opacity-60 hover:opacity-100 transition-opacity" />
-                )}
-              </button>
+                className={cn("flex-shrink-0", !isFocusedMailLayout && "mt-2")}
+                contentClassName="p-3 lg:p-1"
+                onToggle={({ shiftKey }) => {
+                  if (shiftKey) selectRangeEmails(latestEmail.id);
+                  else toggleThreadSelection();
+                }}
+              />
             )}
 
             {density !== 'extra-compact' && (
@@ -848,31 +831,30 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                   selectLabel={tBatch('select')}
                 />
                 {!isMobile && (
-                  <button
-                    data-expand-toggle
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    data-expand-toggle=""
                     onClick={(e) => {
                       e.stopPropagation();
                       onToggleExpand();
                     }}
                     className={cn(
-                      "absolute -bottom-2.5 left-1/2 -translate-x-1/2 p-0.5 rounded-full",
-                      "transition-all duration-200",
-                      "hover:bg-muted/50 hover:scale-110",
-                      "active:scale-95",
-                      "text-muted-foreground hover:text-foreground",
-                      "bg-background border border-border"
+                      "absolute -bottom-2.5 left-1/2 size-6 min-w-6 -translate-x-1/2 rounded-full",
+                      "border-border bg-background text-muted-foreground",
                     )}
                     aria-expanded={isExpanded}
                     aria-label={t('toggle_thread')}
                   >
                     {isLoading ? (
-                      <Loader2 className="w-3 h-3 animate-spin" />
+                      <Loader size="sm" color="current" />
                     ) : isExpanded ? (
                       <ChevronDown className="w-3 h-3" />
                     ) : (
                       <ChevronRight className="w-3 h-3" />
                     )}
-                  </button>
+                  </Button>
                 )}
               </div>
             )}
@@ -1017,7 +999,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                       {showSourceFolder && <SourceFolderTag name={latestEmail.sourceFolder!} />}
                       {scheduledSendLabel ? (
                         <span
-                          className="inline-flex max-w-[11rem] shrink-0 items-center gap-1 truncate rounded-full border border-sky-500/20 bg-sky-500/10 px-2 py-0.5 text-[11px] font-medium tabular-nums text-sky-700 dark:text-sky-300"
+                          className="inline-flex max-w-[11rem] shrink-0 items-center gap-1 truncate rounded-full border border-sky-500/20 bg-sky-500/10 px-2 py-0.5 text-xs font-medium tabular-nums text-sky-700 dark:text-sky-300"
                           title={scheduledSendLabel}
                         >
                           <CalendarClock className="h-3 w-3 shrink-0" />
@@ -1098,7 +1080,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
           <div className="bg-muted/20 animate-in slide-in-from-top-2 duration-200">
             {isLoading ? (
               <div className="py-4 flex items-center justify-center text-sm text-muted-foreground">
-                <Loader2 className="w-4 h-4 animate-spin me-2" />
+                <Loader size="sm" color="current" className="me-2" />
                 {t('loading')}
               </div>
             ) : (

@@ -102,24 +102,27 @@ export function MobileHeader({
         /* Not a single button: the clear control is a button of its own, and
            nesting one inside another is invalid markup. */
         <div className="flex-1 min-w-0 h-10 mx-1 flex items-center rounded-full bg-muted ps-3 pe-1">
-          <button
+          <Button
             type="button"
+            variant="ghost"
             onClick={onOpenSearch}
-            className="flex-1 min-w-0 h-full flex items-center gap-2 text-start text-muted-foreground"
+            className="h-full min-h-0 flex-1 justify-start gap-2 rounded-none px-0 text-start text-muted-foreground"
             aria-label={searchPlaceholder || title}
           >
             <Search className="h-4 w-4 flex-shrink-0" />
             <span className="truncate text-sm">{searchPlaceholder || title}</span>
-          </button>
+          </Button>
           {searchActive && onClearSearch && (
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="icon"
               onClick={onClearSearch}
-              className="h-8 w-8 flex-shrink-0 grid place-items-center rounded-full text-muted-foreground hover:bg-background/60"
+              className="size-8 min-w-8 flex-shrink-0 text-muted-foreground"
               aria-label={t('clear_search')}
             >
               <X className="h-4 w-4" />
-            </button>
+            </Button>
           )}
         </div>
       )}

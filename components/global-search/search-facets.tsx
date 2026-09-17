@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import type { SearchScope } from "@/lib/global-search/query-parser";
 import { SEARCH_KINDS, type SearchKind } from "@/lib/global-search/types";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 export interface SearchFacetsProps {
   scope: SearchScope;
@@ -33,16 +34,16 @@ function FacetSection({ title, first, children }: { title: string; first?: boole
 /** One facet row, styled like a mail sidebar folder row (start-border selection marker). */
 function FacetButton({ active, label, count, onClick }: { active: boolean; label: string; count?: string; onClick: () => void }) {
   return (
-    <button
-      type="button"
+    <Button
+      variant="ghost"
       onClick={onClick}
       aria-pressed={active}
       style={{ paddingBlock: 'var(--density-sidebar-py)' }}
       className={cn(
-        "w-full flex items-center gap-2 ps-3 pe-2 text-sm text-left transition-colors duration-150 cursor-pointer",
+        "h-auto min-h-0 w-full items-center justify-start gap-2 rounded-none ps-3 pe-2 text-sm font-normal text-start transition-colors duration-150",
         "max-lg:min-h-[44px] border-s-2",
         active
-          ? "bg-accent text-accent-foreground font-semibold border-primary"
+          ? "bg-accent text-accent-foreground font-semibold border-primary hover:bg-accent"
           : "hover:bg-muted/50 text-foreground border-transparent",
       )}
     >
@@ -50,7 +51,7 @@ function FacetButton({ active, label, count, onClick }: { active: boolean; label
       {count !== undefined && (
         <span className={cn("shrink-0 text-xs tabular-nums", active ? "font-semibold text-accent-foreground" : "text-muted-foreground")}>{count}</span>
       )}
-    </button>
+    </Button>
   );
 }
 

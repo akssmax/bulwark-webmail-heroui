@@ -9,6 +9,7 @@ import { useEmailStore } from '@/stores/email-store';
 import { usePolicyStore } from '@/stores/policy-store';
 import { SettingItem, Select, ToggleSwitch } from './settings-section';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 import {
   MAX_SORT_LEVELS,
   ORDER_PRESETS,
@@ -155,15 +156,16 @@ export function MessageListOrderSettings() {
               ariaLabel={t('tag_label')}
             />
           )}
-          <button
+          <Button
             type="button"
+            variant="ghost"
             onClick={() => setAdvanced((v) => !v)}
-            className="text-xs text-primary hover:underline"
+            className="text-xs text-primary h-auto min-h-0 px-0 hover:underline font-normal"
             aria-expanded={advanced}
             data-testid="message-list-order-advanced-toggle"
           >
             {advanced ? t('advanced_hide') : t('advanced_show')}
-          </button>
+          </Button>
         </div>
       </SettingItem>
 
@@ -212,52 +214,59 @@ export function MessageListOrderSettings() {
                   ariaLabel={t('direction_label', { n: index + 1 })}
                 />
                 <span className="flex items-center gap-0.5 ms-auto">
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
+                    size="icon"
                     onClick={() => moveLevel(index, index - 1)}
                     disabled={locked || index === 0}
-                    className="p-1 rounded hover:bg-muted disabled:opacity-40"
+                    className="h-7 w-7"
                     aria-label={t('move_up')}
                     title={t('move_up')}
                   >
                     <ArrowUp className="w-3.5 h-3.5" />
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
+                    variant="ghost"
+                    size="icon"
                     onClick={() => moveLevel(index, index + 1)}
                     disabled={locked || index === messageListOrder.length - 1}
-                    className="p-1 rounded hover:bg-muted disabled:opacity-40"
+                    className="h-7 w-7"
                     aria-label={t('move_down')}
                     title={t('move_down')}
                   >
                     <ArrowDown className="w-3.5 h-3.5" />
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
+                    variant="ghost"
+                    size="icon"
                     onClick={() => removeLevel(index)}
                     disabled={locked}
-                    className="p-1 rounded hover:bg-muted disabled:opacity-40"
+                    className="h-7 w-7"
                     aria-label={t('remove_level')}
                     title={t('remove_level')}
                   >
                     <X className="w-3.5 h-3.5" />
-                  </button>
+                  </Button>
                 </span>
               </li>
             ))}
           </ol>
           <div className="flex flex-wrap items-center gap-3 mt-2">
             {messageListOrder.length < MAX_SORT_LEVELS && (
-              <button
+              <Button
                 type="button"
+                variant="ghost"
                 onClick={addLevel}
                 disabled={locked}
-                className="inline-flex items-center gap-1 text-xs text-primary hover:underline disabled:opacity-40"
+                className="inline-flex items-center gap-1 text-xs text-primary h-auto min-h-0 px-0 hover:underline font-normal"
                 data-testid="message-list-order-add-level"
               >
                 <Plus className="w-3.5 h-3.5" />
                 {t('add_level')}
-              </button>
+              </Button>
             )}
             <span className="text-xs text-muted-foreground">{t('tiebreak_note')}</span>
           </div>

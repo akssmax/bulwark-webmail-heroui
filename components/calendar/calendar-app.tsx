@@ -1512,7 +1512,7 @@ export function CalendarApp({ linkSegments }: CalendarAppProps = {}) {
       <div className={cn("relative flex flex-1 min-h-0 overflow-hidden", isMobile && "flex-col")}>
       {/* Left Navigation Rail (hidden when embedded in Pro shell) */}
       {!isMobile && !isEmbedded && (
-        <div className="w-14 bg-secondary flex flex-col flex-shrink-0" style={{ borderRight: '1px solid rgba(128, 128, 128, 0.3)' }}>
+        <div className="w-14 bg-sidebar flex flex-col flex-shrink-0 border-e border-sidebar-border">
           <NavigationRail
             collapsed
             quota={quota}
@@ -1546,7 +1546,7 @@ export function CalendarApp({ linkSegments }: CalendarAppProps = {}) {
         <>
           <div
             className={cn(
-              "border-e border-border bg-secondary overflow-y-auto flex-shrink-0 p-3",
+              "border-e border-sidebar-border bg-sidebar overflow-y-auto flex-shrink-0 p-3",
               !isResizing && "transition-[width] duration-300",
               isNarrow && cn(
                 "absolute inset-y-0 left-0 z-50 w-72 pt-[env(safe-area-inset-top)]",

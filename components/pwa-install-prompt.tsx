@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { X, Download } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useConfig } from "@/hooks/use-config";
 import { withBasePath } from "@/lib/browser-navigation";
 
@@ -116,35 +117,39 @@ export function PWAInstallPrompt() {
             </p>
           </div>
         </div>
-        <button
+        <Button
+          variant="ghost"
+          size="icon"
           onClick={handleDismiss}
-          className="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors"
+          className="h-8 w-8 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300"
           aria-label={t("dismiss_aria")}
         >
           <X className="w-4 h-4" />
-        </button>
+        </Button>
       </div>
       <div className="flex flex-col gap-2">
         <div className="flex gap-2">
-          <button
+          <Button
+            variant="secondary"
             onClick={handleDismiss}
-            className="flex-1 px-3 py-2 text-sm font-medium text-neutral-700 dark:text-neutral-300 bg-neutral-100 dark:bg-neutral-800 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors"
+            className="flex-1"
           >
             {t("not_now")}
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={handleInstall}
-            className="flex-1 px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded hover:bg-blue-700 transition-colors"
+            className="flex-1"
           >
             {t("install")}
-          </button>
+          </Button>
         </div>
-        <button
+        <Button
+          variant="ghost"
           onClick={handleDismissForever}
-          className="w-full text-xs text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors text-center"
+          className="w-full text-xs text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 h-auto min-h-0 py-1"
         >
           {t("dont_remind")}
-        </button>
+        </Button>
       </div>
     </div>
   );

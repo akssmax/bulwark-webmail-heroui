@@ -4,6 +4,11 @@ import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { CheckCircle2, AlertTriangle, AlertCircle, Server, ShieldCheck, KeyRound, FileText, Palette, Lock, ShieldAlert } from 'lucide-react';
 import { apiFetch, getPathPrefix, withBasePath } from '@/lib/browser-navigation';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { AppSelect } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
 
 type State = 'bootstrap' | 'configured' | 'env-managed';
 
@@ -387,13 +392,9 @@ function InsecureContextScreen({ onContinue }: { onContinue: () => void }) {
             Try HTTPS
           </a>
         )}
-        <button
-          type="button"
-          onClick={onContinue}
-          className="block w-full rounded-md border border-border text-center px-4 py-2.5 text-sm font-medium hover:bg-muted"
-        >
+        <Button type="button" variant="outline" onClick={onContinue} className="w-full">
           Continue over HTTP
-        </button>
+        </Button>
       </div>
     </CenteredCard>
   );
@@ -459,13 +460,15 @@ function ErrorBanner({ error, onDismiss }: { error: string; onDismiss: () => voi
       <div className="flex-1 min-w-0 self-center">
         <p className="text-sm text-destructive leading-relaxed">{friendlyError(error)}</p>
       </div>
-      <button
+      <Button
         onClick={onDismiss}
-        className="self-center text-xs text-muted-foreground hover:text-foreground underline shrink-0"
+        variant="ghost"
+        size="sm"
+        className="self-center text-xs underline shrink-0 h-auto px-1"
         type="button"
       >
         dismiss
-      </button>
+      </Button>
     </div>
   );
 }
@@ -523,11 +526,11 @@ function WelcomeStep({ tokenFromUrl, onSubmit }: { tokenFromUrl: string; onSubmi
         Paste the setup token printed in the container logs to continue. The token expires after 1 hour.
       </p>
       <Field label="Setup token">
-        <Input value={token} onChange={(v) => setToken(v)} autoFocus required placeholder="32-byte hex token" />
+        <Input value={token} onChange={(e) => setToken(e.target.value)} autoFocus required placeholder="32-byte hex token" />
       </Field>
-      <PrimaryButton type="submit" disabled={submitting || !token.trim()}>
+      <Button type="submit" disabled={submitting || !token.trim()}>
         {submitting ? 'Verifying…' : 'Continue'}
-      </PrimaryButton>
+      </Button>
     </form>
   );
 }
@@ -700,13 +703,14 @@ function ServerStep({ config, setConfig, onNext }: Pick<StepProps, 'config' | 's
     <form onSubmit={handle} className="space-y-4">
       <StepHeader title="Server" subtitle="Where your mail lives." />
       <Field label="Application name">
-        <Input value={config.appName} onChange={(v) => setConfig({ ...config, appName: v })} required />
+        <Input value={config.appName} onChange={(e) => setConfig({ ...config, appName: e.target.value })} required />
       </Field>
       <Field label="JMAP server URL" hint="The default server users connect to. Example: https://mail.example.com">
         <div className="flex gap-2">
           <Input
             value={config.jmapServerUrl}
-            onChange={(v) => {
+            onChange={(e) => {
+              const v = e.target.value;
               setConfig({ ...config, jmapServerUrl: v });
               // Any URL change invalidates the previous probe result.
               if (probe && probe.url !== v) {
@@ -718,14 +722,14 @@ function ServerStep({ config, setConfig, onNext }: Pick<StepProps, 'config' | 's
             placeholder="https://"
             type="url"
           />
-          <button
+          <Button
             type="button"
+            variant="outline"
             onClick={() => { void testJmap(); }}
             disabled={!config.jmapServerUrl || probing}
-            className="px-3 py-2 text-sm border border-border rounded-md hover:bg-muted disabled:opacity-50"
           >
             {probing ? 'Testing…' : 'Test'}
-          </button>
+          </Button>
         </div>
         {isInsecureHttpUrl(config.jmapServerUrl) && (
           <div className="mt-2 p-3 rounded-xl border border-warning/20 bg-warning/5 flex items-start gap-3">
@@ -780,15 +784,13 @@ function ServerStep({ config, setConfig, onNext }: Pick<StepProps, 'config' | 's
                   </p>
                 </div>
               </div>
-              <label className="mt-3 ms-[3.25rem] flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={confirmedNonJmap}
-                  onChange={(e) => setConfirmedNonJmap(e.target.checked)}
-                  className="h-4 w-4"
-                />
-                <span className="text-sm text-foreground">I&apos;m sure this is the right URL - continue anyway.</span>
-              </label>
+              <Checkbox
+                isSelected={confirmedNonJmap}
+                onChange={setConfirmedNonJmap}
+                className="mt-3 ms-[3.25rem] text-sm text-foreground"
+              >
+                I&apos;m sure this is the right URL - continue anyway.
+              </Checkbox>
             </div>
           ) : (
             <div className="mt-2 p-3 rounded-xl border border-destructive/20 bg-destructive/5 flex items-start gap-3">
@@ -812,13 +814,15 @@ function ServerStep({ config, setConfig, onNext }: Pick<StepProps, 'config' | 's
               Optional. Surface multiple servers in the login dropdown - useful for hosts running several Stalwart instances.
             </p>
           </div>
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="sm"
             onClick={() => setShowAdditional((v) => !v)}
-            className="text-xs underline text-muted-foreground hover:text-foreground shrink-0"
+            className="text-xs underline shrink-0 h-auto px-1"
           >
             {showAdditional ? 'Hide' : config.jmapServers.length > 0 ? `Show (${config.jmapServers.length})` : 'Add'}
-          </button>
+          </Button>
         </div>
 
         {showAdditional && (
@@ -827,38 +831,41 @@ function ServerStep({ config, setConfig, onNext }: Pick<StepProps, 'config' | 's
               <div key={i} className="rounded-md border border-border bg-background p-3 space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-medium text-muted-foreground">Server #{i + 1}</span>
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
+                    size="sm"
                     onClick={() => removeRow(i)}
-                    className="text-xs text-destructive hover:underline"
+                    className="text-xs text-destructive h-auto px-1"
                   >
                     Remove
-                  </button>
+                  </Button>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <Field label="ID" hint="Unique slug, e.g. eu-1">
-                    <Input value={row.id} onChange={(v) => updateRow(i, { id: v })} placeholder="eu-1" required />
+                    <Input value={row.id} onChange={(e) => updateRow(i, { id: e.target.value })} placeholder="eu-1" required />
                   </Field>
                   <Field label="Label" hint="Shown to users">
-                    <Input value={row.label} onChange={(v) => updateRow(i, { label: v })} placeholder="Europe (primary)" />
+                    <Input value={row.label} onChange={(e) => updateRow(i, { label: e.target.value })} placeholder="Europe (primary)" />
                   </Field>
                 </div>
                 <Field label="URL">
-                  <Input value={row.url} onChange={(v) => updateRow(i, { url: v })} placeholder="https://" type="url" required />
+                  <Input value={row.url} onChange={(e) => updateRow(i, { url: e.target.value })} placeholder="https://" type="url" required />
                 </Field>
                 <Field label="Domains" hint="Comma-separated. Used to auto-pick this server by email domain at login.">
-                  <Input value={row.domains} onChange={(v) => updateRow(i, { domains: v })} placeholder="example.com, mail.example.com" />
+                  <Input value={row.domains} onChange={(e) => updateRow(i, { domains: e.target.value })} placeholder="example.com, mail.example.com" />
                 </Field>
               </div>
             ))}
 
-            <button
+            <Button
               type="button"
+              variant="outline"
               onClick={addRow}
-              className="w-full px-3 py-2 text-sm border border-dashed border-border rounded-md hover:bg-muted text-muted-foreground hover:text-foreground"
+              className="w-full border-dashed text-muted-foreground"
             >
               + Add server
-            </button>
+            </Button>
 
             {config.jmapServers.length > 0 && (
               <Toggle
@@ -888,7 +895,7 @@ function ServerStep({ config, setConfig, onNext }: Pick<StepProps, 'config' | 's
       />
 
       <Footer>
-        <PrimaryButton
+        <Button
           type="submit"
           disabled={
             submitting ||
@@ -903,7 +910,7 @@ function ServerStep({ config, setConfig, onNext }: Pick<StepProps, 'config' | 's
           }
         >
           {submitting ? 'Saving…' : probing ? 'Testing…' : 'Next'}
-        </PrimaryButton>
+        </Button>
       </Footer>
     </form>
   );
@@ -949,26 +956,26 @@ function AuthStep({ config, setConfig, onNext, onBack }: Pick<StepProps, 'config
             label="OAuth-only mode (hide password form)"
           />
           <Field label="OAuth Client ID">
-            <Input value={config.oauthClientId} onChange={(v) => setConfig({ ...config, oauthClientId: v })} required />
+            <Input value={config.oauthClientId} onChange={(e) => setConfig({ ...config, oauthClientId: e.target.value })} required />
           </Field>
           <Field label="OAuth Client Secret" hint="Leave blank for public clients using PKCE only.">
             <Input
               value={config.oauthClientSecret}
-              onChange={(v) => setConfig({ ...config, oauthClientSecret: v })}
+              onChange={(e) => setConfig({ ...config, oauthClientSecret: e.target.value })}
               type="password"
               placeholder="paste secret"
             />
           </Field>
           <Field label="OAuth Issuer URL" hint="For external IdPs (Keycloak, Authentik, Entra ID, etc.).">
-            <Input value={config.oauthIssuerUrl} onChange={(v) => setConfig({ ...config, oauthIssuerUrl: v })} type="url" />
+            <Input value={config.oauthIssuerUrl} onChange={(e) => setConfig({ ...config, oauthIssuerUrl: e.target.value })} type="url" />
           </Field>
         </>
       )}
       <Footer>
-        <SecondaryButton onClick={onBack}>Back</SecondaryButton>
-        <PrimaryButton type="submit" disabled={submitting}>
+        <Button type="button" variant="outline" onClick={onBack}>Back</Button>
+        <Button type="submit" disabled={submitting}>
           {submitting ? 'Saving…' : 'Next'}
-        </PrimaryButton>
+        </Button>
       </Footer>
     </form>
   );
@@ -1027,13 +1034,15 @@ function SecurityStep({ config, setConfig, onNext, onBack }: Pick<StepProps, 'co
       <div className="rounded-md border border-border bg-muted/30 px-3 py-2.5 text-sm">
         <div className="flex items-center justify-between gap-2">
           <span className="font-medium">Session secret generated</span>
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="sm"
             onClick={() => setCustomize((v) => !v)}
-            className="text-xs underline text-muted-foreground hover:text-foreground"
+            className="text-xs underline h-auto px-1"
           >
             {customize ? 'Hide' : 'Customize'}
-          </button>
+          </Button>
         </div>
         <p className="text-xs text-muted-foreground mt-0.5">
           A 32-byte secret was created for you. You only need to change this if you have a specific reason.
@@ -1045,23 +1054,19 @@ function SecurityStep({ config, setConfig, onNext, onBack }: Pick<StepProps, 'co
           <div className="flex gap-2">
             <Input
               value={config.sessionSecret}
-              onChange={(v) => setConfig({ ...config, sessionSecret: v })}
+              onChange={(e) => setConfig({ ...config, sessionSecret: e.target.value })}
               type={reveal ? 'text' : 'password'}
             />
-            <button
-              type="button"
-              onClick={() => setReveal((v) => !v)}
-              className="px-3 py-2 text-sm border border-border rounded-md hover:bg-muted"
-            >
+            <Button type="button" variant="outline" onClick={() => setReveal((v) => !v)}>
               {reveal ? 'Hide' : 'Show'}
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="outline"
               onClick={() => setConfig({ ...config, sessionSecret: generateSessionSecret() })}
-              className="px-3 py-2 text-sm border border-border rounded-md hover:bg-muted"
             >
               Regenerate
-            </button>
+            </Button>
           </div>
         </Field>
       )}
@@ -1083,10 +1088,10 @@ function SecurityStep({ config, setConfig, onNext, onBack }: Pick<StepProps, 'co
         />
       </div>
       <Footer>
-        <SecondaryButton onClick={onBack}>Back</SecondaryButton>
-        <PrimaryButton type="submit" disabled={submitting}>
+        <Button type="button" variant="outline" onClick={onBack}>Back</Button>
+        <Button type="submit" disabled={submitting}>
           {submitting ? 'Saving…' : 'Next'}
-        </PrimaryButton>
+        </Button>
       </Footer>
     </form>
   );
@@ -1109,7 +1114,7 @@ function LoggingStep({ config, setConfig, onNext, onBack }: Pick<StepProps, 'con
     <form onSubmit={handle} className="space-y-4">
       <StepHeader title="Logging" subtitle="Format and verbosity for the application logs." />
       <Field label="Format">
-        <Select
+        <AppSelect
           value={config.logFormat}
           onChange={(v) => setConfig({ ...config, logFormat: v as 'text' | 'json' })}
           options={[
@@ -1119,7 +1124,7 @@ function LoggingStep({ config, setConfig, onNext, onBack }: Pick<StepProps, 'con
         />
       </Field>
       <Field label="Level">
-        <Select
+        <AppSelect
           value={config.logLevel}
           onChange={(v) => setConfig({ ...config, logLevel: v as WizardConfig['logLevel'] })}
           options={[
@@ -1131,10 +1136,10 @@ function LoggingStep({ config, setConfig, onNext, onBack }: Pick<StepProps, 'con
         />
       </Field>
       <Footer>
-        <SecondaryButton onClick={onBack}>Back</SecondaryButton>
-        <PrimaryButton type="submit" disabled={submitting}>
+        <Button type="button" variant="outline" onClick={onBack}>Back</Button>
+        <Button type="submit" disabled={submitting}>
           {submitting ? 'Saving…' : 'Next'}
-        </PrimaryButton>
+        </Button>
       </Footer>
     </form>
   );
@@ -1187,7 +1192,7 @@ function BrandingStep({ config, setConfig, onNext, onBack }: Pick<StepProps, 'co
         subtitle="All fields optional. Upload a file or paste a URL - defaults are used for anything you skip."
       />
       <Field label="Company / organization name">
-        <Input value={config.loginCompanyName} onChange={(v) => setConfig({ ...config, loginCompanyName: v })} />
+        <Input value={config.loginCompanyName} onChange={(e) => setConfig({ ...config, loginCompanyName: e.target.value })} />
       </Field>
 
       <div className="space-y-2">
@@ -1231,19 +1236,19 @@ function BrandingStep({ config, setConfig, onNext, onBack }: Pick<StepProps, 'co
       </div>
 
       <Field label="Website URL">
-        <Input value={config.loginWebsiteUrl} onChange={(v) => setConfig({ ...config, loginWebsiteUrl: v })} type="url" />
+        <Input value={config.loginWebsiteUrl} onChange={(e) => setConfig({ ...config, loginWebsiteUrl: e.target.value })} type="url" />
       </Field>
       <Field label="Imprint URL">
-        <Input value={config.loginImprintUrl} onChange={(v) => setConfig({ ...config, loginImprintUrl: v })} type="url" />
+        <Input value={config.loginImprintUrl} onChange={(e) => setConfig({ ...config, loginImprintUrl: e.target.value })} type="url" />
       </Field>
       <Field label="Privacy policy URL">
-        <Input value={config.loginPrivacyPolicyUrl} onChange={(v) => setConfig({ ...config, loginPrivacyPolicyUrl: v })} type="url" />
+        <Input value={config.loginPrivacyPolicyUrl} onChange={(e) => setConfig({ ...config, loginPrivacyPolicyUrl: e.target.value })} type="url" />
       </Field>
       <Footer>
-        <SecondaryButton onClick={onBack}>Back</SecondaryButton>
-        <PrimaryButton type="submit" disabled={submitting}>
+        <Button type="button" variant="outline" onClick={onBack}>Back</Button>
+        <Button type="submit" disabled={submitting}>
           {submitting ? 'Saving…' : 'Next'}
-        </PrimaryButton>
+        </Button>
       </Footer>
     </form>
   );
@@ -1345,20 +1350,22 @@ function BrandingAsset({
           {value ? (
             <img src={withBasePath(value)} alt="" className="max-w-full max-h-full object-contain" />
           ) : (
-            <span className="text-[10px] text-muted-foreground text-center px-1">click or drop</span>
+            <span className="text-xs text-muted-foreground text-center px-1">click or drop</span>
           )}
         </label>
         <div className="flex-1 min-w-0">
           <div className="flex items-baseline justify-between gap-2">
             <div className="text-sm font-medium truncate">{label}</div>
             {value && (
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="sm"
                 onClick={clearAsset}
-                className="text-xs text-muted-foreground hover:text-destructive shrink-0"
+                className="text-xs text-muted-foreground hover:text-destructive shrink-0 h-auto px-1"
               >
                 Remove
-              </button>
+              </Button>
             )}
           </div>
           {hint && <p className="text-xs text-muted-foreground mt-0.5">{hint}</p>}
@@ -1372,13 +1379,15 @@ function BrandingAsset({
             ) : (
               <span className="text-muted-foreground">SVG, PNG, JPEG, WebP or ICO · max 2 MB</span>
             )}
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
               onClick={() => setShowUrlField((v) => !v)}
-              className="text-muted-foreground hover:text-foreground underline shrink-0"
+              className="text-muted-foreground underline shrink-0 h-auto px-1"
             >
               {showUrlField ? 'Hide URL' : 'Use URL'}
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -1387,7 +1396,7 @@ function BrandingAsset({
         <div className="mt-3 ps-[4.75rem]">
           <Input
             value={value}
-            onChange={onChange}
+            onChange={(e) => onChange(e.target.value)}
             placeholder="https://… or /branding/file.svg"
           />
         </div>
@@ -1529,14 +1538,14 @@ function ReviewStep({ config, onBack, onFinish }: { config: WizardConfig; onBack
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className="block text-xs text-muted-foreground mb-1">New password</label>
-            <Input value={adminPassword} onChange={setAdminPassword} type="password" required />
+            <Input value={adminPassword} onChange={(e) => setAdminPassword(e.target.value)} type="password" required />
             {passwordTooShort && (
               <p className="text-xs text-warning mt-1">At least 8 characters.</p>
             )}
           </div>
           <div>
             <label className="block text-xs text-muted-foreground mb-1">Confirm</label>
-            <Input value={adminConfirm} onChange={setAdminConfirm} type="password" required />
+            <Input value={adminConfirm} onChange={(e) => setAdminConfirm(e.target.value)} type="password" required />
             {adminConfirm.length > 0 && !passwordsMatch && (
               <p className="text-xs text-destructive mt-1">Passwords don&apos;t match.</p>
             )}
@@ -1576,10 +1585,10 @@ function ReviewStep({ config, onBack, onFinish }: { config: WizardConfig; onBack
       )}
 
       <Footer>
-        <SecondaryButton onClick={onBack} disabled={submitting}>Back</SecondaryButton>
-        <PrimaryButton type="submit" disabled={!canSubmit}>
+        <Button type="button" variant="outline" onClick={onBack} disabled={submitting}>Back</Button>
+        <Button type="submit" disabled={!canSubmit}>
           {submitting ? 'Applying…' : 'Apply & Finish'}
-        </PrimaryButton>
+        </Button>
       </Footer>
     </form>
   );
@@ -1629,50 +1638,6 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
   );
 }
 
-function Input({
-  value,
-  onChange,
-  type = 'text',
-  placeholder,
-  required,
-  autoFocus,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-  type?: string;
-  placeholder?: string;
-  required?: boolean;
-  autoFocus?: boolean;
-}) {
-  return (
-    <input
-      type={type}
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      placeholder={placeholder}
-      required={required}
-      autoFocus={autoFocus}
-      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-    />
-  );
-}
-
-function Select({ value, onChange, options }: { value: string; onChange: (v: string) => void; options: { value: string; label: string }[] }) {
-  return (
-    <select
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-    >
-      {options.map((o) => (
-        <option key={o.value} value={o.value}>
-          {o.label}
-        </option>
-      ))}
-    </select>
-  );
-}
-
 function Toggle({
   checked,
   onChange,
@@ -1687,48 +1652,18 @@ function Toggle({
   disabled?: boolean;
 }) {
   return (
-    <label className={'flex items-start gap-3 cursor-pointer ' + (disabled ? 'opacity-50 cursor-not-allowed' : '')}>
-      <input
-        type="checkbox"
-        checked={checked}
-        disabled={disabled}
-        onChange={(e) => onChange(e.target.checked)}
-        className="mt-1 h-4 w-4"
-      />
+    <div className={`flex items-start gap-3 ${disabled ? 'opacity-50' : ''}`}>
+      <Switch checked={checked} onChange={onChange} disabled={disabled} aria-label={label} className="mt-0.5 shrink-0" />
       <div>
         <div className="text-sm font-medium">{label}</div>
         {hint && <div className="text-xs text-muted-foreground mt-0.5">{hint}</div>}
       </div>
-    </label>
+    </div>
   );
 }
 
 function Footer({ children }: { children: ReactNode }) {
   return <div className="flex justify-end gap-2 pt-3 border-t border-border mt-4">{children}</div>;
-}
-
-function PrimaryButton({ children, ...rest }: React.ButtonHTMLAttributes<HTMLButtonElement>) {
-  return (
-    <button
-      {...rest}
-      className="inline-flex items-center justify-center rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
-    >
-      {children}
-    </button>
-  );
-}
-
-function SecondaryButton({ children, onClick, disabled }: { children: ReactNode; onClick: () => void; disabled?: boolean }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      className="inline-flex items-center justify-center rounded-md border border-border px-4 py-2 text-sm font-medium hover:bg-muted disabled:opacity-50"
-    >
-      {children}
-    </button>
-  );
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────

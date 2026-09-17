@@ -80,7 +80,7 @@ export const ContextMenu = forwardRef<HTMLDivElement, ContextMenuProps>(
       <div
         ref={setRefs}
         className={cn(
-          "fixed z-50 min-w-[200px] bg-background rounded-md shadow-lg border border-border"
+          "fixed z-50 min-w-[200px] bg-overlay rounded-lg shadow-lg border border-border"
         )}
         style={{
           left: renderPosition.x,
@@ -249,7 +249,7 @@ export function ContextMenuSubMenu({
       {isOpen && (
         <div
           ref={subMenuRef}
-          className="fixed z-50 min-w-[180px] bg-background rounded-md shadow-lg border border-border"
+          className="fixed z-50 min-w-[180px] bg-overlay rounded-lg shadow-lg border border-border"
           style={{
             left: subMenuPos?.x ?? 0,
             top: subMenuPos?.y ?? 0,

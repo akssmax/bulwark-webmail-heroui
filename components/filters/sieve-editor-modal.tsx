@@ -1,10 +1,12 @@
 "use client";
+import { Loader } from "@/components/ui/loader";
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
-import { X, AlertTriangle, CheckCircle, Loader2 } from "lucide-react";
-import { useFocusTrap } from "@/hooks/use-focus-trap";
+import { Textarea } from "@/components/ui/textarea";
+import { AppModal } from "@/components/ui/modal";
+import { AlertTriangle, CheckCircle } from "lucide-react";
 
 interface SieveEditorModalProps {
   content: string;
@@ -28,7 +30,6 @@ export function SieveEditorModal({
   } | null>(null);
   const [showSaveWarning, setShowSaveWarning] = useState(false);
 
-  const modalRef = useFocusTrap({ isActive: true, onEscape: onClose });
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const lineCount = script.split("\n").length;
@@ -72,99 +73,15 @@ export function SieveEditorModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-[1px]" onClick={onClose} aria-hidden="true" />
-      <div
-        ref={modalRef}
-        role="dialog"
-        aria-modal="true"
-        aria-label={t("title")}
-        className="relative bg-background border border-border rounded-lg shadow-xl w-full max-w-4xl mx-4 max-h-[90vh] flex flex-col animate-in zoom-in-95 duration-200"
-      >
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border">
-          <h2 className="text-lg font-semibold text-foreground">{t("title")}</h2>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-md hover:bg-muted transition-colors duration-150 text-muted-foreground hover:text-foreground"
-            aria-label={t("cancel")}
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        <div className="px-6 py-4 flex-1 overflow-hidden flex flex-col space-y-4">
-          <div className="flex items-start gap-2 p-3 rounded-md bg-warning/10 border border-warning/20 text-sm text-warning">
-            <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
-            <p>{t("warning")}</p>
-          </div>
-
-          <div className="flex-1 min-h-0 flex border border-border rounded-md overflow-hidden">
-            <div
-              className="w-10 flex-shrink-0 bg-muted border-e border-border py-2 text-end pe-2 select-none overflow-hidden"
-              aria-hidden="true"
-            >
-              {Array.from({ length: lineCount }, (_, i) => (
-                <div
-                  key={i}
-                  className="text-xs text-muted-foreground leading-[1.5rem]"
-                >
-                  {i + 1}
-                </div>
-              ))}
-            </div>
-            <textarea
-              ref={textareaRef}
-              value={script}
-              onChange={(e) => {
-                setScript(e.target.value);
-                setValidationResult(null);
-                setShowSaveWarning(false);
-              }}
-              onKeyDown={handleKeyDown}
-              className="flex-1 bg-background text-foreground font-mono text-sm p-2 resize-none focus:outline-none leading-[1.5rem]"
-              spellCheck={false}
-              aria-label={t("script_content")}
-            />
-          </div>
-
-          {validationResult && (
-            <div
-              className={`flex items-start gap-2 p-3 rounded-md text-sm ${
-                validationResult.isValid
-                  ? "bg-success/10 border border-success/20 text-success"
-                  : "bg-destructive/10 border border-destructive/20 text-destructive"
-              }`}
-            >
-              {validationResult.isValid ? (
-                <>
-                  <CheckCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                  <p>{t("valid")}</p>
-                </>
-              ) : (
-                <>
-                  <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <p className="font-medium">{t("invalid")}</p>
-                    {validationResult.errors?.map((err, i) => (
-                      <p key={i} className="mt-1 font-mono text-xs">
-                        {err}
-                      </p>
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
-          )}
-
-          {showSaveWarning && (
-            <div className="flex items-start gap-2 p-3 rounded-md bg-warning/10 border border-warning/20 text-sm text-warning">
-              <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
-              <p>{t("save_warning")}</p>
-            </div>
-          )}
-        </div>
-
-        <div className="flex items-center justify-between px-6 py-4 border-t border-border">
+    <AppModal
+      isOpen
+      onClose={onClose}
+      size="full"
+      className="max-w-4xl max-h-[90vh] flex flex-col"
+      title={t("title")}
+      bodyClassName="px-6 py-4 flex-1 overflow-hidden flex flex-col space-y-4"
+      footer={(
+        <div className="flex items-center justify-between w-full">
           <Button
             variant="outline"
             onClick={handleValidate}
@@ -172,7 +89,7 @@ export function SieveEditorModal({
           >
             {isValidating ? (
               <>
-                <Loader2 className="w-4 h-4 me-2 animate-spin" />
+                <Loader size="sm" color="current" className="me-2" />
                 {t("validating")}
               </>
             ) : (
@@ -188,7 +105,77 @@ export function SieveEditorModal({
             </Button>
           </div>
         </div>
+      )}
+    >
+      <div className="flex items-start gap-2 p-3 rounded-md bg-warning/10 border border-warning/20 text-sm text-warning">
+        <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+        <p>{t("warning")}</p>
       </div>
-    </div>
+
+      <div className="flex-1 min-h-0 flex border border-border rounded-md overflow-hidden">
+        <div
+          className="w-10 flex-shrink-0 bg-muted border-e border-border py-2 text-end pe-2 select-none overflow-hidden"
+          aria-hidden="true"
+        >
+          {Array.from({ length: lineCount }, (_, i) => (
+            <div
+              key={i}
+              className="text-xs text-muted-foreground leading-[1.5rem]"
+            >
+              {i + 1}
+            </div>
+          ))}
+        </div>
+        <Textarea
+          ref={textareaRef}
+          value={script}
+          onChange={(e) => {
+            setScript(e.target.value);
+            setValidationResult(null);
+            setShowSaveWarning(false);
+          }}
+          onKeyDown={handleKeyDown}
+          className="flex-1 min-h-0 rounded-none border-0 font-mono text-sm p-2 resize-none leading-[1.5rem] focus-visible:ring-0"
+          spellCheck={false}
+          aria-label={t("script_content")}
+        />
+      </div>
+
+      {validationResult && (
+        <div
+          className={`flex items-start gap-2 p-3 rounded-md text-sm ${
+            validationResult.isValid
+              ? "bg-success/10 border border-success/20 text-success"
+              : "bg-destructive/10 border border-destructive/20 text-destructive"
+          }`}
+        >
+          {validationResult.isValid ? (
+            <>
+              <CheckCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+              <p>{t("valid")}</p>
+            </>
+          ) : (
+            <>
+              <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="font-medium">{t("invalid")}</p>
+                {validationResult.errors?.map((err, i) => (
+                  <p key={i} className="mt-1 font-mono text-xs">
+                    {err}
+                  </p>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {showSaveWarning && (
+        <div className="flex items-start gap-2 p-3 rounded-md bg-warning/10 border border-warning/20 text-sm text-warning">
+          <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+          <p>{t("save_warning")}</p>
+        </div>
+      )}
+    </AppModal>
   );
 }

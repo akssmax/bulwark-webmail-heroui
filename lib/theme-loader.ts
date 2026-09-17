@@ -5,7 +5,28 @@ import { syncThemeColorMeta } from './theme-color-meta';
 
 const THEME_STYLE_ID = 'active-theme';
 const THEME_SKIN_STYLE_ID = 'active-theme-skin';
+const CUSTOM_THEME_STYLE_ID = 'custom-theme-draft';
 const THEME_SKIN_BODY_ATTR = 'data-theme-skin';
+
+const ALLOWED_THEME_PARTS = new Set([
+  ':root',
+  '.dark',
+  '.light',
+  '[data-theme="dark"]',
+  '[data-theme="light"]',
+  '',
+]);
+
+function isAllowedThemeSelector(selector: string): boolean {
+  if (
+    selector.startsWith('@font-face') ||
+    selector.startsWith('@keyframes') ||
+    selector.startsWith('@media')
+  ) {
+    return true;
+  }
+  return selector.split(',').every((part) => ALLOWED_THEME_PARTS.has(part.trim()));
+}
 
 /**
  * Sanitize theme CSS: strip dangerous patterns like @import, external url(),
@@ -40,22 +61,11 @@ export function validateThemeSelectors(css: string): string[] {
   let match;
   while ((match = selectorRegex.exec(noComments)) !== null) {
     const selector = match[1].trim();
-    // Allow :root, .dark, @font-face, @keyframes, @media
-    if (
-      selector === ':root' ||
-      selector === '.dark' ||
-      selector.startsWith('@font-face') ||
-      selector.startsWith('@keyframes') ||
-      selector.startsWith('@media') ||
-      selector === ''
-    ) {
+    if (isAllowedThemeSelector(selector)) {
       continue;
     }
 
-    // Inside @media blocks, also allow :root and .dark
-    if (selector === ':root' || selector === '.dark') continue;
-
-    warnings.push(`Non-standard selector "${selector}" - themes should only use :root and .dark`);
+    warnings.push(`Non-standard selector "${selector}" - themes should only use :root, .dark, and [data-theme]`);
   }
 
   return warnings;
@@ -90,6 +100,26 @@ export function removeThemeCSS(): void {
   if (styleEl) {
     styleEl.remove();
   }
+  syncThemeColorMeta();
+}
+
+/** Live custom-theme-builder CSS. Injected after ZIP themes so drafts win. */
+export function injectCustomThemeCSS(css: string): void {
+  if (typeof document === 'undefined') return;
+
+  let styleEl = document.getElementById(CUSTOM_THEME_STYLE_ID) as HTMLStyleElement | null;
+  if (!styleEl) {
+    styleEl = document.createElement('style');
+    styleEl.id = CUSTOM_THEME_STYLE_ID;
+    document.head.appendChild(styleEl);
+  }
+  styleEl.textContent = css;
+  syncThemeColorMeta();
+}
+
+export function removeCustomThemeCSS(): void {
+  if (typeof document === 'undefined') return;
+  document.getElementById(CUSTOM_THEME_STYLE_ID)?.remove();
   syncThemeColorMeta();
 }
 

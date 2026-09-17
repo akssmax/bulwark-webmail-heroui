@@ -1,42 +1,14 @@
 "use client";
+import { Loader } from "@/components/ui/loader";
 
 import { useState, useEffect, useMemo, Fragment, ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { PluginSlot } from "@/components/plugins/plugin-slot";
-import { Button } from "@/components/ui/button";
-import {
-  Inbox,
-  Send,
-  File,
-  Star,
-  Trash2,
-  Archive,
-  Ban,
-  ChevronsLeft,
-  ChevronsRight,
-  ChevronRight,
-  ChevronDown,
-  Folder,
-  FolderOpen,
-  User,
-  Users,
-  Palmtree,
-  Settings,
-  X,
-  RotateCcw,
-  Tag,
-  FlaskConical,
-  PlayCircle,
-  Loader2,
-  AlertTriangle,
-  NotebookPen,
-  CalendarClock,
-  BellOff,
-  Mails,
-  MailOpen,
-  MoreHorizontal,
-} from "lucide-react";
+import { Button as HeroButton, Chip, Separator } from "@heroui/react";
+import { Tooltip } from "@/components/ui/tooltip";
+import { isDocumentRTL } from "@/i18n/direction";
+import { Inbox, Send, File, Star, Trash2, Archive, Ban, ChevronsLeft, ChevronsRight, ChevronRight, ChevronDown, Folder, FolderOpen, User, Users, Palmtree, Settings, X, RotateCcw, Tag, FlaskConical, PlayCircle, AlertTriangle, NotebookPen, CalendarClock, BellOff, Mails, MailOpen, MoreHorizontal } from "lucide-react";
 import { cn, buildMailboxTree, MailboxNode } from "@/lib/utils";
 import { localizeMailboxName } from "@/lib/mailbox-label";
 import {
@@ -126,8 +98,7 @@ interface SidebarProps {
 }
 
 const ROW_PX_BASE = 8;
-const CHEVRON_SLOT = 20;
-const INDENT_STEP = 12;
+const INDENT_STEP = 16;
 
 const getIconForMailbox = (role?: string, name?: string, hasChildren?: boolean, isExpanded?: boolean, _isShared?: boolean, id?: string) => {
   const lowerName = name?.toLowerCase() || "";
@@ -198,11 +169,11 @@ function getIconClass(isSelected: boolean, isVirtual: boolean, colorful: boolean
 function SidebarRowCounts({
   unread,
   total,
-  onUnreadClick,
+  onUnreadClick: _onUnreadClick,
 }: {
   unread?: number;
   total?: number;
-  isSelected: boolean;
+  isSelected?: boolean;
   onUnreadClick?: () => void;
 }) {
   const showFolderTotalCount = useSettingsStore(s => s.showFolderTotalCount);
@@ -211,39 +182,25 @@ function SidebarRowCounts({
 
   if (unreadCount === 0 && totalCount === 0) return null;
 
-  const unreadClass = "text-xs font-semibold tabular-nums text-foreground";
-  const totalClass = "text-xs tabular-nums text-muted-foreground";
-
   const unreadNode = unreadCount > 0 ? (
-    onUnreadClick ? (
-      <span
-        role="button"
-        tabIndex={0}
-        onClick={(e) => {
-          e.stopPropagation();
-          onUnreadClick();
-        }}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            e.stopPropagation();
-            onUnreadClick();
-          }
-        }}
-        className={cn(unreadClass, "cursor-pointer hover:underline")}
-        title={`${unreadCount} unread`}
+    _onUnreadClick ? (
+      <HeroButton
+        variant="ghost"
+        size="sm"
+        className="min-h-8 min-w-8 px-1"
+        onPress={() => _onUnreadClick()}
+        aria-label={`${unreadCount} unread`}
       >
-        {unreadCount}
-      </span>
+        <Chip size="sm" color="accent" variant="soft">{unreadCount}</Chip>
+      </HeroButton>
     ) : (
-      <span className={unreadClass}>{unreadCount}</span>
+      <Chip size="sm" color="accent" variant="soft">{unreadCount}</Chip>
     )
   ) : null;
 
   return (
     <span
-      className="ms-2 flex-shrink-0 flex items-baseline gap-1"
-      title={totalCount > 0 ? `${unreadCount} unread / ${totalCount} total` : `${unreadCount} unread`}
+      className="ms-1 flex-shrink-0 flex items-center gap-1"
       data-testid="folder-counts"
       data-unread={unreadCount}
       data-total={totalCount}
@@ -252,7 +209,9 @@ function SidebarRowCounts({
       {unreadCount > 0 && totalCount > 0 && (
         <span className="text-xs text-muted-foreground/60">/</span>
       )}
-      {totalCount > 0 && <span className={totalClass}>{totalCount}</span>}
+      {totalCount > 0 && (
+        <Chip size="sm" variant="tertiary">{totalCount}</Chip>
+      )}
     </span>
   );
 }
@@ -323,72 +282,96 @@ function SidebarRow({
       data-mailbox-id={testMailboxId ?? undefined}
       data-shared={testShared ? 'true' : undefined}
       data-selected={isSelected ? 'true' : undefined}
-      style={{ paddingBlock: 'var(--density-sidebar-py)' }}
       className={cn(
-        "group w-full flex items-center max-lg:min-h-[44px] text-sm transition-colors duration-150",
-        isCollapsed ? "justify-center px-1" : "pe-2",
-        isVirtual
-          ? "text-muted-foreground"
-          : isSelected
-            ? "bg-accent text-accent-foreground font-semibold border-s-2 border-primary"
-            : "hover:bg-muted/50 text-foreground border-s-2 border-transparent",
-        isValidDropTarget && "bg-primary/20 ring-2 ring-primary ring-inset",
-        isInvalidDropTarget && "bg-destructive/10 ring-2 ring-destructive/30 ring-inset opacity-50"
+        "sidebar-row group w-full flex items-center text-sm",
+        isCollapsed ? "justify-center" : "list-box-item pe-1 ps-0",
+        !isCollapsed && (
+          isVirtual
+            ? "text-muted-foreground"
+            : isSelected
+              ? "bg-primary/10 text-primary font-semibold"
+              : "text-foreground"
+        ),
+        !isCollapsed && isValidDropTarget && "bg-primary/20 ring-2 ring-primary ring-inset",
+        !isCollapsed && isInvalidDropTarget && "bg-destructive/10 ring-2 ring-destructive/30 ring-inset opacity-50",
+        isCollapsed && isVirtual && "text-muted-foreground",
       )}
     >
       {!isCollapsed && (
         <div
-          className="flex items-center flex-shrink-0"
-          style={{ paddingLeft: leftPad }}
+          className="flex w-8 shrink-0 items-center justify-center"
+          style={{ marginLeft: leftPad }}
         >
           {hasChildren && onExpandToggle ? (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onExpandToggle();
-              }}
-              data-testid="folder-expand-toggle"
-              className="flex items-center justify-center rounded hover:bg-muted active:bg-accent transition-colors"
-              style={{ width: CHEVRON_SLOT, height: CHEVRON_SLOT }}
-              title={isExpanded ? t('collapse_tooltip') : t('expand_tooltip')}
+            <Tooltip
+              content={isExpanded ? t('collapse_tooltip') : t('expand_tooltip')}
+              placement="top"
             >
-              {isExpanded ? (
-                <ChevronDown className="w-3 h-3 text-muted-foreground" />
-              ) : (
-                <ChevronRight className="w-3 h-3 text-muted-foreground" />
-              )}
-            </button>
+              <HeroButton
+                variant="ghost"
+                isIconOnly
+                size="md"
+                data-testid="folder-expand-toggle"
+                className="sidebar-hit"
+                onPress={onExpandToggle}
+                aria-label={isExpanded ? t('collapse_tooltip') : t('expand_tooltip')}
+              >
+                {isExpanded ? (
+                  <ChevronDown className="text-muted-foreground" />
+                ) : (
+                  <ChevronRight className="text-muted-foreground" />
+                )}
+              </HeroButton>
+            </Tooltip>
           ) : (
-            <div style={{ width: CHEVRON_SLOT }} aria-hidden />
+            <div className="w-8" aria-hidden />
           )}
         </div>
       )}
 
-      <button
-        onClick={() => !isVirtual && onClick?.()}
-        disabled={isVirtual}
-        className={cn(
-          "flex items-center gap-2 min-w-0 transition-colors",
-          isCollapsed ? "justify-center" : "flex-1 text-start",
-          isVirtual && "cursor-default select-none"
-        )}
-        title={isCollapsed ? label : undefined}
+      <Tooltip
+        content={isCollapsed ? label : undefined}
+        placement={isDocumentRTL() ? "left" : "right"}
       >
-        <span className="flex items-center justify-center flex-shrink-0 w-4 h-4">
-          {icon}
-        </span>
-        {!isCollapsed && (
-          <>
+        <HeroButton
+          variant="ghost"
+          onPress={() => !isVirtual && onClick?.()}
+          isDisabled={isVirtual}
+          className={cn(
+            "sidebar-row-hit flex items-center min-w-0 h-auto min-h-0 transition-colors rounded-2xl",
+            isCollapsed
+              ? cn(
+                  "justify-center",
+                  isVirtual
+                    ? "text-muted-foreground"
+                    : isSelected
+                      ? "bg-primary/10 text-primary font-semibold"
+                      : "text-foreground",
+                  isValidDropTarget && "bg-primary/20 ring-2 ring-primary ring-inset",
+                  isInvalidDropTarget && "bg-destructive/10 ring-2 ring-destructive/30 ring-inset opacity-50",
+                )
+              : "min-h-full flex-1 justify-start text-start gap-2 px-1",
+            isVirtual && "cursor-default select-none",
+          )}
+          aria-label={isCollapsed ? label : undefined}
+          aria-current={isSelected ? "page" : undefined}
+        >
+          <span className="flex items-center justify-center flex-shrink-0 w-5 h-5">
+            {icon}
+          </span>
+          {!isCollapsed && (
             <span ref={labelRef} className="flex-1 truncate">{shortenedLabel}</span>
-            <SidebarRowCounts
-              unread={unread}
-              total={total}
-              isSelected={isSelected}
-              onUnreadClick={onUnreadClick}
-            />
-          </>
-        )}
-      </button>
+          )}
+        </HeroButton>
+      </Tooltip>
+      {!isCollapsed && (
+        <SidebarRowCounts
+          unread={unread}
+          total={total}
+          isSelected={isSelected}
+          onUnreadClick={onUnreadClick}
+        />
+      )}
     </div>
   );
 }
@@ -419,59 +402,49 @@ function SidebarSectionHeader({
   onContextMenu?: (event: React.MouseEvent) => void;
 }) {
   if (isCollapsed) {
-    return first ? null : <div className="h-px bg-border/50 mx-2 my-2" aria-hidden />;
+    return first ? null : <Separator className="mx-2 my-2" />;
   }
 
-  const paddingY = sub ? "pt-2" : first ? "pt-3" : "pt-5";
-  const paddingX = sub ? "px-4" : "px-3";
+  const paddingX = sub ? "px-2" : "px-1";
   const textClass = sub
     ? "text-xs font-semibold text-muted-foreground truncate"
     : "text-sm font-semibold text-foreground truncate";
 
   return (
-    <button
-      onClick={onToggle}
-      onContextMenu={onContextMenu}
-      data-testid={testId}
-      data-section-name={label}
-      data-expanded={expanded ? 'true' : 'false'}
-      className={cn(
-        "group w-full flex items-center pb-1 select-none rounded-sm hover:bg-muted/40 transition-colors",
-        paddingX,
-        paddingY
-      )}
+    <div
+      className={cn("sidebar-row group w-full flex items-center", paddingX, !first && "mt-1")}
     >
-      {expanded ? (
-        <ChevronDown className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-      ) : (
-        <ChevronRight className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-      )}
-      {icon && <span className="ms-1.5 flex-shrink-0">{icon}</span>}
-      <span className={cn(textClass, icon ? "ms-1.5" : "ms-1.5")}>
-        {label}
-      </span>
+      <HeroButton
+        variant="ghost"
+        onPress={onToggle}
+        onContextMenu={onContextMenu}
+        data-testid={testId}
+        data-section-name={label}
+        data-expanded={expanded ? 'true' : 'false'}
+        className="flex-1 justify-start min-h-[var(--density-touch-target)] gap-2 px-2 rounded-2xl"
+      >
+        <ChevronDown
+          className="disclosure__indicator text-muted-foreground"
+          data-expanded={expanded ? "true" : undefined}
+        />
+        {icon && <span className="flex-shrink-0">{icon}</span>}
+        <span className={textClass}>{label}</span>
+      </HeroButton>
       {onSettings && (
-        <span
-          role="button"
-          tabIndex={0}
-          onClick={(e) => {
-            e.stopPropagation();
-            onSettings();
-          }}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              e.stopPropagation();
-              onSettings();
-            }
-          }}
-          className="ms-auto p-1 rounded text-muted-foreground/70 hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
-          title={settingsTitle}
-        >
-          <Settings className="w-3.5 h-3.5" />
-        </span>
+        <Tooltip content={settingsTitle} placement="top">
+          <HeroButton
+            variant="ghost"
+            isIconOnly
+            size="md"
+            className="sidebar-hit"
+            onPress={onSettings}
+            aria-label={settingsTitle}
+          >
+            <Settings />
+          </HeroButton>
+        </Tooltip>
       )}
-    </button>
+    </div>
   );
 }
 
@@ -754,27 +727,29 @@ function DemoBanner() {
         <span className="truncate font-medium">{t("demo_banner")}</span>
       </div>
       <div className="flex items-center gap-1.5">
-        <button
-          onClick={handleStartTour}
-          className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-primary/10 hover:bg-primary/20 transition-colors"
-          title={t("demo_tour")}
+        <HeroButton
+          variant="ghost"
+          size="sm"
+          className="min-h-8 px-2 text-xs"
+          onPress={handleStartTour}
         >
-          <PlayCircle className="w-3 h-3" />
+          <PlayCircle />
           {t("demo_tour")}
-        </button>
-        <button
-          onClick={handleReset}
-          disabled={isResetting}
-          className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-primary/10 hover:bg-primary/20 transition-colors disabled:opacity-50"
-          title={t("demo_reset")}
+        </HeroButton>
+        <HeroButton
+          variant="ghost"
+          size="sm"
+          className="min-h-8 px-2 text-xs"
+          onPress={handleReset}
+          isDisabled={isResetting}
         >
           {isResetting ? (
-            <Loader2 className="w-3 h-3 animate-spin" />
+            <Loader size="sm" color="current" />
           ) : (
-            <RotateCcw className="w-3 h-3" />
+            <RotateCcw />
           )}
           {t("demo_reset")}
-        </button>
+        </HeroButton>
       </div>
     </div>
   );
@@ -788,18 +763,18 @@ function VacationBanner() {
   if (!isSupported || !isEnabled) return null;
 
   return (
-    <button
-      onClick={() => router.push('/settings')}
+    <HeroButton
+      variant="ghost"
+      onPress={() => router.push('/settings')}
       className={cn(
-        "flex items-center gap-2 w-full px-3 py-2 text-xs",
+        "sidebar-row w-full justify-start px-3 text-xs rounded-none",
         "bg-amber-500/10 dark:bg-amber-400/10 text-amber-700 dark:text-amber-400",
-        "hover:bg-amber-500/15 dark:hover:bg-amber-400/15 transition-colors"
       )}
     >
-      <Palmtree className="w-3.5 h-3.5 flex-shrink-0" />
+      <Palmtree className="flex-shrink-0" />
       <span className="truncate font-medium">{t("vacation_active")}</span>
-      <Settings className="w-3 h-3 ms-auto flex-shrink-0 opacity-60" />
-    </button>
+      <Settings className="ms-auto flex-shrink-0 opacity-60" />
+    </HeroButton>
   );
 }
 
@@ -1200,9 +1175,9 @@ export function Sidebar({
     <div
       className={cn(
         "relative flex flex-col h-full border-e transition-all duration-300 overflow-hidden",
-        "bg-secondary border-border",
+        "bg-sidebar border-sidebar-border",
         "max-lg:w-full",
-        isCollapsed ? "lg:w-12" : "lg:w-full",
+        isCollapsed ? "lg:w-12 sidebar-collapsed" : "lg:w-full",
         className
       )}
     >
@@ -1212,29 +1187,34 @@ export function Sidebar({
         // Border lives on the wrapper (outside the h-14 box) so the bar's total
         // height matches the search/reply toolbars, which border-b their wrapper too.
         <div className="border-b border-border">
-          <div className={cn("flex items-center h-14", isCollapsed ? "justify-center px-2" : "gap-1 px-2")}>
-            <Button
+          <div className={cn("flex items-center min-h-14", isCollapsed ? "justify-center px-1" : "gap-1 px-1")}>
+            <HeroButton
               variant="ghost"
-              size="icon"
-              onClick={onSidebarClose}
-              className="lg:hidden h-9 w-9 flex-shrink-0"
+              isIconOnly
+              className="lg:hidden sidebar-hit"
+              onPress={() => onSidebarClose?.()}
               aria-label={t("close")}
             >
-              <X className="w-5 h-5" />
-            </Button>
+              <X />
+            </HeroButton>
 
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleSidebarCollapsed}
-              className="hidden lg:flex h-8 w-8 flex-shrink-0"
-              title={isCollapsed ? t("expand_tooltip") : t("collapse_tooltip")}
+            <Tooltip
+              content={isCollapsed ? t("expand_tooltip") : t("collapse_tooltip")}
+              placement={isCollapsed ? (isDocumentRTL() ? "left" : "right") : "bottom"}
             >
-              {isCollapsed ? <ChevronsRight className="w-4 h-4" /> : <ChevronsLeft className="w-4 h-4" />}
-            </Button>
+              <HeroButton
+                variant="ghost"
+                isIconOnly
+                className="hidden lg:flex sidebar-hit"
+                onPress={toggleSidebarCollapsed}
+                aria-label={isCollapsed ? t("expand_tooltip") : t("collapse_tooltip")}
+              >
+                {isCollapsed ? <ChevronsRight /> : <ChevronsLeft />}
+              </HeroButton>
+            </Tooltip>
 
             {!isCollapsed && !hideAccountSwitcher && (
-              <AccountSwitcher variant="expanded" className="flex-1" />
+              <AccountSwitcher variant="expanded" className="flex-1 min-h-[var(--density-touch-target)]" />
             )}
           </div>
         </div>
@@ -1244,7 +1224,7 @@ export function Sidebar({
       {!isCollapsed && <VacationBanner />}
 
       {/* Mailbox List */}
-      <div className="flex-1 overflow-y-auto" data-tour="sidebar">
+      <div className="sidebar-scroll flex-1 overflow-y-auto" data-tour="sidebar">
         {(showUnified || showCrossUnread || showCrossStarred || showCrossAll) && (
           <div>
             <SidebarSectionHeader

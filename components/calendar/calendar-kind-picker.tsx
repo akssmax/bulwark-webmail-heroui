@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { Calendar as CalendarIcon, CheckSquare, Layers } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import type { CalendarComponentType } from "@/lib/jmap/types";
 
 /**
@@ -47,23 +48,23 @@ export function CalendarKindPicker({
       </label>
       <div role="radiogroup" aria-label={t("kind")} className="inline-flex gap-0.5 rounded-md border border-input p-0.5">
         {KINDS.map(({ kind, icon: Icon }) => (
-          <button
+          <Button
             key={kind}
             type="button"
             role="radio"
             aria-checked={value === kind}
             disabled={disabled}
             onClick={() => onChange(kind)}
+            variant={value === kind ? "default" : "ghost"}
+            size="sm"
             className={cn(
-              "flex items-center gap-1.5 px-2.5 py-1 text-xs rounded transition-colors disabled:opacity-50",
-              value === kind
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:text-foreground"
+              "gap-1.5 px-2.5 py-1 text-xs h-auto rounded",
+              value !== kind && "text-muted-foreground hover:text-foreground"
             )}
           >
             <Icon className="w-3.5 h-3.5" />
             {labels[kind]}
-          </button>
+          </Button>
         ))}
       </div>
       <p className="text-xs text-muted-foreground mt-1">{t("kind_hint")}</p>

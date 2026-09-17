@@ -74,6 +74,13 @@ const THEME_TOKENS: readonly string[] = [
   '--density-header-py',
   '--density-card-p',
   '--density-sidebar-py',
+  '--density-sidebar-row',
+  '--density-touch-target',
+  '--density-row-height',
+  '--density-control-height',
+  '--density-spacing-1',
+  '--density-spacing-2',
+  '--density-spacing-3',
 ];
 
 // Mirrors the body font stack in app/globals.css. Used when no document is

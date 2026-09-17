@@ -1,8 +1,11 @@
 'use client';
+import { Loader } from "@/components/ui/loader";
 
 import { useEffect, useState } from 'react';
-import { Loader2, Send, Save, CheckCircle2, XCircle, ExternalLink } from 'lucide-react';
+import { Send, Save, CheckCircle2, XCircle, ExternalLink } from "lucide-react";
 import { apiFetch } from '@/lib/browser-navigation';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 interface TelemetryStatus {
   consent: 'pending' | 'on' | 'off';
@@ -105,7 +108,7 @@ export function TelemetryTab() {
   if (loading || !status) {
     return (
       <div className="p-8 flex items-center gap-2 text-muted-foreground">
-        <Loader2 className="h-4 w-4 animate-spin" /> loading…
+        <Loader size="sm" color="current" /> loading…
       </div>
     );
   }
@@ -147,22 +150,21 @@ export function TelemetryTab() {
             </div>
           </div>
           <div className="flex gap-2">
-            <button
-              type="button"
+            <Button
               disabled={busy === 'consent' || envOverridden || isOn}
               onClick={() => void setConsent('on')}
-              className="px-3 py-1.5 rounded-md border bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+              size="sm"
             >
               Enable
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
+              variant="outline"
               disabled={busy === 'consent' || envOverridden || status.consent === 'off'}
               onClick={() => void setConsent('off')}
-              className="px-3 py-1.5 rounded-md border hover:bg-accent disabled:opacity-50"
+              size="sm"
             >
               Disable
-            </button>
+            </Button>
           </div>
         </div>
         <dl className="grid grid-cols-2 gap-2 text-sm pt-2 border-t">
@@ -197,21 +199,21 @@ export function TelemetryTab() {
           (open source at <code>bulwarkmail/dashboard</code>) or clear this field to disable sending.
         </p>
         <div className="flex flex-col sm:flex-row gap-2">
-          <input
+          <Input
             type="url"
             value={endpointDraft}
             onChange={(e) => setEndpointDraft(e.target.value)}
             placeholder={status.defaultEndpoint}
-            className="flex-1 min-w-0 px-3 py-1.5 rounded-md border bg-background"
+            className="flex-1 min-w-0 h-9"
           />
-          <button
-            type="button"
+          <Button
             disabled={busy === 'endpoint' || endpointDraft === status.endpoint}
             onClick={() => void saveEndpoint()}
-            className="shrink-0 px-3 py-1.5 rounded-md border bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 inline-flex items-center justify-center gap-1"
+            className="shrink-0 gap-1"
+            size="sm"
           >
             <Save className="h-4 w-4" /> Save
-          </button>
+          </Button>
         </div>
       </section>
 
@@ -223,14 +225,14 @@ export function TelemetryTab() {
               Exactly what the next heartbeat would send from this install, right now.
             </div>
           </div>
-          <button
-            type="button"
+          <Button
             disabled={busy === 'send' || !isOn}
             onClick={() => void sendNow()}
-            className="shrink-0 px-3 py-1.5 rounded-md border bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 inline-flex items-center gap-1"
+            className="shrink-0 gap-1"
+            size="sm"
           >
             <Send className="h-4 w-4" /> Send now
-          </button>
+          </Button>
         </div>
         {sendResult && (
           <div

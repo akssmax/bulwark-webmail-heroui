@@ -18,6 +18,14 @@ if (typeof window !== 'undefined' && typeof window.matchMedia !== 'function') {
   }) as unknown as MediaQueryList;
 }
 
+if (typeof window !== 'undefined' && typeof window.ResizeObserver !== 'function') {
+  window.ResizeObserver = class ResizeObserver {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  };
+}
+
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
   useLocale: () => 'en',

@@ -3,6 +3,9 @@
 import { ReactNode, createContext, useContext, useId } from 'react';
 import { Lock } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { SegmentedTabs } from '@/components/ui/segmented-tabs';
+import { Switch as HeroSwitch } from '@/components/ui/switch';
+import { AppSelect } from '@/components/ui/select';
 
 /**
  * Lets the controls inside a SettingItem borrow the row's visible label as
@@ -36,14 +39,20 @@ interface SettingItemProps {
   description?: string;
   children: ReactNode;
   locked?: boolean;
+  /** Put the control under the label instead of on the trailing edge. */
+  stacked?: boolean;
 }
 
-export function SettingItem({ label, description, children, locked }: SettingItemProps) {
+export function SettingItem({ label, description, children, locked, stacked }: SettingItemProps) {
   const labelId = useId();
   return (
     <div
       data-search-label={label}
-      className={cn("flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4 py-3 border-b border-border last:border-0", locked && "opacity-60")}
+      className={cn(
+        "flex flex-col gap-2 py-3 border-b border-border last:border-0",
+        !stacked && "sm:flex-row sm:items-start sm:justify-between sm:gap-4",
+        locked && "opacity-60",
+      )}
     >
       <div className="flex-1 min-w-0 sm:pe-4">
         <div className="flex items-center gap-1.5">
@@ -55,7 +64,7 @@ export function SettingItem({ label, description, children, locked }: SettingIte
         )}
       </div>
       <SettingLabelContext.Provider value={labelId}>
-        <div className={cn("flex-shrink-0", locked && "pointer-events-none")}>{children}</div>
+        <div className={cn("min-w-0 w-full", !stacked && "sm:w-auto sm:max-w-lg", locked && "pointer-events-none")}>{children}</div>
       </SettingLabelContext.Provider>
     </div>
   );
@@ -74,28 +83,14 @@ interface ToggleSwitchProps {
 export function ToggleSwitch({ checked, onChange, disabled, ariaLabel, testId }: ToggleSwitchProps) {
   const labelledBy = useContext(SettingLabelContext);
   return (
-    <button
-      type="button"
-      role="switch"
-      data-testid={testId}
-      aria-checked={checked}
+    <HeroSwitch
+      checked={checked}
+      onChange={onChange}
+      disabled={disabled}
       aria-label={ariaLabel}
       aria-labelledby={ariaLabel ? undefined : labelledBy}
-      disabled={disabled}
-      onClick={() => onChange(!checked)}
-      className={cn(
-        'relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-150',
-        checked ? 'bg-primary' : 'bg-muted',
-        disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-      )}
-    >
-      <span
-        className={cn(
-          'inline-block h-4 w-4 transform rounded-full bg-background transition-transform duration-150',
-          checked ? 'ltr:translate-x-6 rtl:-translate-x-6' : 'ltr:translate-x-1 rtl:-translate-x-1'
-        )}
-      />
-    </button>
+      data-testid={testId}
+    />
   );
 }
 
@@ -108,24 +103,13 @@ interface RadioGroupProps {
 export function RadioGroup({ value, onChange, options }: RadioGroupProps) {
   const labelledBy = useContext(SettingLabelContext);
   return (
-    <div className="flex gap-1.5" role="group" aria-labelledby={labelledBy}>
-      {options.map((option) => (
-        <button
-          key={option.value}
-          type="button"
-          aria-pressed={value === option.value}
-          onClick={() => onChange(option.value)}
-          className={cn(
-            'px-3 py-1.5 text-xs rounded-md transition-colors duration-150',
-            value === option.value
-              ? 'bg-primary text-primary-foreground font-medium'
-              : 'bg-muted hover:bg-accent text-foreground'
-          )}
-        >
-          {option.label}
-        </button>
-      ))}
-    </div>
+    <SegmentedTabs
+      value={value}
+      onChange={onChange}
+      options={options}
+      aria-labelledby={labelledBy}
+      className="w-full"
+    />
   );
 }
 
@@ -141,24 +125,14 @@ interface SelectProps {
 export function Select({ value, onChange, options, disabled, className, ariaLabel }: SelectProps) {
   const labelledBy = useContext(SettingLabelContext);
   return (
-    <select
+    <AppSelect
       value={value}
-      onChange={(e) => onChange(e.target.value)}
+      onChange={onChange}
+      options={options}
       disabled={disabled}
+      className={className}
       aria-label={ariaLabel}
       aria-labelledby={ariaLabel ? undefined : labelledBy}
-      dir="auto"
-      className={cn(
-        "px-3 py-1.5 text-sm rounded-md bg-muted border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-colors duration-150",
-        disabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer hover:border-muted-foreground",
-        className
-      )}
-    >
-      {options.map((option) => (
-        <option key={option.value} value={option.value}>
-          {option.label}
-        </option>
-      ))}
-    </select>
+    />
   );
 }

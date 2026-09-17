@@ -7,6 +7,8 @@ import { useAuthStore } from '@/stores/auth-store';
 import { useSettingsStore } from '@/stores/settings-store';
 import { usePolicyStore } from '@/stores/policy-store';
 import { toast } from '@/stores/toast-store';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { SettingsSection, SettingItem, Select } from './settings-section';
 import {
   Plus, Pencil, Trash2, Check, X, FolderPlus, Folder,
@@ -102,19 +104,17 @@ function IconPicker({ currentIcon, onSelect, onClose }: {
       className="absolute start-0 top-full mt-1 z-50 bg-background border border-border rounded-lg shadow-lg p-2 grid grid-cols-6 gap-1 w-52"
     >
       {ICON_CHOICES.map(({ name, icon: Icon }) => (
-        <button
+        <Button
           key={name}
+          type="button"
+          size="icon"
+          variant={currentIcon === name ? "default" : "ghost"}
           onClick={() => onSelect(name)}
-          className={cn(
-            "p-1.5 rounded-md transition-colors flex items-center justify-center",
-            currentIcon === name
-              ? "bg-primary text-primary-foreground"
-              : "hover:bg-accent text-muted-foreground hover:text-foreground"
-          )}
           title={name}
+          className="h-8 w-8"
         >
           <Icon className="w-4 h-4" />
-        </button>
+        </Button>
       ))}
     </div>
   );
@@ -136,16 +136,18 @@ function SortableFolderRow({ id, title, children }: { id: string; title: string;
   };
   return (
     <div ref={setNodeRef} style={style} className="flex items-stretch">
-      <button
+      <Button
         type="button"
+        variant="ghost"
+        size="icon"
         {...attributes}
         {...listeners}
-        className="flex items-center px-1 text-muted-foreground/40 hover:text-foreground cursor-grab active:cursor-grabbing touch-none rounded-md focus:outline-none focus:ring-2 focus:ring-ring flex-shrink-0"
+        className="h-auto px-1 text-muted-foreground/40 hover:text-foreground cursor-grab active:cursor-grabbing touch-none flex-shrink-0"
         title={title}
         aria-label={title}
       >
         <GripVertical className="w-3.5 h-3.5" />
-      </button>
+      </Button>
       <div className="flex-1 min-w-0">{children}</div>
     </div>
   );
@@ -408,7 +410,7 @@ export function FolderSettings() {
               {t('subfolder_of', { name: parentName })}
             </span>
           )}
-          <input
+          <Input
             type="text"
             value={newFolderName}
             onChange={(e) => setNewFolderName(e.target.value)}
@@ -421,28 +423,29 @@ export function FolderSettings() {
               }
             }}
             placeholder={parentId ? t('subfolder_name') : t('new_folder_name')}
-            className="flex-1 px-2 py-1 text-sm rounded border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            className="flex-1 text-sm"
             autoFocus
             disabled={isLoading}
           />
         </div>
-        <button
+        <Button
+          size="sm"
           onClick={handleCreate}
           disabled={isLoading || !newFolderName.trim()}
-          className="px-3 py-1 text-xs font-medium bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50"
         >
           {t('create')}
-        </button>
-        <button
+        </Button>
+        <Button
+          size="sm"
+          variant="secondary"
           onClick={() => {
             setIsCreating(false);
             setNewFolderName('');
             setCreatingParentId(null);
           }}
-          className="px-3 py-1 text-xs bg-muted text-foreground rounded-md hover:bg-accent"
         >
           {t('cancel')}
-        </button>
+        </Button>
       </div>
     );
   };
@@ -461,7 +464,7 @@ export function FolderSettings() {
         <div key={mb.id}>
         <div className="flex items-center gap-2 py-2 px-3" style={{ paddingLeft: 12 + depth * 16 }}>
           <Icon className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-          <input
+          <Input
             type="text"
             value={editingName}
             onChange={(e) => setEditingName(e.target.value)}
@@ -469,25 +472,28 @@ export function FolderSettings() {
               if (e.key === 'Enter') handleRename(mb.id);
               if (e.key === 'Escape') cancelEdit();
             }}
-            className="flex-1 px-2 py-1 text-sm rounded border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            className="flex-1 text-sm"
             autoFocus
             disabled={isLoading}
           />
-          <button
+          <Button
+            size="icon"
+            variant="ghost"
             onClick={() => handleRename(mb.id)}
             disabled={isLoading || !editingName.trim()}
-            className="p-1.5 text-primary hover:bg-accent rounded-md disabled:opacity-50"
             title={t('rename')}
+            className="text-primary"
           >
             <Check className="w-4 h-4" />
-          </button>
-          <button
+          </Button>
+          <Button
+            size="icon"
+            variant="ghost"
             onClick={cancelEdit}
-            className="p-1.5 text-muted-foreground hover:bg-accent rounded-md"
             title={t('cancel')}
           >
             <X className="w-4 h-4" />
-          </button>
+          </Button>
         </div>
         </div>
       );
@@ -501,19 +507,21 @@ export function FolderSettings() {
           <p className="text-sm text-foreground flex-1">
             {t('confirm_delete', { name: mb.name })}
           </p>
-          <button
+          <Button
+            size="sm"
+            variant="destructive"
             onClick={() => handleDelete(mb.id)}
             disabled={isLoading}
-            className="px-3 py-1 text-xs font-medium bg-destructive text-destructive-foreground rounded-md hover:bg-destructive/90 disabled:opacity-50"
           >
             {t('delete')}
-          </button>
-          <button
+          </Button>
+          <Button
+            size="sm"
+            variant="secondary"
             onClick={() => setDeletingId(null)}
-            className="px-3 py-1 text-xs bg-muted text-foreground rounded-md hover:bg-accent"
           >
             {t('cancel')}
-          </button>
+          </Button>
         </div>
         </div>
       );
@@ -529,35 +537,36 @@ export function FolderSettings() {
           <div className="flex items-center gap-2.5 min-w-0">
             {/* Expand/collapse toggle for folders with children */}
             {hasChildren ? (
-              <button
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
                 onClick={() => toggleExpanded(mb.id)}
-                className="p-0.5 text-muted-foreground hover:text-foreground rounded transition-colors flex-shrink-0"
+                className="h-6 w-6 flex-shrink-0"
               >
                 {isExpanded
                   ? <ChevronDown className="w-3.5 h-3.5" />
                   : <ChevronRight className="w-3.5 h-3.5" />
                 }
-              </button>
+              </Button>
             ) : (
               <span className="w-4.5 flex-shrink-0" />
             )}
             <div className="relative flex-shrink-0">
               {folderIconsAllowed ? (
-                <button
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="ghost"
                   onClick={() => setIconPickerId(iconPickerId === mb.id ? null : mb.id)}
-                  className={cn(
-                    "p-1 rounded-md transition-colors",
-                    iconPickerId === mb.id
-                      ? "bg-accent"
-                      : "hover:bg-accent"
-                  )}
+                  className={cn("h-8 w-8", iconPickerId === mb.id && "bg-accent")}
                   title={t('change_icon')}
                 >
                   <Icon className={cn(
                     "w-4 h-4",
                     mb.role ? "text-primary" : "text-muted-foreground"
                   )} />
-                </button>
+                </Button>
               ) : (
                 <span className="p-1">
                   <Icon className={cn(
@@ -591,31 +600,38 @@ export function FolderSettings() {
           </div>
           <div className="flex items-center gap-0.5">
             {mb.myRights?.mayCreateChild && (
-              <button
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
                 onClick={() => startCreateSubfolder(mb.id)}
-                className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors"
                 title={t('create_subfolder')}
               >
                 <FolderPlus className="w-3.5 h-3.5" />
-              </button>
+              </Button>
             )}
             {mb.myRights?.mayRename && (
-              <button
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
                 onClick={() => startEdit(mb)}
-                className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors"
                 title={t('rename')}
               >
                 <Pencil className="w-3.5 h-3.5" />
-              </button>
+              </Button>
             )}
             {mb.myRights?.mayDelete && !mb.role && (
-              <button
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
                 onClick={() => setDeletingId(mb.id)}
-                className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-md transition-colors"
                 title={t('delete')}
+                className="hover:text-destructive hover:bg-destructive/10"
               >
                 <Trash2 className="w-3.5 h-3.5" />
-              </button>
+              </Button>
             )}
           </div>
         </div>
@@ -657,13 +673,14 @@ export function FolderSettings() {
         {/* Create top-level folder */}
         {renderCreateInline(null, 0)}
         {!isCreating && (
-          <button
+          <Button
+            variant="outline"
             onClick={() => { setIsCreating(true); setCreatingParentId(null); setNewFolderName(''); }}
-            className="flex items-center gap-2 mt-3 px-3 py-2 text-sm text-primary hover:bg-primary/5 rounded-md transition-colors w-full border border-dashed border-primary/30 hover:border-primary/50"
+            className="flex items-center gap-2 mt-3 w-full border-dashed border-primary/30 hover:border-primary/50 text-primary hover:bg-primary/5"
           >
             <Plus className="w-4 h-4" />
             {t('create_folder')}
-          </button>
+          </Button>
         )}
       </SettingsSection>
 

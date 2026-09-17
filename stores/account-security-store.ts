@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { debug } from '@/lib/debug';
 import { useAuthStore } from '@/stores/auth-store';
 import { stalwartJmap, requireResult, type JmapMethodResponse } from '@/lib/stalwart/jmap-passthrough';
-import { isStalwartJmapPassthroughEnabled } from '@/lib/stalwart/principal';
+import { isStalwartJmapPassthroughEnabled, STALWART_JMAP_CAPABILITY } from '@/lib/stalwart/principal';
 
 export type EncryptionType = 'Disabled' | 'Aes128' | 'Aes256';
 
@@ -113,6 +113,13 @@ function getPrimaryAccountId(): string {
   const client = useAuthStore.getState().client;
   if (!client) throw new Error('Not authenticated');
   return client.getAccountId();
+}
+
+/** Stalwart management calls need the account capability and server passthrough. */
+async function canUseStalwartPassthrough(): Promise<boolean> {
+  const client = useAuthStore.getState().client;
+  if (!client?.hasAccountCapability?.(STALWART_JMAP_CAPABILITY)) return false;
+  return isStalwartJmapPassthroughEnabled();
 }
 
 function credentialFromResult(raw: Record<string, unknown>): AppPasswordInfo {
@@ -461,6 +468,10 @@ export const useAccountSecurityStore = create<AccountSecurityState>()((set, get)
   fetchPrincipal: async () => {
     set({ isLoadingPrincipal: true, error: null });
     try {
+      if (!(await canUseStalwartPassthrough())) {
+        set({ isLoadingPrincipal: false });
+        return;
+      }
       const accountId = getPrimaryAccountId();
       const responses = await stalwartJmap([
         ['x:Account/get', { accountId, ids: [accountId] }, '0'],

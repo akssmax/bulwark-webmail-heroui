@@ -649,20 +649,21 @@ export function SettingsApp({ linkSegments }: SettingsAppProps = {}) {
   const renderTabContent = () => (
     <>
       {managedAccountId && managedAccount && (
-        <button
+        <Button
           type="button"
+          variant="outline"
           onClick={() => {
             clearManagedAccount();
             handleTabSelect('account');
           }}
-          className="flex items-center gap-2 w-full mb-4 px-3 py-2 rounded-md border border-border bg-muted/40 hover:bg-muted text-start transition-colors"
+          className="flex items-center gap-2 w-full mb-4 px-3 py-2 h-auto min-h-0 justify-start bg-muted/40 font-normal"
         >
           <ArrowLeft className="w-4 h-4 text-muted-foreground flex-shrink-0" />
           <span className="text-sm text-muted-foreground">{t('scoped.back')}</span>
           <span className="ms-auto text-sm font-medium truncate">
             {t('scoped.managing', { name: managedAccount.name })}
           </span>
-        </button>
+        </Button>
       )}
       {effectiveActiveTab === 'account' && <AccountSettings />}
       {effectiveActiveTab === 'language' && <LanguageSettings />}
@@ -774,14 +775,16 @@ export function SettingsApp({ linkSegments }: SettingsAppProps = {}) {
                 aria-label={t('search_placeholder')}
               />
               {searchQuery && (
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="icon"
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md text-muted-foreground hover:bg-muted"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7"
                   aria-label={t('search_clear')}
                 >
                   <X className="w-4 h-4" />
-                </button>
+                </Button>
               )}
             </div>
           </div>
@@ -804,25 +807,27 @@ export function SettingsApp({ linkSegments }: SettingsAppProps = {}) {
                   const subs = subResultsForTab(tab.id);
                   return (
                     <div key={tab.id}>
-                      <button
+                      <Button
                         data-testid={`settings-tab-${tab.id}`}
+                        variant="ghost"
                         onClick={() => handleTabSelect(tab.id)}
-                        className="w-full flex items-center justify-between px-5 py-3.5 text-sm text-foreground hover:bg-muted transition-colors duration-150"
+                        className="w-full flex items-center justify-between px-5 py-3.5 h-auto min-h-0 text-sm text-foreground font-normal"
                       >
                         <span className="flex items-center gap-3">
                           <Icon className="w-4 h-4 text-muted-foreground" />
                           {tab.label}
                         </span>
                         <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                      </button>
+                      </Button>
                       {subs.map((sub) => (
-                        <button
+                        <Button
                           key={`${tab.id}:${sub.label}`}
+                          variant="ghost"
                           onClick={() => handleSubResultSelect(tab.id, sub)}
-                          className="w-full flex items-center ps-12 pe-5 py-2 text-xs text-muted-foreground hover:bg-muted hover:text-foreground transition-colors duration-150 text-start"
+                          className="w-full flex items-center justify-start ps-12 pe-5 py-2 h-auto min-h-0 text-xs text-muted-foreground hover:text-foreground font-normal"
                         >
                           <span className="truncate">{sub.label}</span>
-                        </button>
+                        </Button>
                       ))}
                     </div>
                   );
@@ -832,13 +837,14 @@ export function SettingsApp({ linkSegments }: SettingsAppProps = {}) {
           </div>
 
           <div className="border-t border-border px-5 py-3">
-            <button
+            <Button
+              variant="ghost"
               onClick={logout}
-              className="w-full flex items-center gap-3 py-2.5 text-sm text-destructive hover:bg-muted rounded-md px-2 transition-colors duration-150"
+              className="w-full flex items-center gap-3 justify-start py-2.5 text-sm text-destructive font-normal"
             >
               <LogOut className="w-4 h-4" />
               <span>{tSidebar('sign_out')}</span>
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -862,7 +868,7 @@ export function SettingsApp({ linkSegments }: SettingsAppProps = {}) {
       <AppTopBannerSlot />
       <div className="flex flex-1 min-h-0">
       {!isEmbedded && (
-        <div className="w-14 bg-secondary flex flex-col flex-shrink-0" style={{ borderRight: '1px solid rgba(128, 128, 128, 0.3)' }}>
+        <div className="w-14 bg-sidebar flex flex-col flex-shrink-0 border-e border-sidebar-border">
           <NavigationRail
             collapsed
             quota={quota}
@@ -883,7 +889,7 @@ export function SettingsApp({ linkSegments }: SettingsAppProps = {}) {
       <>
       <div
         className={cn(
-          "border-e border-border bg-secondary flex flex-col",
+          "border-e border-sidebar-border bg-sidebar flex flex-col",
           !isResizing && "transition-[width] duration-300"
         )}
         style={{ width: `${settingsSidebarWidth}px` }}
@@ -915,14 +921,16 @@ export function SettingsApp({ linkSegments }: SettingsAppProps = {}) {
                 aria-label={t('search_placeholder')}
               />
               {searchQuery && (
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="icon"
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-1.5 top-1/2 -translate-y-1/2 p-0.5 rounded-md text-muted-foreground hover:bg-muted"
+                  className="absolute right-1.5 top-1/2 -translate-y-1/2 h-6 w-6"
                   aria-label={t('search_clear')}
                 >
                   <X className="w-3.5 h-3.5" />
-                </button>
+                </Button>
               )}
             </div>
           </div>
@@ -936,7 +944,7 @@ export function SettingsApp({ linkSegments }: SettingsAppProps = {}) {
               <div key={group.group}>
                 {groupIndex > 0 && <div className="mx-1 my-2 border-t border-border" />}
                 <div className="px-3 pt-2.5 pb-1">
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     {group.label}
                   </span>
                 </div>
@@ -945,11 +953,12 @@ export function SettingsApp({ linkSegments }: SettingsAppProps = {}) {
                   const subs = subResultsForTab(tab.id);
                   return (
                     <div key={tab.id}>
-                      <button
+                      <Button
                         data-testid={`settings-tab-${tab.id}`}
+                        variant="ghost"
                         onClick={() => handleTabSelect(tab.id)}
                         className={cn(
-                          'w-full text-start px-3 py-2 rounded-md text-sm transition-colors duration-150 flex items-center gap-2.5',
+                          'w-full justify-start px-3 py-2 h-auto min-h-0 text-sm font-normal flex items-center gap-2.5',
                           effectiveActiveTab === tab.id
                             ? 'bg-accent text-accent-foreground font-medium'
                             : 'hover:bg-muted text-foreground'
@@ -960,15 +969,16 @@ export function SettingsApp({ linkSegments }: SettingsAppProps = {}) {
                           effectiveActiveTab === tab.id ? 'text-accent-foreground' : 'text-muted-foreground'
                         )} />
                         {tab.label}
-                      </button>
+                      </Button>
                       {subs.map((sub) => (
-                        <button
+                        <Button
                           key={`${tab.id}:${sub.label}`}
+                          variant="ghost"
                           onClick={() => handleSubResultSelect(tab.id, sub)}
-                          className="w-full text-start ps-9 pe-3 py-1.5 rounded-md text-xs text-muted-foreground hover:bg-muted hover:text-foreground transition-colors duration-150"
+                          className="w-full justify-start ps-9 pe-3 py-1.5 h-auto min-h-0 text-xs text-muted-foreground hover:text-foreground font-normal"
                         >
                           <span className="truncate block">{sub.label}</span>
-                        </button>
+                        </Button>
                       ))}
                     </div>
                   );

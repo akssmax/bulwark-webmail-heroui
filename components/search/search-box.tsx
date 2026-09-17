@@ -4,6 +4,7 @@ import { useCallback, useId, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useContactStore } from "@/stores/contact-store";
 import { useSearchHistoryStore } from "@/stores/search-history-store";
@@ -150,17 +151,19 @@ export function SearchBox({ value, onChange, onSubmit, onClear, onSelectContact,
           title={title}
         />
         {value && (
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon"
             onClick={() => {
               close();
               onClear();
             }}
-            className="absolute end-2 top-1/2 transform -translate-y-1/2 p-1 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+            className="absolute end-1 top-1/2 size-7 min-w-7 -translate-y-1/2 text-muted-foreground"
             aria-label={t("clear_search")}
           >
             <X className="w-4 h-4" />
-          </button>
+          </Button>
         )}
       </form>
       {showDropdown && (

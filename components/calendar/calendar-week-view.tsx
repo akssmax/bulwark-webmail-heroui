@@ -8,6 +8,7 @@ import {
 } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Check } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { EventCard } from "./event-card";
 import { QuickEventInput } from "./quick-event-input";
 import { buildTimedFullDayWeekSegments, buildWeekSegmentsRaw, formatSnapTime, getEventDayBounds, getPrimaryCalendarId, isTimedEventFullDayOnDate, layoutOverlappingEvents, packWeekSegments } from "@/lib/calendar-utils";
@@ -331,7 +332,7 @@ export function CalendarWeekView({
       {hasAllDay && (
         <div className="flex border-b border-border">
           <div
-            className={cn(gutterClass, "text-[10px] text-muted-foreground p-1 text-end")}
+            className={cn(gutterClass, "text-xs text-muted-foreground p-1 text-end")}
             style={{ minHeight: Math.max(28, (allDayRowCount + taskRowCount) * 24 + 4) }}
           >
             {t("events.all_day")}
@@ -400,7 +401,7 @@ export function CalendarWeekView({
                         }}
                       >
                         <div
-                          className="h-full rounded text-[10px] leading-[20px] font-medium px-1.5 truncate flex items-center gap-1 cursor-pointer hover:opacity-80"
+                          className="h-full rounded text-xs leading-[20px] font-medium px-1.5 truncate flex items-center gap-1 cursor-pointer hover:opacity-80"
                           style={{ backgroundColor: `${color}20`, borderLeft: `3px solid ${color}` }}
                           onClick={() => onToggleTaskComplete?.(task)}
                         >
@@ -432,19 +433,20 @@ export function CalendarWeekView({
             const selected = isSameDay(day, selectedDate);
             const fullLabel = intlFormatter.dateTime(day, { weekday: "long", month: "long", day: "numeric", year: "numeric" });
             return (
-              <button
+              <Button
                 key={day.toISOString()}
+                variant="ghost"
                 onClick={() => onSelectDate(day)}
                 role="columnheader"
                 aria-label={fullLabel}
                 data-day={dayKey(day)}
                 className={cn(
-                  "text-center py-2 text-sm border-e border-border last:border-e-0 transition-colors touch-manipulation",
+                  "h-auto w-full rounded-none text-center py-2 text-sm border-e border-border last:border-e-0 transition-colors touch-manipulation",
                   "hover:bg-muted/50",
                   todayCol && "font-bold",
                 )}
               >
-                <div className="text-[10px] text-muted-foreground uppercase">
+                <div className="text-xs text-muted-foreground uppercase">
                   {intlFormatter.dateTime(day, { weekday: "short" })}
                 </div>
                 <div className={cn(
@@ -454,7 +456,7 @@ export function CalendarWeekView({
                 )}>
                   {format(day, "d")}
                 </div>
-              </button>
+              </Button>
             );
           })}
         </div>
@@ -472,7 +474,7 @@ export function CalendarWeekView({
                 style={{ height: HOUR_HEIGHT }}
               >
                 {h > 0 && (
-                  <span className={cn("absolute top-0 right-2 -translate-y-1/2 leading-none", isMobile ? "text-[9px]" : "text-[10px]")}>
+                  <span className={cn("absolute top-0 right-2 -translate-y-1/2 leading-none", isMobile ? "text-xs" : "text-xs")}>
                     {formatHour(h)}
                   </span>
                 )}
@@ -592,7 +594,7 @@ export function CalendarWeekView({
                         height: ((dragCreate.endMinutes - dragCreate.startMinutes) / 60) * HOUR_HEIGHT,
                       }}
                     >
-                      <div className="text-[10px] font-medium text-primary px-1.5 py-0.5">
+                      <div className="text-xs font-medium text-primary px-1.5 py-0.5">
                         {formatSnapTime(dragCreate.startMinutes, timeFormat)} – {formatSnapTime(dragCreate.endMinutes, timeFormat)}
                       </div>
                     </div>
@@ -607,7 +609,7 @@ export function CalendarWeekView({
                         <div className="w-2 h-2 rounded-full bg-primary -ms-1" />
                         <div className="flex-1 h-0.5 bg-primary rounded-full" />
                       </div>
-                      <div className="absolute -top-4 left-2 text-[10px] font-medium text-primary bg-background/90 px-1 rounded shadow-sm">
+                      <div className="absolute -top-4 left-2 text-xs font-medium text-primary bg-background/90 px-1 rounded shadow-sm">
                         {formatSnapTime(dropTarget.minutes, timeFormat)}
                       </div>
                     </div>
@@ -631,10 +633,10 @@ export function CalendarWeekView({
                             backgroundColor: `${color}10`,
                           }}
                         >
-                          <div className="text-[10px] font-medium px-1.5 py-0.5 truncate" style={{ color }}>
+                          <div className="text-xs font-medium px-1.5 py-0.5 truncate" style={{ color }}>
                             {pendingPreview.title}
                           </div>
-                          <div className="text-[9px] px-1.5 opacity-70" style={{ color }}>
+                          <div className="text-xs px-1.5 opacity-70" style={{ color }}>
                             {formatSnapTime(startMin, timeFormat)} – {formatSnapTime(startMin + durationMin, timeFormat)}
                           </div>
                         </div>

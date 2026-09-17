@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useLayoutEffect, useCallback, useMemo, useId } from "react";
-import { createPortal } from "react-dom";
+import { useState, useRef, useCallback, useMemo, useId } from "react";
 import { Check, Plus, LogOut, Star, ChevronDown, AlertCircle, GripVertical, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useAccountStore, type AccountEntry } from "@/stores/account-store";
@@ -11,6 +10,10 @@ import { isDocumentRTL } from "@/i18n/direction";
 import { cn } from "@/lib/utils";
 import { useRouter } from "@/i18n/navigation";
 import { Avatar } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { MenuButton } from "@/components/ui/menu-button";
+import { Popover } from "@/components/ui/popover";
+import { Tooltip } from "@/components/ui/tooltip";
 import { useMenuNavigation } from "@/hooks/use-menu-navigation";
 
 interface AccountSwitcherProps {
@@ -38,10 +41,6 @@ export function AccountSwitcher({ variant = "rail", className }: AccountSwitcher
   const [open, setOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const menuId = useId();
-  const [popoverStyle, setPopoverStyle] = useState<React.CSSProperties>({});
-  // The popover is portalled to <body>, so it lands at the very end of the
-  // reading order. Without this the menu is unreachable for screen reader and
-  // keyboard users even though it is on screen.
   const closeMenu = useCallback(() => setOpen(false), []);
   const { menuRef: popoverRef, onKeyDown: handleMenuKeyDown } = useMenuNavigation<HTMLDivElement>({
     open,
@@ -61,81 +60,6 @@ export function AccountSwitcher({ variant = "rail", className }: AccountSwitcher
   const logout = useAuthStore((s) => s.logout);
   const removeAccount = useAuthStore((s) => s.removeAccount);
   const logoutAll = useAuthStore((s) => s.logoutAll);
-
-  const updatePosition = useCallback(() => {
-    if (!buttonRef.current) return;
-    const rect = buttonRef.current.getBoundingClientRect();
-    const rtl = isDocumentRTL();
-    if (variant === "header") {
-      // Anchored at the inline-end edge of the top bar, so the menu drops
-      // down and is pinned by its own trailing edge — anchoring by the
-      // leading edge (as "expanded" does) runs it off-screen, which is
-      // exactly what happened in RTL where that edge is the left one.
-      setPopoverStyle({
-        position: "fixed",
-        top: rect.bottom + 4,
-        maxWidth: "calc(100vw - 16px)",
-        ...(rtl
-          ? { left: Math.max(8, rect.left) }
-          : { right: Math.max(8, window.innerWidth - rect.right) }),
-      });
-    } else if (variant === "rail") {
-      setPopoverStyle(
-        rtl
-          ? {
-              position: "fixed",
-              right: window.innerWidth - rect.left + 8,
-              bottom: Math.max(8, window.innerHeight - rect.bottom),
-            }
-          : {
-              position: "fixed",
-              left: rect.right + 8,
-              bottom: Math.max(8, window.innerHeight - rect.bottom),
-            }
-      );
-    } else {
-      setPopoverStyle(
-        rtl
-          ? {
-              position: "fixed",
-              right: window.innerWidth - rect.right,
-              top: rect.bottom + 4,
-            }
-          : {
-              position: "fixed",
-              left: rect.left,
-              top: rect.bottom + 4,
-            }
-      );
-    }
-  }, [variant]);
-
-  // Position before the first paint - the portalled popover would otherwise
-  // render one frame as an unpositioned block at the end of <body>, shifting
-  // the page layout for a split second.
-  useLayoutEffect(() => {
-    if (open) updatePosition();
-  }, [open, updatePosition]);
-
-  useEffect(() => {
-    if (!open) return;
-    const handleClickOutside = (e: MouseEvent) => {
-      if (
-        buttonRef.current?.contains(e.target as Node) ||
-        popoverRef.current?.contains(e.target as Node)
-      ) return;
-      setOpen(false);
-    };
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    document.addEventListener("keydown", handleEscape);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("keydown", handleEscape);
-    };
-  }, [open, popoverRef]);
 
   const handleSwitch = async (accountId: string) => {
     if (accountId === activeAccountId) return;
@@ -195,6 +119,13 @@ export function AccountSwitcher({ variant = "rail", className }: AccountSwitcher
     resetDrag();
   };
 
+  const popoverPlacement = useMemo(() => {
+    const rtl = isDocumentRTL();
+    if (variant === "rail") return rtl ? "left bottom" : "right bottom";
+    if (variant === "header") return rtl ? "bottom start" : "bottom end";
+    return rtl ? "bottom end" : "bottom start";
+  }, [variant]);
+
   // Show the account's own identity, not the preferred sending identity -
   // primaryIdentity can be an alias (e.g. info@korazo.net) that differs from
   // the actually logged-in account (info@linusrath.de).
@@ -202,58 +133,68 @@ export function AccountSwitcher({ variant = "rail", className }: AccountSwitcher
   const displayEmail = activeAccount?.email || activeAccount?.username || "";
 
   return (
-    <>
-      <button
-        ref={buttonRef}
-        onClick={() => setOpen(!open)}
-        data-testid="account-switcher"
-        data-active-account-id={activeAccountId ?? undefined}
-        className={cn(
-          "flex items-center gap-2 rounded-md transition-colors",
-          variant !== "expanded"
-            ? "justify-center w-10 h-10 hover:bg-muted"
-            : "w-full px-2 py-1.5 hover:bg-muted text-start min-w-0",
-          className
-        )}
-        title={variant !== "expanded" ? (displayName || displayEmail) : undefined}
-        aria-label={t("switch_account")}
-        aria-expanded={open}
-        aria-haspopup="menu"
-        aria-controls={open ? menuId : undefined}
+    <Popover isOpen={open} onOpenChange={setOpen}>
+      <Tooltip
+        content={variant !== "expanded" ? (displayName || displayEmail) : undefined}
+        placement={isDocumentRTL() ? "left" : "right"}
+        isDisabled={open}
       >
-        {activeAccount ? (
-          <>
-            <AccountAvatar account={activeAccount} size={variant === "expanded" ? "md" : "sm"} />
-            {variant === "expanded" && (
-              <>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-foreground truncate">{displayName}</p>
-                  <p className="text-xs text-muted-foreground truncate">{displayEmail}</p>
-                </div>
-                <ChevronDown className={cn("w-3.5 h-3.5 text-muted-foreground flex-shrink-0 transition-transform", open && "rotate-180")} />
-              </>
+        <Popover.Trigger>
+          <Button
+            ref={buttonRef}
+            variant="ghost"
+            data-testid="account-switcher"
+            data-active-account-id={activeAccountId ?? undefined}
+            className={cn(
+              "flex items-center gap-2 rounded-md transition-colors",
+              variant !== "expanded"
+                ? "justify-center sidebar-hit hover:bg-muted"
+                : "w-full px-2 min-h-[var(--density-touch-target)] hover:bg-muted text-start min-w-0 h-auto",
+              className
             )}
-          </>
-        ) : (
-          <div className={cn(
-            "rounded-full bg-muted flex items-center justify-center text-muted-foreground",
-            variant === "expanded" ? "w-9 h-9 text-sm" : "w-8 h-8 text-xs"
-          )}>
-            ?
-          </div>
-        )}
-      </button>
+            aria-label={t("switch_account")}
+            aria-expanded={open}
+            aria-haspopup="menu"
+            aria-controls={open ? menuId : undefined}
+          >
+            {activeAccount ? (
+              <>
+                <AccountAvatar account={activeAccount} size={variant === "expanded" ? "md" : "sm"} />
+                {variant === "expanded" && (
+                  <>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-foreground truncate">{displayName}</p>
+                      <p className="text-xs text-muted-foreground truncate">{displayEmail}</p>
+                    </div>
+                    <ChevronDown className={cn("w-3.5 h-3.5 text-muted-foreground flex-shrink-0 transition-transform", open && "rotate-180")} />
+                  </>
+                )}
+              </>
+            ) : (
+              <div className={cn(
+                "rounded-full bg-muted flex items-center justify-center text-muted-foreground",
+                variant === "expanded" ? "w-9 h-9 text-sm" : "w-8 h-8 text-xs"
+              )}>
+                ?
+              </div>
+            )}
+          </Button>
+        </Popover.Trigger>
+      </Tooltip>
 
-      {open && createPortal(
-        <div
-          ref={popoverRef}
-          style={popoverStyle}
-          className="w-72 rounded-lg border border-border bg-background text-foreground shadow-lg z-50 overflow-hidden"
-          role="menu"
-          id={menuId}
-          aria-label={t("switch_account")}
-          onKeyDown={handleMenuKeyDown}
-        >
+      <Popover.Content
+        placement={popoverPlacement}
+        className="w-72 overflow-hidden p-0"
+        offset={4}
+      >
+        <Popover.Dialog className="outline-none p-0">
+          <div
+            ref={popoverRef}
+            role="menu"
+            id={menuId}
+            aria-label={t("switch_account")}
+            onKeyDown={handleMenuKeyDown}
+          >
           {/* Account List */}
           <div className="py-1 max-h-64 overflow-y-auto">
             {displayAccounts.map((account) => {
@@ -273,74 +214,76 @@ export function AccountSwitcher({ variant = "rail", className }: AccountSwitcher
                     dragOverId === account.id && dragId !== account.id && "border-t-2 border-primary"
                   )}
                 >
-                <button
-                  onClick={() => handleSwitch(account.id)}
-                  data-testid="account-option"
-                  data-account-id={account.id}
-                  data-account-email={account.email || account.username}
-                  className={cn(
-                    "w-full flex items-start gap-3 px-3 py-2.5 text-start transition-colors",
-                    isActive ? "bg-accent/50" : "hover:bg-muted",
-                    (!isActive && !account.isDefault) ? (isDraggable ? "pe-14" : "pe-8") : (isDraggable && "pe-7")
-                  )}
-                  role="menuitem"
-                  disabled={isActive}
-                >
-                  <div className="relative flex-shrink-0">
-                    <AccountAvatar account={account} size="md" />
-                    {isActive && (
-                      <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-primary flex items-center justify-center">
-                        <Check className="w-2.5 h-2.5 text-primary-foreground" />
-                      </div>
-                    )}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1">
-                      <span className="text-sm font-medium truncate">
-                        {account.displayName || account.label}
-                      </span>
-                      {account.isDefault && (
-                        <Star className="w-3 h-3 text-amber-500 flex-shrink-0 fill-amber-500" />
-                      )}
-                    </div>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {account.email || account.username}
-                    </p>
-                    <div className="flex items-center gap-1 mt-0.5">
-                      {account.hasError ? (
-                        <AlertCircle className="w-3 h-3 text-destructive" />
-                      ) : (
-                        <span className={cn(
-                          "w-1.5 h-1.5 rounded-full",
-                          account.isConnected ? "bg-green-500" : "bg-muted-foreground/40"
-                        )} />
-                      )}
-                      <span className="text-[10px] text-muted-foreground truncate">
-                        {(() => { try { return new URL(account.serverUrl).hostname; } catch { return account.serverUrl; } })()}
-                      </span>
-                    </div>
-                  </div>
-                </button>
-                {isDraggable && (
-                  <span
-                    aria-hidden
-                    className="pointer-events-none absolute end-7 top-1/2 -translate-y-1/2 text-muted-foreground/50 opacity-0 transition-opacity group-hover/acct:opacity-100"
-                  >
-                    <GripVertical className="w-4 h-4" />
-                  </span>
-                )}
-                {!isActive && !account.isDefault && (
-                  <button
-                    type="button"
-                    onClick={(e) => handleRemove(e, account)}
+                  <Button
+                    variant="ghost"
+                    onClick={() => handleSwitch(account.id)}
+                    data-testid="account-option"
+                    data-account-id={account.id}
+                    data-account-email={account.email || account.username}
                     role="menuitem"
-                    aria-label={t("remove_account")}
-                    title={t("remove_account")}
-                    className="absolute end-1.5 top-1/2 -translate-y-1/2 p-1 rounded-md text-muted-foreground/60 opacity-0 transition-opacity group-hover/acct:opacity-100 hover:bg-destructive/10 hover:text-destructive focus:opacity-100 focus:outline-none focus:ring-1 focus:ring-destructive"
+                    disabled={isActive}
+                    className={cn(
+                      "h-auto w-full items-start justify-start gap-3 px-3 py-2.5 text-start font-normal min-h-[var(--density-touch-target)]",
+                      isActive ? "bg-accent/50" : "hover:bg-muted",
+                      (!isActive && !account.isDefault) ? (isDraggable ? "pe-14" : "pe-8") : (isDraggable && "pe-7")
+                    )}
                   >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                )}
+                    <div className="relative flex-shrink-0">
+                      <AccountAvatar account={account} size="md" />
+                      {isActive && (
+                        <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-primary flex items-center justify-center">
+                          <Check className="w-2.5 h-2.5 text-primary-foreground" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1">
+                        <span className="text-sm font-medium truncate">
+                          {account.displayName || account.label}
+                        </span>
+                        {account.isDefault && (
+                          <Star className="w-3 h-3 text-amber-500 flex-shrink-0 fill-amber-500" />
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {account.email || account.username}
+                      </p>
+                      <div className="flex items-center gap-1 mt-0.5">
+                        {account.hasError ? (
+                          <AlertCircle className="w-3 h-3 text-destructive" />
+                        ) : (
+                          <span className={cn(
+                            "w-1.5 h-1.5 rounded-full",
+                            account.isConnected ? "bg-green-500" : "bg-muted-foreground/40"
+                          )} />
+                        )}
+                        <span className="text-xs text-muted-foreground truncate">
+                          {(() => { try { return new URL(account.serverUrl).hostname; } catch { return account.serverUrl; } })()}
+                        </span>
+                      </div>
+                    </div>
+                  </Button>
+                  {isDraggable && (
+                    <span
+                      aria-hidden
+                      className="pointer-events-none absolute end-7 top-1/2 -translate-y-1/2 text-muted-foreground/50 opacity-0 transition-opacity group-hover/acct:opacity-100"
+                    >
+                      <GripVertical className="w-4 h-4" />
+                    </span>
+                  )}
+                  {!isActive && !account.isDefault && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={(e) => handleRemove(e, account)}
+                      role="menuitem"
+                      aria-label={t("remove_account")}
+                      title={t("remove_account")}
+                      className="absolute end-1.5 top-1/2 h-7 w-7 min-w-7 -translate-y-1/2 text-muted-foreground/60 opacity-0 transition-opacity group-hover/acct:opacity-100 hover:bg-destructive/10 hover:text-destructive focus:opacity-100"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </Button>
+                  )}
                 </div>
               );
             })}
@@ -349,52 +292,45 @@ export function AccountSwitcher({ variant = "rail", className }: AccountSwitcher
           {/* Separator + Add Account */}
           {accounts.length < getMaxAccounts() && (
             <div className="border-t border-border">
-              <button
+              <MenuButton
                 onClick={handleAddAccount}
                 data-testid="add-account"
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors"
-                role="menuitem"
+                className="px-3 py-2"
               >
                 <Plus className="w-4 h-4" />
                 {t("add_account")}
-              </button>
+              </MenuButton>
             </div>
           )}
 
           {/* Separator + Actions */}
           <div className="border-t border-border">
             {activeAccount && !activeAccount.isDefault && accounts.length > 1 && (
-              <button
+              <MenuButton
                 onClick={() => handleSetDefault(activeAccount.id)}
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors"
-                role="menuitem"
+                className="px-3 py-2"
               >
                 <Star className="w-4 h-4" />
                 {t("set_as_default")}
-              </button>
+              </MenuButton>
             )}
-            <button
-              onClick={handleLogout}
-              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors"
-              role="menuitem"
-            >
+            <MenuButton onClick={handleLogout} className="px-3 py-2">
               <LogOut className="w-4 h-4" />
               {t("sign_out_of", { account: displayEmail })}
-            </button>
+            </MenuButton>
             {accounts.length > 1 && (
-              <button
+              <MenuButton
                 onClick={handleLogoutAll}
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-destructive hover:bg-muted transition-colors"
-                role="menuitem"
+                className="px-3 py-2 text-destructive hover:text-destructive"
               >
                 <LogOut className="w-4 h-4" />
                 {t("sign_out_all")}
-              </button>
+              </MenuButton>
             )}
           </div>
-        </div>,
-        document.body
-      )}
-    </>
+          </div>
+        </Popover.Dialog>
+      </Popover.Content>
+    </Popover>
   );
 }

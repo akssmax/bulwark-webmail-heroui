@@ -46,6 +46,25 @@ export default [
       "react-hooks/exhaustive-deps": "warn",
       "no-unused-vars": "off",
       "no-undef": "off",
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector:
+            "JSXOpeningElement[name.name='input'] > JSXAttribute[name.name='type'][value.value=/^(date|time|datetime-local|month|week)$/]",
+          message:
+            "Use HeroUI DatePicker/TimeField (components/ui/date-picker.tsx) instead of native date/time inputs on web.",
+        },
+        {
+          selector: "Literal[value=/text-\\[(?:6|7|8|9|10|11)px\\]/]",
+          message:
+            "Use text-xs or larger. Tailwind text-xs (0.75rem) is the smallest type size.",
+        },
+        {
+          selector: "TemplateElement[value.raw=/text-\\[(?:6|7|8|9|10|11)px\\]/]",
+          message:
+            "Use text-xs or larger. Tailwind text-xs (0.75rem) is the smallest type size.",
+        },
+      ],
     },
     settings: {
       react: {

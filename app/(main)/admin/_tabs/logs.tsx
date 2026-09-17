@@ -4,6 +4,8 @@ import { useEffect, useState, useCallback } from 'react';
 import { RefreshCw } from 'lucide-react';
 import type { AuditEntry } from '@/lib/admin/types';
 import { apiFetch } from '@/lib/browser-navigation';
+import { Button } from '@/components/ui/button';
+import { AppSelect } from '@/components/ui/select';
 
 export function LogsTab() {
   const [entries, setEntries] = useState<AuditEntry[]>([]);
@@ -38,31 +40,34 @@ export function LogsTab() {
           <h1 className="text-2xl font-semibold text-foreground">Audit Log</h1>
           <p className="text-sm text-muted-foreground mt-1">{total} total entries</p>
         </div>
-        <button
+        <Button
+          variant="outline"
           onClick={fetchLogs}
-          className="inline-flex items-center gap-2 h-9 px-3 rounded-md border border-input bg-background text-sm text-foreground hover:bg-accent transition-colors"
+          className="h-9 gap-2"
         >
           <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           Refresh
-        </button>
+        </Button>
       </div>
 
       <div className="flex items-center gap-3">
-        <select
+        <AppSelect
           value={actionFilter}
-          onChange={(e) => { setActionFilter(e.target.value); setPage(1); }}
-          className="h-8 w-full sm:w-auto rounded-md border border-input bg-background px-2.5 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        >
-          <option value="">All actions</option>
-          <option value="admin.login">Login</option>
-          <option value="admin.logout">Logout</option>
-          <option value="admin.login_failed">Login Failed</option>
-          <option value="admin.login_blocked">Login Blocked</option>
-          <option value="admin.change-password">Password Change</option>
-          <option value="config.update">Config Update</option>
-          <option value="config.revert">Config Revert</option>
-          <option value="policy.update">Policy Update</option>
-        </select>
+          onChange={(value) => { setActionFilter(value); setPage(1); }}
+          options={[
+            { value: '', label: 'All actions' },
+            { value: 'admin.login', label: 'Login' },
+            { value: 'admin.logout', label: 'Logout' },
+            { value: 'admin.login_failed', label: 'Login Failed' },
+            { value: 'admin.login_blocked', label: 'Login Blocked' },
+            { value: 'admin.change-password', label: 'Password Change' },
+            { value: 'config.update', label: 'Config Update' },
+            { value: 'config.revert', label: 'Config Revert' },
+            { value: 'policy.update', label: 'Policy Update' },
+          ]}
+          aria-label="Filter by action"
+          className="w-full sm:w-auto min-w-[12rem]"
+        />
       </div>
 
       <div className="sm:hidden space-y-2">
@@ -77,14 +82,14 @@ export function LogsTab() {
                 <span className="text-xs font-mono px-2 py-0.5 rounded bg-muted text-muted-foreground truncate">
                   {entry.action}
                 </span>
-                <span className="text-[11px] text-muted-foreground whitespace-nowrap">
+                <span className="text-xs text-muted-foreground whitespace-nowrap">
                   {new Date(entry.ts).toLocaleString()}
                 </span>
               </div>
               <div className="text-xs text-foreground break-words">
                 {formatDetail(entry.detail)}
               </div>
-              <div className="text-[11px] text-muted-foreground font-mono">
+              <div className="text-xs text-muted-foreground font-mono">
                 {entry.ip}
               </div>
             </div>
@@ -141,20 +146,22 @@ export function LogsTab() {
             Page {page} of {totalPages}
           </p>
           <div className="flex items-center gap-2">
-            <button
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => setPage(p => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="h-8 px-3 rounded-md border border-input bg-background text-sm disabled:opacity-50 hover:bg-accent transition-colors"
             >
               Previous
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => setPage(p => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
-              className="h-8 px-3 rounded-md border border-input bg-background text-sm disabled:opacity-50 hover:bg-accent transition-colors"
             >
               Next
-            </button>
+            </Button>
           </div>
         </div>
       )}

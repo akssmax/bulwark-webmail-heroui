@@ -8,7 +8,7 @@ import { useCalendarStore } from '@/stores/calendar-store';
 import { useSettingsStore } from '@/stores/settings-store';
 import { useTaskStore } from '@/stores/task-store';
 import { useCalendarNotificationStore } from '@/stores/calendar-notification-store';
-import { useToastStore } from '@/stores/toast-store';
+import { addToast } from '@/stores/toast-store';
 import { getPendingAlerts, getPendingTaskAlerts, buildAlertKey } from '@/lib/calendar-alerts';
 import { playNotificationSound } from '@/lib/notification-sound';
 import { getPathPrefix } from '@/lib/browser-navigation';
@@ -24,7 +24,6 @@ export function useCalendarAlerts() {
   const { calendarNotificationsEnabled, calendarNotificationSound, enableCalendarTasks, notificationSoundChoice } = useSettingsStore();
   const { tasks: storeTasks } = useTaskStore();
   const { acknowledgedAlerts, acknowledgeAlert, cleanupStaleAlerts } = useCalendarNotificationStore();
-  const addToast = useToastStore((s) => s.addToast);
   const t = useTranslations('calendar.notifications');
   const locale = useLocale();
 

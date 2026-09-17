@@ -1,10 +1,14 @@
 'use client';
+import { Loader } from "@/components/ui/loader";
 
 import { useEffect, useState } from 'react';
-import { Puzzle, ArrowLeft, Loader2, Eye, EyeOff } from 'lucide-react';
+import { Puzzle, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { apiFetch } from '@/lib/browser-navigation';
 import { usePluginSlotOffers } from '@/hooks/use-plugin-slot-offers';
 import { PluginIframeSlot } from '@/components/plugins/plugin-iframe-slot';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { AppSelect } from '@/components/ui/select';
 
 interface ConfigField {
   type: 'string' | 'secret' | 'boolean' | 'number' | 'select';
@@ -155,7 +159,7 @@ export function PluginConfigPanel({ pluginId, onBack }: Props) {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12 text-muted-foreground text-sm">
-        <Loader2 className="w-4 h-4 animate-spin me-2" />
+        <Loader size="sm" color="current" className="me-2" />
         Loading...
       </div>
     );
@@ -164,13 +168,14 @@ export function PluginConfigPanel({ pluginId, onBack }: Props) {
   if (!plugin) {
     return (
       <div className="space-y-4">
-        <button
+        <Button
           type="button"
+          variant="ghost"
           onClick={onBack}
-          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+          className="h-auto px-0 gap-1.5 text-sm text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="w-4 h-4" /> Back to Plugins
-        </button>
+        </Button>
         <p className="text-sm text-destructive">Plugin not found: {pluginId}</p>
       </div>
     );
@@ -182,14 +187,16 @@ export function PluginConfigPanel({ pluginId, onBack }: Props) {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          size="icon"
           onClick={onBack}
-          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+          className="h-8 w-8 text-muted-foreground hover:text-foreground"
           aria-label="Back to Plugins"
         >
           <ArrowLeft className="w-4 h-4" />
-        </button>
+        </Button>
         <div>
           <h1 className="text-2xl font-semibold text-foreground flex items-center gap-2">
             <Puzzle className="w-5 h-5" />
@@ -224,63 +231,67 @@ export function PluginConfigPanel({ pluginId, onBack }: Props) {
                 )}
 
                 {field.type === 'boolean' ? (
-                  <select
+                  <AppSelect
                     value={formValues[key] ?? String(field.default ?? 'false')}
-                    onChange={(e) => setFormValues(prev => ({ ...prev, [key]: e.target.value }))}
-                    className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                  >
-                    <option value="true">Enabled</option>
-                    <option value="false">Disabled</option>
-                  </select>
+                    onChange={(next) => setFormValues(prev => ({ ...prev, [key]: next }))}
+                    options={[
+                      { value: 'true', label: 'Enabled' },
+                      { value: 'false', label: 'Disabled' },
+                    ]}
+                    aria-label={field.label}
+                    className="h-9"
+                  />
                 ) : field.type === 'select' && field.options ? (
-                  <select
+                  <AppSelect
                     value={formValues[key] ?? ''}
-                    onChange={(e) => setFormValues(prev => ({ ...prev, [key]: e.target.value }))}
-                    className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                  >
-                    <option value="">- Select -</option>
-                    {field.options.map(opt => (
-                      <option key={opt.value} value={opt.value}>{opt.label}</option>
-                    ))}
-                  </select>
+                    onChange={(next) => setFormValues(prev => ({ ...prev, [key]: next }))}
+                    options={[
+                      { value: '', label: '- Select -' },
+                      ...field.options.map((opt) => ({ value: opt.value, label: opt.label })),
+                    ]}
+                    aria-label={field.label}
+                    className="h-9"
+                  />
                 ) : field.type === 'secret' ? (
                   <div className="relative">
-                    <input
+                    <Input
                       type={revealSecrets[key] ? 'text' : 'password'}
                       value={formValues[key] ?? ''}
                       onChange={(e) => setFormValues(prev => ({ ...prev, [key]: e.target.value }))}
                       placeholder={config[key] ? '••••••••  (unchanged)' : (field.placeholder || '')}
-                      className="w-full h-9 px-3 pe-10 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring font-mono"
+                      className="h-9 pe-10 font-mono"
                     />
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
+                      size="icon"
                       onClick={() => setRevealSecrets(prev => ({ ...prev, [key]: !prev[key] }))}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground"
+                      className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 text-muted-foreground hover:text-foreground"
                       aria-label={revealSecrets[key] ? 'Hide' : 'Show'}
                     >
                       {revealSecrets[key] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
+                    </Button>
                   </div>
                 ) : (
-                  <input
+                  <Input
                     type={field.type === 'number' ? 'number' : 'text'}
                     value={formValues[key] ?? ''}
                     onChange={(e) => setFormValues(prev => ({ ...prev, [key]: e.target.value }))}
                     placeholder={field.placeholder || ''}
-                    className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                    className="h-9"
                   />
                 )}
               </div>
             ))}
 
-            <button
+            <Button
               onClick={handleSaveAll}
               disabled={saving}
-              className="inline-flex items-center gap-2 h-9 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 disabled:opacity-50 transition-all shadow-sm"
+              className="h-9 gap-2"
             >
-              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+              {saving ? <Loader size="sm" color="current" /> : null}
               Save Configuration
-            </button>
+            </Button>
           </div>
         </div>
       ) : (

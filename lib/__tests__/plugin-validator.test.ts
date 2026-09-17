@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import JSZip from 'jszip';
 import { extractTheme, extractPlugin } from '../plugin-validator';
+import { toOklchCss } from '../color-transform';
 
 function createZipFile(zip: JSZip, name = 'test.zip'): Promise<File> {
   return zip.generateAsync({ type: 'blob' }).then(blob => new File([blob], name));
@@ -148,8 +149,8 @@ describe('extractTheme', () => {
     const file = await createZipFile(zip);
     const result = await extractTheme(file);
     expect(result.valid).toBe(true);
-    expect(result.css).toContain('--color-primary: #1373d9');
-    expect(result.css).toContain('--color-primary: #58c9ff');
+    expect(result.css).toContain(`--color-primary: ${toOklchCss('#1373d9')}`);
+    expect(result.css).toContain(`--color-primary: ${toOklchCss('#58c9ff')}`);
   });
 
   it('concatenates compiled tokens with author-supplied theme.css', async () => {
@@ -168,7 +169,7 @@ describe('extractTheme', () => {
     const file = await createZipFile(zip);
     const result = await extractTheme(file);
     expect(result.valid).toBe(true);
-    expect(result.css).toContain('--color-primary: #000');
+    expect(result.css).toContain(`--color-primary: ${toOklchCss('#000')}`);
     expect(result.css).toContain('@font-face');
   });
 

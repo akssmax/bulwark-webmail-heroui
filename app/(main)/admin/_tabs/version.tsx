@@ -1,16 +1,11 @@
 'use client';
+import { Loader } from "@/components/ui/loader";
 
 import { useEffect, useState } from 'react';
-import {
-  Loader2,
-  RefreshCw,
-  CheckCircle2,
-  AlertTriangle,
-  ShieldAlert,
-  ExternalLink,
-} from 'lucide-react';
+import { RefreshCw, CheckCircle2, AlertTriangle, ShieldAlert, ExternalLink } from "lucide-react";
 import { SettingsSection, SettingItem } from '@/components/settings/settings-section';
 import { apiFetch } from '@/lib/browser-navigation';
+import { Button } from '@/components/ui/button';
 import type { UpdateStatus, UpdateSeverity } from '@/lib/version-check/types';
 
 interface VersionAdminStatus {
@@ -116,7 +111,7 @@ export function VersionTab() {
   if (loading || !data) {
     return (
       <div className="p-8 flex items-center gap-2 text-muted-foreground">
-        <Loader2 className="h-4 w-4 animate-spin" /> loading…
+        <Loader size="sm" color="current" /> loading…
       </div>
     );
   }
@@ -137,15 +132,14 @@ export function VersionTab() {
             disable with <code>BULWARK_UPDATE_CHECK=off</code>.
           </p>
         </div>
-        <button
-          type="button"
+        <Button
           disabled={checking}
           onClick={() => void checkNow()}
-          className="inline-flex items-center gap-2 h-9 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 disabled:opacity-50 transition-all shadow-sm"
+          className="h-9 gap-2"
         >
-          {checking ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+          {checking ? <Loader size="sm" color="current" /> : <RefreshCw className="w-4 h-4" />}
           Check now
-        </button>
+        </Button>
       </div>
 
       {checkResult && (

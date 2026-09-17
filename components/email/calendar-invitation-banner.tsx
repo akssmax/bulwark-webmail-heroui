@@ -1,23 +1,9 @@
 'use client';
+import { Loader } from "@/components/ui/loader";
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import {
-  ArrowRight,
-  Calendar,
-  CalendarCheck,
-  CalendarX,
-  Clock,
-  MapPin,
-  Users,
-  Loader2,
-  Check,
-  HelpCircle,
-  X,
-  AlertCircle,
-  ChevronDown,
-  ChevronUp,
-} from 'lucide-react';
+import { ArrowRight, Calendar, CalendarCheck, CalendarX, Clock, MapPin, Users, Check, HelpCircle, X, AlertCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { useTranslations, useFormatter } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
 import { isDocumentRTL } from '@/i18n/direction';
@@ -40,6 +26,8 @@ import {
 import { cn } from '@/lib/utils';
 import { sanitizeColor } from '@/components/calendar/event-card';
 import { RecipientPopover } from './recipient-popover';
+import { Button } from '@/components/ui/button';
+import { MenuButton } from '@/components/ui/menu-button';
 
 interface InvitationChangeItem {
   label: string;
@@ -758,7 +746,7 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
           <Calendar className="w-5 h-5" />
         </div>
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+          <Loader size="sm" color="current" />
           <span>{t('loading')}</span>
         </div>
       </div>
@@ -833,7 +821,7 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
         {/* Eyebrow + title + collapse */}
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
-            <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               {bannerTitle}
             </div>
             {summary?.title && (
@@ -848,22 +836,24 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
 
           <div className="flex items-center gap-1.5 flex-shrink-0">
             {parsedEvent?.sequence != null && parsedEvent.sequence > 0 && (
-              <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground whitespace-nowrap">
+              <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground whitespace-nowrap">
                 {t('event_updated', { sequence: parsedEvent.sequence })}
               </span>
             )}
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
               onClick={(e) => {
                 e.stopPropagation();
                 setIsCollapsed((prev) => !prev);
               }}
               aria-expanded={!isCollapsed}
-              className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-0.5 transition-colors"
+              className="h-auto min-h-0 gap-0.5 px-1 text-xs text-muted-foreground"
             >
               {isCollapsed ? <ChevronDown className="w-3 h-3" /> : <ChevronUp className="w-3 h-3" />}
               {isCollapsed ? t('expand') : t('collapse')}
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -913,7 +903,7 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
           <div className="flex flex-wrap items-center gap-1.5">
             {parsedEvent?.status && parsedEvent.status !== 'confirmed' && (
               <span className={cn(
-                "rounded-full px-2 py-0.5 text-[11px] font-medium",
+                "rounded-full px-2 py-0.5 text-xs font-medium",
                 parsedEvent.status === 'cancelled'
                   ? "bg-destructive/15 text-destructive"
                   : "bg-warning/15 text-warning",
@@ -922,25 +912,25 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
               </span>
             )}
             {existingEvent && (
-              <span className="rounded-full bg-success/15 px-2 py-0.5 text-[11px] font-medium text-success">
+              <span className="rounded-full bg-success/15 px-2 py-0.5 text-xs font-medium text-success">
                 {t('already_in_calendar')}
               </span>
             )}
             {userIsOrganizer && (
-              <span className="rounded-full bg-info/15 px-2 py-0.5 text-[11px] font-medium text-info">
+              <span className="rounded-full bg-info/15 px-2 py-0.5 text-xs font-medium text-info">
                 {t('organizer_role')}
               </span>
             )}
             {participationLabel && myParticipant && (
               <span className={cn(
-                'rounded-full px-2 py-0.5 text-[11px] font-medium',
+                'rounded-full px-2 py-0.5 text-xs font-medium',
                 getParticipationTone(currentRsvp),
               )}>
                 {t('your_response', { status: participationLabel })}
               </span>
             )}
             {actionNotice && (
-              <span className="rounded-full bg-success/15 px-2 py-0.5 text-[11px] font-medium text-success">
+              <span className="rounded-full bg-success/15 px-2 py-0.5 text-xs font-medium text-success">
                 {actionNotice}
               </span>
             )}
@@ -999,56 +989,64 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
           <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
           {canRespond && (
             <>
-              <button
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => handleRsvp('accepted')}
                 disabled={isProcessing}
                 aria-pressed={currentRsvp === 'accepted'}
                 className={cn(
-                  "inline-flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-md transition-colors min-h-[36px] disabled:opacity-50 border",
+                  "h-auto min-h-[36px] gap-1.5 px-3 py-1.5 text-sm font-medium",
                   currentRsvp === 'accepted'
-                    ? "bg-success/15 text-success border-success/30"
-                    : "text-muted-foreground hover:text-success border-border hover:border-success/30 hover:bg-success/10",
+                    ? "border-success/30 bg-success/15 text-success"
+                    : "border-border text-muted-foreground hover:border-success/30 hover:bg-success/10 hover:text-success",
                 )}
               >
                 <Check className="w-3.5 h-3.5" />
                 {t('accept')}
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => handleRsvp('tentative')}
                 disabled={isProcessing}
                 aria-pressed={currentRsvp === 'tentative'}
                 className={cn(
-                  "inline-flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-md transition-colors min-h-[36px] disabled:opacity-50 border",
+                  "h-auto min-h-[36px] gap-1.5 px-3 py-1.5 text-sm font-medium",
                   currentRsvp === 'tentative'
-                    ? "bg-warning/15 text-warning border-warning/30"
-                    : "text-muted-foreground hover:text-warning border-border hover:border-warning/30 hover:bg-warning/10",
+                    ? "border-warning/30 bg-warning/15 text-warning"
+                    : "border-border text-muted-foreground hover:border-warning/30 hover:bg-warning/10 hover:text-warning",
                 )}
               >
                 <HelpCircle className="w-3.5 h-3.5" />
                 {t('maybe')}
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => handleRsvp('declined')}
                 disabled={isProcessing}
                 aria-pressed={currentRsvp === 'declined'}
                 className={cn(
-                  "inline-flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-md transition-colors min-h-[36px] disabled:opacity-50 border",
+                  "h-auto min-h-[36px] gap-1.5 px-3 py-1.5 text-sm font-medium",
                   currentRsvp === 'declined'
-                    ? "bg-destructive/15 text-destructive border-destructive/30"
-                    : "text-muted-foreground hover:text-destructive border-border hover:border-destructive/30 hover:bg-destructive/10",
+                    ? "border-destructive/30 bg-destructive/15 text-destructive"
+                    : "border-border text-muted-foreground hover:border-destructive/30 hover:bg-destructive/10 hover:text-destructive",
                 )}
               >
                 <X className="w-3.5 h-3.5" />
                 {t('decline')}
-              </button>
+              </Button>
               <div className="w-px h-5 bg-border mx-1" />
             </>
           )}
 
           {supportsCalendar && !existingEvent && allowsImport && !isResponseOnly && !isCancellation && (
             <>
-              <button
+              <Button
                 ref={pickerTriggerRef}
+                variant="outline"
+                size="sm"
                 onClick={() => {
                   if (calendars.length <= 1) {
                     handleImport();
@@ -1069,12 +1067,12 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
                   setShowCalendarPicker(true);
                 }}
                 disabled={isProcessing}
-                className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground px-3 py-1.5 rounded-md border border-border hover:bg-muted transition-colors min-h-[36px] disabled:opacity-50"
+                className="h-auto min-h-[36px] gap-1.5 px-3 py-1.5 text-sm text-muted-foreground"
               >
                 <CalendarCheck className="w-3.5 h-3.5" />
                 {t('add_to_calendar')}
                 {calendars.length > 1 && <ChevronDown className="w-3 h-3" />}
-              </button>
+              </Button>
 
               {showCalendarPicker && calendars.length > 1 && pickerPosition && typeof document !== 'undefined' && createPortal(
                 <div
@@ -1085,20 +1083,20 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
                     {t('select_calendar')}
                   </div>
                   {calendars.map((cal) => (
-                    <button
+                    <MenuButton
                       key={cal.id}
                       onClick={() => {
                         setShowCalendarPicker(false);
                         handleImport(cal.id);
                       }}
-                      className="w-full px-3 py-1.5 text-sm text-start hover:bg-muted flex items-center gap-2"
+                      className="gap-2 px-3 py-1.5 text-sm"
                     >
                       <span
                         className="w-3 h-3 rounded-full flex-shrink-0"
                         style={{ backgroundColor: sanitizeColor(cal.color) }}
                       />
                       <span className="truncate text-foreground">{cal.name}</span>
-                    </button>
+                    </MenuButton>
                   ))}
                 </div>,
                 document.body,
@@ -1107,25 +1105,29 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
           )}
 
           {canApplyProposal && (
-            <button
+            <Button
+              variant="outline"
+              size="sm"
               onClick={handleApplyProposal}
               disabled={isProcessing}
-              className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground px-3 py-1.5 rounded-md border border-border hover:bg-muted transition-colors min-h-[36px] disabled:opacity-50"
+              className="h-auto min-h-[36px] gap-1.5 px-3 py-1.5 text-sm text-muted-foreground"
             >
               <CalendarCheck className="w-3.5 h-3.5" />
               {t('apply_proposal')}
-            </button>
+            </Button>
           )}
 
           {supportsCalendar && (existingEvent || parsedEvent) && (
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={handleViewInCalendar}
-              className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground px-3 py-1.5 rounded-md hover:bg-muted transition-colors min-h-[36px]"
+              className="h-auto min-h-[36px] gap-1.5 px-3 py-1.5 text-sm text-muted-foreground"
             >
               <Calendar className="w-3.5 h-3.5" />
               {viewActionLabel}
               <ArrowRight className="w-3 h-3" />
-            </button>
+            </Button>
           )}
 
           {!supportsCalendar && (
@@ -1133,7 +1135,7 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
           )}
 
           {isProcessing && (
-            <Loader2 className="w-4 h-4 animate-spin text-muted-foreground ms-auto" />
+            <Loader size="sm" color="current" className="ms-auto" />
           )}
         </div>
         )}

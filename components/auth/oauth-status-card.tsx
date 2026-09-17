@@ -1,4 +1,5 @@
 "use client";
+import { Loader } from "@/components/ui/loader";
 
 /**
  * Branded full-screen status card for OAuth callback pages.
@@ -10,7 +11,6 @@ import { withBasePath } from "@/lib/browser-navigation";
 import { cn } from "@/lib/utils";
 import { useThemeStore } from "@/stores/theme-store";
 import type { LucideIcon } from "lucide-react";
-import { Loader2 } from "lucide-react";
 
 export interface OAuthStatusAction {
   label: string;
@@ -58,7 +58,7 @@ export function OAuthStatusCard({
   return (
     <div className="min-h-dvh flex flex-col items-center justify-center bg-linear-to-br from-background via-background to-muted/20 px-4 py-10">
       <div className="w-full max-w-100 mx-auto">
-        <div className="rounded-2xl border border-border/60 bg-background/80 backdrop-blur-sm shadow-xl shadow-black/5 dark:shadow-black/20 overflow-hidden">
+        <div className="rounded-2xl border border-border/60 bg-surface/90 backdrop-blur-sm shadow-xl shadow-black/5 dark:shadow-black/20 overflow-hidden">
           {/* Header with instance branding */}
           <div className="px-8 pt-10 pb-6 text-center">
             <div className="inline-flex items-center justify-center w-16 h-16 mb-5">
@@ -82,7 +82,7 @@ export function OAuthStatusCard({
               {Icon ? (
                 <Icon className="w-7 h-7" />
               ) : (
-                <Loader2 className="w-7 h-7 animate-spin" />
+                <Loader size="sm" color="current" />
               )}
             </div>
           </div>

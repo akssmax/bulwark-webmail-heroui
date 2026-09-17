@@ -4,7 +4,11 @@ import { useState, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Star, Plus, Square, CheckSquare } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { AppSelect } from '@/components/ui/select';
+import { Dropdown } from '@/components/ui/dropdown';
+import { Star, Plus } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { validateTemplateName } from '@/lib/template-utils';
 import { BUILT_IN_PLACEHOLDERS } from '@/lib/template-types';
@@ -51,7 +55,6 @@ export function TemplateForm({ template, initialData, onSave, onCancel }: Templa
   const [identityId, setIdentityId] = useState(template?.identityId || '');
   const [isFavorite, setIsFavorite] = useState(template?.isFavorite || false);
   const [nameError, setNameError] = useState<string | null>(null);
-  const [showPlaceholderMenu, setShowPlaceholderMenu] = useState<'subject' | 'body' | null>(null);
 
   const existingCategories = useMemo(() => {
     const cats = new Set(templates.map((t) => t.category).filter(Boolean));
@@ -94,8 +97,15 @@ export function TemplateForm({ template, initialData, onSave, onCancel }: Templa
     } else {
       setBody((prev) => prev + tag);
     }
-    setShowPlaceholderMenu(null);
   };
+
+  const identityOptions = [
+    { value: '', label: tSettings('default_identity') },
+    ...identities.map((id) => ({
+      value: id.id,
+      label: id.name ? `${id.name} <${id.email}>` : id.email,
+    })),
+  ];
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -136,24 +146,7 @@ export function TemplateForm({ template, initialData, onSave, onCancel }: Templa
       <div>
         <div className="flex items-center justify-between">
           <label className="text-sm font-medium text-foreground">{tSettings('subject')}</label>
-          <div className="relative">
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="h-6 px-2 text-xs"
-              onClick={() => setShowPlaceholderMenu(showPlaceholderMenu === 'subject' ? null : 'subject')}
-            >
-              <Plus className="w-3 h-3 me-1" />
-              {t('placeholder')}
-            </Button>
-            {showPlaceholderMenu === 'subject' && (
-              <PlaceholderDropdown
-                onSelect={(p) => insertPlaceholder(p, 'subject')}
-                onClose={() => setShowPlaceholderMenu(null)}
-              />
-            )}
-          </div>
+          <PlaceholderDropdown onSelect={(p) => insertPlaceholder(p, 'subject')} />
         </div>
         <Input
           value={subject}
@@ -166,40 +159,18 @@ export function TemplateForm({ template, initialData, onSave, onCancel }: Templa
       <div>
         <div className="flex items-center justify-between">
           <label className="text-sm font-medium text-foreground">{tSettings('body')}</label>
-          <div className="relative">
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="h-6 px-2 text-xs"
-              onClick={() => setShowPlaceholderMenu(showPlaceholderMenu === 'body' ? null : 'body')}
-            >
-              <Plus className="w-3 h-3 me-1" />
-              {t('placeholder')}
-            </Button>
-            {showPlaceholderMenu === 'body' && (
-              <PlaceholderDropdown
-                onSelect={(p) => insertPlaceholder(p, 'body')}
-                onClose={() => setShowPlaceholderMenu(null)}
-              />
-            )}
-          </div>
+          <PlaceholderDropdown onSelect={(p) => insertPlaceholder(p, 'body')} />
         </div>
-        <textarea
+        <Textarea
           value={body}
           onChange={(e) => setBody(e.target.value)}
           placeholder={tSettings('body_placeholder')}
           rows={6}
-          className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-y"
+          className="mt-1 min-h-[120px] resize-y"
         />
-        <button
-          type="button"
-          onClick={() => setIsHTML(!isHTML)}
-          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
-        >
-          {isHTML ? <CheckSquare className={cn('w-4 h-4')}></CheckSquare> : <Square className={cn('w-4 h-4')}></Square>}
+        <Checkbox isSelected={isHTML} onChange={setIsHTML} className="text-sm text-muted-foreground">
           HTML
-        </button>
+        </Checkbox>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -235,30 +206,27 @@ export function TemplateForm({ template, initialData, onSave, onCancel }: Templa
       {identities.length > 1 && (
         <div>
           <label className="text-sm font-medium text-foreground">{tSettings('identity')}</label>
-          <select
+          <AppSelect
             value={identityId}
-            onChange={(e) => setIdentityId(e.target.value)}
-            className="mt-1 w-full px-3 py-2 text-sm rounded-md bg-background border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-          >
-            <option value="">{tSettings('default_identity')}</option>
-            {identities.map((id) => (
-              <option key={id.id} value={id.id} dir="ltr">
-                {id.name ? `${id.name} <${id.email}>` : id.email}
-              </option>
-            ))}
-          </select>
+            onChange={setIdentityId}
+            options={identityOptions}
+            className="mt-1"
+            aria-label={tSettings('identity')}
+          />
         </div>
       )}
 
       <div className="flex items-center justify-between pt-2">
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          size="sm"
           onClick={() => setIsFavorite(!isFavorite)}
-          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          className="gap-1.5 text-muted-foreground hover:text-foreground"
         >
           <Star className={cn('w-4 h-4', isFavorite && 'fill-amber-400 text-amber-400')} />
           {tSettings('favorite')}
-        </button>
+        </Button>
 
         <div className="flex gap-2">
           <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
@@ -273,33 +241,32 @@ export function TemplateForm({ template, initialData, onSave, onCancel }: Templa
   );
 }
 
-function PlaceholderDropdown({
-  onSelect,
-  onClose,
-}: {
-  onSelect: (name: string) => void;
-  onClose: () => void;
-}) {
+function PlaceholderDropdown({ onSelect }: { onSelect: (name: string) => void }) {
   const t = useTranslations('templates');
 
   return (
-    <>
-      <div className="fixed inset-0 z-40" onClick={onClose} />
-      <div className="absolute end-0 top-full mt-1 z-50 bg-background border border-border rounded-md shadow-lg min-w-[180px]">
-        <div className="p-1">
+    <Dropdown>
+      <Dropdown.Trigger>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="h-6 px-2 text-xs"
+        >
+          <Plus className="w-3 h-3 me-1" />
+          {t('placeholder')}
+        </Button>
+      </Dropdown.Trigger>
+      <Dropdown.Popover className="min-w-[180px]">
+        <Dropdown.Menu aria-label={t('placeholder')}>
           {BUILT_IN_PLACEHOLDERS.map((p) => (
-            <button
-              key={p}
-              type="button"
-              className="w-full text-start px-3 py-1.5 text-sm rounded hover:bg-muted transition-colors"
-              onClick={() => onSelect(p)}
-            >
+            <Dropdown.Item key={p} id={p} onAction={() => onSelect(p)}>
               <span className="font-mono text-xs text-primary">{`{{${p}}}`}</span>
               <span className="ms-2 text-muted-foreground">{t(`placeholders.${p}`)}</span>
-            </button>
+            </Dropdown.Item>
           ))}
-        </div>
-      </div>
-    </>
+        </Dropdown.Menu>
+      </Dropdown.Popover>
+    </Dropdown>
   );
 }

@@ -10,6 +10,8 @@ import { Button } from '@/components/ui/button';
 import { PlayCircle } from 'lucide-react';
 import { usePolicyStore } from '@/stores/policy-store';
 import { MessageListOrderSettings } from './message-list-order-settings';
+import { ThemeBuilder } from '@/components/theme/theme-builder';
+import { Link } from '@/i18n/navigation';
 
 const DENSITY_PREVIEW: Record<Density, { py: string; gap: string; showAvatar: boolean; showPreview: boolean }> = {
   'extra-compact': { py: 'py-0.5', gap: 'gap-1.5', showAvatar: false, showPreview: false },
@@ -48,7 +50,7 @@ function DensityPreview({ density }: { density: Density }) {
               <span className={cn("truncate", row.unread ? "font-semibold text-foreground" : "text-muted-foreground")}>
                 {row.sender}
               </span>
-              <span className="text-[10px] text-muted-foreground flex-shrink-0 tabular-nums">12:00</span>
+              <span className="text-xs text-muted-foreground flex-shrink-0 tabular-nums">12:00</span>
             </div>
             <div className={cn("truncate", row.unread ? "font-medium text-foreground" : "text-foreground/80")}>
               {row.subject}
@@ -155,6 +157,18 @@ export function AppearanceSettings() {
           onChange={(checked) => updateSetting('showOnboardingOnNewDevices', checked)}
         />
       </SettingItem>
+
+      <div className="rounded-xl border border-border bg-surface p-4">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <p className="text-sm text-muted-foreground">
+            Live brand tokens apply across HeroUI components.{' '}
+            <Link href="/design-system" className="text-primary underline-offset-2 hover:underline">
+              Open the design-system page
+            </Link>
+          </p>
+        </div>
+        <ThemeBuilder compact />
+      </div>
     </SettingsSection>
   );
 }

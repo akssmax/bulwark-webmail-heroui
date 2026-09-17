@@ -6,7 +6,8 @@ import { formatDate } from "@/lib/utils";
 import { Email } from "@/lib/jmap/types";
 import { cn } from "@/lib/utils";
 import { Avatar } from "@/components/ui/avatar";
-import { Paperclip, Star, Circle, CheckSquare, Square, Reply, Forward } from "lucide-react";
+import { Paperclip, Star, Circle, Reply, Forward } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useEmailDrag } from "@/hooks/use-email-drag";
 import { useLongPress } from "@/hooks/use-long-press";
 import { useEmailStore } from "@/stores/email-store";
@@ -35,6 +36,7 @@ export function ThreadEmailItem({
   onContextMenu,
 }: ThreadEmailItemProps) {
   const t = useTranslations('email_viewer');
+  const tBatch = useTranslations('email_list.batch_actions');
   const isUnread = !email.keywords?.$seen;
   const isStarred = email.keywords?.$flagged;
   const isAnswered = email.keywords?.$answered;
@@ -69,11 +71,6 @@ export function ThreadEmailItem({
 
   const handleContextMenu = (e: React.MouseEvent) => {
     onContextMenu?.(e, email);
-  };
-
-  const handleCheckboxClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    toggleEmailSelection(email.id);
   };
 
   const handleClick = (e: React.MouseEvent) => {
@@ -119,22 +116,13 @@ export function ThreadEmailItem({
       <div className="flex items-start gap-3">
         {/* Checkbox - only visible when in selection mode */}
         {selectedEmailIds.size > 0 && (
-          <button
-            onClick={handleCheckboxClick}
-            className={cn(
-              "p-1 rounded mt-0.5 flex-shrink-0 transition-all duration-200",
-              "hover:bg-muted/50 hover:scale-110",
-              "active:scale-95",
-              "animate-in fade-in zoom-in-95 duration-150",
-              isChecked && "text-primary"
-            )}
-          >
-            {isChecked ? (
-              <CheckSquare className="w-3.5 h-3.5 animate-in zoom-in-50 duration-200" />
-            ) : (
-              <Square className="w-3.5 h-3.5 text-muted-foreground opacity-60 hover:opacity-100 transition-opacity" />
-            )}
-          </button>
+          <Checkbox
+            isSelected={isChecked}
+            aria-label={tBatch('select')}
+            className="mt-0.5 flex-shrink-0"
+            contentClassName="p-1"
+            onChange={() => toggleEmailSelection(email.id)}
+          />
         )}
 
         {/* Unread indicator — anchored on the first line (top padding + half a

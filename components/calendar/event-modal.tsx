@@ -4,6 +4,9 @@ import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { AppSelect } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { LinkifiedText } from "@/components/ui/linkified-text";
 import { X, Trash2, Check, Users, CalendarDays, Copy, Pencil, Clock, MapPin, Video, Repeat, Bell, AlignLeft, Plus } from "lucide-react";
 import { format, parseISO, addHours, addDays, isSameDay } from "date-fns";
@@ -31,6 +34,7 @@ import { useFormatEventDate } from "@/hooks/use-format-event-date";
 import { useIsPaneScoped } from "@/hooks/use-pane-context";
 import { calendarHooks } from "@/lib/plugin-hooks";
 import type { ConflictWarning } from "@/lib/plugin-types";
+import { DatePickerField, TimePickerField } from "@/components/ui/date-picker";
 
 export interface PendingEventPreview {
   start: Date;
@@ -703,9 +707,9 @@ export function EventModal({
       <div ref={modalRef} role="dialog" aria-modal={isMobile || undefined} aria-label={event.title || t("events.no_title")} className={isMobile ? mobileRootClass : "flex flex-col h-full bg-background"}>
         <div className="flex items-center justify-between px-6 py-4 border-b border-border flex-shrink-0">
           <h2 className="text-lg font-semibold truncate">{event.title || t("events.no_title")}</h2>
-          <button onClick={onClose} className="p-1.5 rounded-md hover:bg-muted transition-colors duration-150 text-muted-foreground hover:text-foreground" aria-label={t("form.cancel")}>
+          <Button variant="ghost" size="icon" onClick={onClose} aria-label={t("form.cancel")}>
             <X className="w-5 h-5" />
-          </button>
+          </Button>
         </div>
 
         <div className="flex-1 overflow-y-auto">
@@ -861,9 +865,9 @@ export function EventModal({
               <p className="text-xs text-muted-foreground mt-0.5 ps-[18px]">{eventCalendar.name}</p>
             )}
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-md hover:bg-muted transition-colors duration-150 flex-shrink-0 mt-0.5 text-muted-foreground hover:text-foreground" aria-label={t("form.cancel")}>
+          <Button variant="ghost" size="icon" onClick={onClose} className="flex-shrink-0 mt-0.5" aria-label={t("form.cancel")}>
             <X className="w-5 h-5" />
-          </button>
+          </Button>
         </div>
 
         {/* Content */}
@@ -1047,9 +1051,9 @@ export function EventModal({
         <h2 className="text-lg font-semibold">
           {isEdit ? t("events.edit") : t("events.create")}
         </h2>
-        <button onClick={onClose} className="p-1.5 rounded-md hover:bg-muted transition-colors duration-150 text-muted-foreground hover:text-foreground" aria-label={t("form.cancel")}>
+        <Button variant="ghost" size="icon" onClick={onClose} aria-label={t("form.cancel")}>
           <X className="w-5 h-5" />
-        </button>
+        </Button>
       </div>
 
       <div className="flex-1 overflow-y-auto">
@@ -1067,13 +1071,13 @@ export function EventModal({
 
           <div>
             <label className="text-sm font-medium mb-1 block">{t("form.description")}</label>
-            <textarea
+            <Textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder={t("form.description")}
               rows={3}
               maxLength={10000}
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ring"
+              className="min-h-0 resize-none"
             />
           </div>
 
@@ -1148,59 +1152,36 @@ export function EventModal({
             )}
           </div>
 
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="allDay"
-              checked={allDay}
-              onChange={(e) => setAllDay(e.target.checked)}
-              className="rounded border-input"
-            />
-            <label htmlFor="allDay" className="text-sm">{t("form.all_day_event")}</label>
-          </div>
+          <Checkbox isSelected={allDay} onChange={setAllDay} className="text-sm">
+              {t("form.all_day_event")}
+            </Checkbox>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div>
-              <label className="text-sm font-medium mb-1 block">{t("form.start_date")}</label>
-              <input
-                type="date"
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <DatePickerField
+                label={t("form.start_date")}
                 value={startDate}
                 onChange={(e) => handleStartDateChange(e.target.value)}
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               />
-            </div>
-            {!allDay && (
-              <div>
-                <label className="text-sm font-medium mb-1 block">{t("form.start_time")}</label>
-                <input
-                  type="time"
+              {!allDay && (
+                <TimePickerField
+                  label={t("form.start_time")}
                   value={startTime}
                   onChange={(e) => handleStartTimeChange(e.target.value)}
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 />
-              </div>
-            )}
-            <div>
-              <label className="text-sm font-medium mb-1 block">{t("form.end_date")}</label>
-              <input
-                type="date"
+              )}
+              <DatePickerField
+                label={t("form.end_date")}
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               />
-            </div>
-            {!allDay && (
-              <div>
-                <label className="text-sm font-medium mb-1 block">{t("form.end_time")}</label>
-                <input
-                  type="time"
+              {!allDay && (
+                <TimePickerField
+                  label={t("form.end_time")}
                   value={endTime}
                   onChange={(e) => setEndTime(e.target.value)}
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 />
-              </div>
-            )}
-          </div>
+              )}
+            </div>
 
           {pluginConflictWarnings.length > 0 && (
             <div className="space-y-1.5">
@@ -1225,54 +1206,52 @@ export function EventModal({
           {selectableCalendars.length > 1 && (
             <div>
               <label className="text-sm font-medium mb-1 block">{t("form.calendar_select")}</label>
-              <select
+              <AppSelect
                 value={calendarId}
-                onChange={(e) => setCalendarId(e.target.value)}
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-              >
-                {selectableCalendars.map((cal) => (
-                  <option key={cal.id} value={cal.id}>
-                    {cal.name}
-                  </option>
-                ))}
-              </select>
+                onChange={setCalendarId}
+                options={selectableCalendars.map((cal) => ({ value: cal.id, label: cal.name }))}
+                aria-label={t("form.calendar_select")}
+              />
             </div>
           )}
 
           <div>
             <label className="text-sm font-medium mb-1 block">{t("recurrence.title")}</label>
             <div className="flex items-center gap-2">
-              <select
+              <AppSelect
                 value={recurrence}
-                onChange={(e) => {
-                  const value = e.target.value as RecurrenceOption;
-                  if (value === "custom") {
+                onChange={(value) => {
+                  const option = value as RecurrenceOption;
+                  if (option === "custom") {
                     recurrenceBeforeCustomRef.current = recurrence;
                     setRecurrence("custom");
                     setShowRecurrenceEditor(true);
                   } else {
-                    setRecurrence(value);
+                    setRecurrence(option);
                     setShowRecurrenceEditor(false);
                   }
                 }}
-                className="flex-1 min-w-0 rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-              >
-                <option value="none">{t("recurrence.none")}</option>
-                <option value="daily">{t("recurrence.daily")}</option>
-                <option value="weekly">{t("recurrence.weekly")}</option>
-                <option value="monthly">{t("recurrence.monthly")}</option>
-                <option value="yearly">{t("recurrence.yearly")}</option>
-                <option value="custom">{customRuleSummary || t("recurrence.custom")}</option>
-              </select>
+                options={[
+                  { value: "none", label: t("recurrence.none") },
+                  { value: "daily", label: t("recurrence.daily") },
+                  { value: "weekly", label: t("recurrence.weekly") },
+                  { value: "monthly", label: t("recurrence.monthly") },
+                  { value: "yearly", label: t("recurrence.yearly") },
+                  { value: "custom", label: customRuleSummary || t("recurrence.custom") },
+                ]}
+                className="flex-1 min-w-0"
+                aria-label={t("recurrence.title")}
+              />
               {recurrence === "custom" && !showRecurrenceEditor && (
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="icon"
                   onClick={() => setShowRecurrenceEditor(true)}
-                  className="p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                   aria-label={t("recurrence.edit_custom")}
                 >
                   <Pencil className="w-4 h-4" />
-                </button>
+                </Button>
               )}
             </div>
             {showRecurrenceEditor && (
@@ -1310,59 +1289,54 @@ export function EventModal({
                         aria-label={t("alerts.amount")}
                       />
                     )}
-                    <select
+                    <AppSelect
                       value={row.unit}
-                      onChange={(e) => {
-                        const unit = e.target.value as AlertUnit;
+                      onChange={(unit) => {
+                        const alertUnit = unit as AlertUnit;
                         updateAlertRow(row.id, {
-                          unit,
-                          value: unit === "at_time" ? 0 : (row.value || 1),
+                          unit: alertUnit,
+                          value: alertUnit === "at_time" ? 0 : (row.value || 1),
                         });
                       }}
-                      className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                      options={[
+                        { value: "at_time", label: t("alerts.at_time") },
+                        { value: "minutes", label: t("alerts.unit_minutes_before") },
+                        { value: "hours", label: t("alerts.unit_hours_before") },
+                        { value: "days", label: t("alerts.unit_days_before") },
+                        { value: "weeks", label: t("alerts.unit_weeks_before") },
+                      ]}
+                      className="flex-1"
                       aria-label={t("alerts.unit")}
-                    >
-                      <option value="at_time">{t("alerts.at_time")}</option>
-                      <option value="minutes">{t("alerts.unit_minutes_before")}</option>
-                      <option value="hours">{t("alerts.unit_hours_before")}</option>
-                      <option value="days">{t("alerts.unit_days_before")}</option>
-                      <option value="weeks">{t("alerts.unit_weeks_before")}</option>
-                    </select>
-                    <button
+                    />
+                    <Button
                       type="button"
+                      variant="ghost"
+                      size="icon"
                       onClick={() => removeAlertRow(row.id)}
-                      className="p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                       aria-label={t("alerts.remove")}
                     >
                       <Trash2 className="w-4 h-4" />
-                    </button>
+                    </Button>
                   </div>
                 ))}
               </div>
             )}
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
               onClick={addAlertRow}
-              className="mt-2 inline-flex items-center gap-1 text-sm text-primary hover:underline"
+              className="mt-2 h-auto min-h-0 px-0 text-primary hover:underline"
             >
               <Plus className="w-4 h-4" />
               {t("alerts.add")}
-            </button>
+            </Button>
           </div>
 
           {attendees.length > 0 && (
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="sendInvitations"
-                checked={sendInvitations}
-                onChange={(e) => setSendInvitations(e.target.checked)}
-                className="rounded border-input"
-              />
-              <label htmlFor="sendInvitations" className="text-sm">
+            <Checkbox isSelected={sendInvitations} onChange={setSendInvitations} className="text-sm">
                 {t("participants.send_invitations")}
-              </label>
-            </div>
+              </Checkbox>
           )}
         </div>
       </div>

@@ -1,28 +1,13 @@
 'use client';
+import { Loader } from "@/components/ui/loader";
 
 import { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import {
-  ArrowLeft,
-  ArrowUpCircle,
-  Download,
-  Loader2,
-  Puzzle,
-  SwatchBook,
-  Star,
-  Trash2,
-  Check,
-  Settings as SettingsIcon,
-  ExternalLink,
-  Shield,
-  AlertTriangle,
-  FileCode,
-  ChevronDown,
-  ChevronUp,
-} from 'lucide-react';
+import { ArrowLeft, ArrowUpCircle, Download, Puzzle, SwatchBook, Star, Trash2, Check, Settings as SettingsIcon, ExternalLink, Shield, AlertTriangle, FileCode, ChevronDown, ChevronUp } from "lucide-react";
 import { apiFetch } from '@/lib/browser-navigation';
 import { compareVersions, isVersionSatisfied } from '@/lib/version-compare';
+import { Button } from '@/components/ui/button';
 
 const CURRENT_APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION || '0.0.0';
 
@@ -186,7 +171,7 @@ export default function MarketplacePreviewPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12 text-muted-foreground text-sm">
-        <Loader2 className="w-4 h-4 animate-spin me-2" />
+        <Loader size="sm" color="current" className="me-2" />
         Loading...
       </div>
     );
@@ -280,7 +265,7 @@ export default function MarketplacePreviewPage() {
               )}
             </div>
             <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground flex-wrap">
-              <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
+              <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${
                 isPlugin
                   ? 'bg-blue-100 text-blue-700 dark:bg-blue-950/30 dark:text-blue-400'
                   : 'bg-purple-100 text-purple-700 dark:bg-purple-950/30 dark:text-purple-400'
@@ -305,15 +290,15 @@ export default function MarketplacePreviewPage() {
           {data.installed ? (
             <>
               {updateAvailable && (
-                <button
+                <Button
                   onClick={handleInstall}
                   disabled={installing || !!bundle.error}
                   title={`Update from v${data.installedVersion} to v${ext.latestVersion}`}
-                  className="inline-flex items-center gap-1.5 h-9 px-4 rounded-md bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="h-9 gap-1.5 bg-blue-600 text-white hover:bg-blue-700"
                 >
-                  {installing ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowUpCircle className="w-4 h-4" />}
+                  {installing ? <Loader size="sm" color="current" /> : <ArrowUpCircle className="w-4 h-4" />}
                   Update to v{ext.latestVersion}
-                </button>
+                </Button>
               )}
               <Link
                 href={isPlugin ? `/admin/plugins/${ext.slug}` : '/admin/themes'}
@@ -322,27 +307,28 @@ export default function MarketplacePreviewPage() {
                 <SettingsIcon className="w-4 h-4" />
                 Manage
               </Link>
-              <button
+              <Button
+                variant="destructive"
                 onClick={handleUninstall}
                 disabled={uninstalling}
-                className="inline-flex items-center gap-1.5 h-9 px-3 rounded-md bg-destructive text-destructive-foreground text-sm font-medium hover:bg-destructive/90 disabled:opacity-50 transition-colors"
+                className="h-9 gap-1.5"
               >
-                {uninstalling ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                {uninstalling ? <Loader size="sm" color="current" /> : <Trash2 className="w-4 h-4" />}
                 Uninstall
-              </button>
+              </Button>
             </>
           ) : (
-            <button
+            <Button
               onClick={handleInstall}
               disabled={installing || !!bundle.error || versionMismatch}
               title={versionMismatch
                 ? `Requires app v${ext.minAppVersion}+. You are running v${CURRENT_APP_VERSION}. Update Bulwark to install.`
                 : undefined}
-              className="inline-flex items-center gap-1.5 h-9 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="h-9 gap-1.5"
             >
-              {installing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+              {installing ? <Loader size="sm" color="current" /> : <Download className="w-4 h-4" />}
               Install
-            </button>
+            </Button>
           )}
         </div>
       </div>
@@ -385,7 +371,7 @@ export default function MarketplacePreviewPage() {
         {ext.tags.length > 0 && (
           <div className="flex flex-wrap gap-1 mt-3">
             {ext.tags.map(tag => (
-              <span key={tag} className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+              <span key={tag} className="text-xs px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
                 {tag}
               </span>
             ))}
@@ -495,7 +481,7 @@ export default function MarketplacePreviewPage() {
               <li key={key} className="py-2">
                 <div className="flex items-center gap-2">
                   <code className="text-xs font-mono text-foreground">{key}</code>
-                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{field.type}</span>
+                  <span className="text-xs px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{field.type}</span>
                 </div>
                 <div className="text-sm text-foreground mt-0.5">{field.label}</div>
                 {field.description && (
@@ -510,16 +496,17 @@ export default function MarketplacePreviewPage() {
       {/* Source / manifest disclosure */}
       {bundle.manifest && (
         <section className="border border-border rounded-lg">
-          <button
+          <Button
+            variant="ghost"
             onClick={() => setShowManifest(v => !v)}
-            className="w-full flex items-center justify-between gap-2 px-4 py-3 text-start hover:bg-muted/30 transition-colors"
+            className="w-full h-auto justify-between gap-2 px-4 py-3 text-start font-normal hover:bg-muted/30"
           >
             <div className="flex items-center gap-2">
               <FileCode className="w-4 h-4 text-muted-foreground" />
               <h2 className="text-sm font-medium text-foreground">manifest.json</h2>
             </div>
             {showManifest ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
-          </button>
+          </Button>
           {showManifest && (
             <pre className="px-4 pb-4 text-xs font-mono overflow-x-auto text-foreground whitespace-pre">
               {JSON.stringify(bundle.manifest, null, 2)}
@@ -530,19 +517,20 @@ export default function MarketplacePreviewPage() {
 
       {bundle.source && (
         <section className="border border-border rounded-lg">
-          <button
+          <Button
+            variant="ghost"
             onClick={() => setShowSource(v => !v)}
-            className="w-full flex items-center justify-between gap-2 px-4 py-3 text-start hover:bg-muted/30 transition-colors"
+            className="w-full h-auto justify-between gap-2 px-4 py-3 text-start font-normal hover:bg-muted/30"
           >
             <div className="flex items-center gap-2">
               <FileCode className="w-4 h-4 text-muted-foreground" />
               <h2 className="text-sm font-medium text-foreground">{bundle.source.name}</h2>
               {bundle.source.truncated && (
-                <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400">truncated</span>
+                <span className="text-xs px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400">truncated</span>
               )}
             </div>
             {showSource ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
-          </button>
+          </Button>
           {showSource && (
             <pre className="px-4 pb-4 text-xs font-mono overflow-x-auto text-foreground whitespace-pre max-h-[600px] overflow-y-auto">
               {bundle.source.content}

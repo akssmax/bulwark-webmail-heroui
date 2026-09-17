@@ -6,6 +6,7 @@ import { useSettingsStore } from '@/stores/settings-store';
 import { SettingsSection, SettingItem, Select, ToggleSwitch } from './settings-section';
 import { TrustedSendersModal } from '@/components/trusted-senders-modal';
 import { ChevronRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { usePolicyStore } from '@/stores/policy-store';
 import { useContactStore } from '@/stores/contact-store';
 import { useAuthStore } from '@/stores/auth-store';
@@ -65,13 +66,14 @@ export function ContentSendersSettings() {
       </SettingItem>
 
       <SettingItem label={t('trusted_senders.label')} description={t('trusted_senders.description')}>
-        <button
+        <Button
+          variant="secondary"
           onClick={() => setShowTrustedModal(true)}
-          className="flex items-center gap-2 px-3 py-1.5 bg-muted hover:bg-accent rounded-md transition-colors"
+          className="flex items-center gap-2"
         >
           <span className="text-sm text-foreground">{getTrustedSendersCount()}</span>
           <ChevronRight className="w-4 h-4 text-muted-foreground" />
-        </button>
+        </Button>
       </SettingItem>
 
       <SettingItem label={t('trusted_senders.use_address_book_label')} description={t('trusted_senders.use_address_book_description')}>

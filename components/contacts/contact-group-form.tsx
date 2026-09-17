@@ -129,12 +129,13 @@ export function ContactGroupForm({
                 const cEmail = getContactPrimaryEmail(contact);
                 const isSelected = selectedIds.has(contact.id);
                 return (
-                  <button
+                  <Button
                     key={contact.id}
                     type="button"
+                    variant="ghost"
                     onClick={() => toggleMember(contact.id)}
                     className={cn(
-                      "w-full flex items-center gap-3 px-3 py-2.5 text-start transition-colors",
+                      "w-full flex items-center gap-3 justify-start px-3 py-2.5 h-auto min-h-0 font-normal",
                       "hover:bg-muted",
                       isSelected && "bg-primary/5"
                     )}
@@ -154,7 +155,7 @@ export function ContactGroupForm({
                         <div className="text-xs text-muted-foreground truncate">{cEmail}</div>
                       )}
                     </div>
-                  </button>
+                  </Button>
                 );
               })
             )}
@@ -172,13 +173,15 @@ export function ContactGroupForm({
                   className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-primary/10 text-primary"
                 >
                   {getContactDisplayName(contact)}
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
+                    size="icon"
                     onClick={() => toggleMember(id)}
-                    className="hover:text-red-600 dark:hover:text-red-400"
+                    className="h-5 w-5 min-w-0 hover:text-red-600 dark:hover:text-red-400"
                   >
                     <X className="w-3 h-3" />
-                  </button>
+                  </Button>
                 </span>
               );
             })}

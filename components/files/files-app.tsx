@@ -1,4 +1,5 @@
 "use client";
+import { Loader } from "@/components/ui/loader";
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "@/i18n/navigation";
@@ -31,7 +32,7 @@ import { useWopiStatus, fileExtension } from "@/hooks/use-wopi-status";
 import { loadFilesSettings } from "@/components/files/files-settings-dialog";
 import type { FolderLayout } from "@/components/files/files-settings-dialog";
 import { AppTopBannerSlot } from "@/components/plugins/app-top-banner-slot";
-import { AlertTriangle, Loader2 } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import { isFilePreviewable } from "@/lib/file-preview";
 import { appPath, buildFilesPath, parseFilesPath, type FilesDeepLink } from "@/lib/deep-links";
 import { consumePendingDeepLinkEntry, subscribePendingDeepLink } from "@/lib/deep-link-handoff";
@@ -573,7 +574,7 @@ export function FilesApp({ linkSegments }: FilesAppProps = {}) {
       {refreshIndicator}
       <div className="flex flex-1 min-h-0 overflow-hidden">
       {!isMobile && !isEmbedded && (
-        <div className="w-14 bg-secondary flex flex-col flex-shrink-0" style={{ borderRight: '1px solid rgba(128, 128, 128, 0.3)' }}>
+        <div className="w-14 bg-sidebar flex flex-col flex-shrink-0 border-e border-sidebar-border">
           <NavigationRail
             collapsed
             quota={quota}
@@ -740,7 +741,7 @@ export function FilesApp({ linkSegments }: FilesAppProps = {}) {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
           <div className="w-[22rem] max-w-[90vw] rounded-lg border border-border bg-background p-6 shadow-xl">
             <div className="flex items-center gap-3">
-              <Loader2 className="w-5 h-5 text-primary animate-spin shrink-0" />
+              <Loader size="md" color="accent" />
               <div>
                 <p className="text-sm font-medium">{t("migration_title")}</p>
                 <p className="text-xs text-muted-foreground">{t("migration_description")}</p>

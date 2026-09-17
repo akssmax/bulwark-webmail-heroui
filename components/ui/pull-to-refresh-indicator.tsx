@@ -1,8 +1,9 @@
 "use client";
+import { Loader } from "@/components/ui/loader";
 
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
-import { Loader2 } from "lucide-react";
+
 import { cn } from "@/lib/utils";
 
 /**
@@ -114,7 +115,7 @@ export function PullToRefreshIndicator({ store, threshold, labels }: PullToRefre
       }}
     >
       {spinning ? (
-        <Loader2 className="h-5 w-5 animate-spin text-primary motion-reduce:animate-none" aria-hidden="true" />
+        <Loader size="md" color="accent" aria-hidden="true" />
       ) : (
         <svg className="h-5 w-5 -rotate-90" viewBox="0 0 24 24" aria-hidden="true">
           <circle

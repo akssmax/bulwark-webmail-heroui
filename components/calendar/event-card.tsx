@@ -3,6 +3,7 @@
 import { useCallback, useState, type CSSProperties, type DragEvent } from "react";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import type { CalendarEvent, Calendar } from "@/lib/jmap/types";
 import { format } from "date-fns";
 import { Users } from "lucide-react";
@@ -126,7 +127,8 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
 
   if (variant === "chip") {
     return (
-      <button
+      <Button
+        variant="ghost"
         onClick={(e) => { e.stopPropagation(); onClick?.(e.currentTarget.getBoundingClientRect()); }}
         onMouseEnter={(e) => onMouseEnter?.(e.currentTarget.getBoundingClientRect())}
         onMouseLeave={() => onMouseLeave?.()}
@@ -134,9 +136,8 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
         aria-label={ariaLabel}
         {...dragProps}
         className={cn(
-          "flex items-center gap-1 w-full text-start text-xs px-1 py-0.5 rounded truncate",
-          "min-h-[44px] sm:min-h-0",
-          "hover:opacity-80 transition-opacity",
+          "flex items-center gap-1 w-full justify-start text-start text-xs px-1 py-0.5 h-auto min-h-[44px] sm:min-h-0 rounded truncate",
+          "hover:opacity-80 hover:bg-transparent transition-opacity",
           isSelected && "ring-2 ring-primary",
           isBeingDragged && "opacity-50",
           isCancelled && !isBeingDragged && "opacity-60",
@@ -149,13 +150,14 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
           style={{ backgroundColor: color }}
         />
         <span className={cn("truncate", isCancelled && "line-through")}>{event.title || t("events.no_title")}</span>
-      </button>
+      </Button>
     );
   }
 
   if (variant === "span") {
     return (
-      <button
+      <Button
+        variant="ghost"
         onClick={(e) => { e.stopPropagation(); onClick?.(e.currentTarget.getBoundingClientRect()); }}
         onMouseEnter={(e) => onMouseEnter?.(e.currentTarget.getBoundingClientRect())}
         onMouseLeave={() => onMouseLeave?.()}
@@ -163,8 +165,8 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
         aria-label={ariaLabel}
         {...dragProps}
         className={cn(
-          "w-full h-full text-start rounded-r px-1.5 py-0.5 text-xs overflow-hidden",
-          "hover:opacity-90 transition-opacity cursor-pointer",
+          "w-full h-full justify-start text-start rounded-r px-1.5 py-0.5 h-auto min-h-0 text-xs overflow-hidden",
+          "hover:opacity-90 hover:bg-transparent transition-opacity cursor-pointer",
           continuesAfter && "rounded-r-sm",
           continuesAfter && "pe-2",
           isSelected && "ring-2 ring-primary",
@@ -180,12 +182,13 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
           )}
           <span className={cn("truncate font-medium", isCancelled && "line-through")}>{event.title || t("events.no_title")}</span>
         </div>
-      </button>
+      </Button>
     );
   }
 
   return (
-    <button
+    <Button
+      variant="ghost"
       onClick={(e) => { e.stopPropagation(); onClick?.(e.currentTarget.getBoundingClientRect()); }}
       onMouseEnter={(e) => onMouseEnter?.(e.currentTarget.getBoundingClientRect())}
       onMouseLeave={() => onMouseLeave?.()}
@@ -194,8 +197,8 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
       {...dragProps}
       data-calendar-event
       className={cn(
-        "w-full h-full text-start rounded-r px-1.5 py-0.5 text-xs overflow-hidden",
-        "hover:opacity-90 transition-opacity cursor-pointer",
+        "w-full h-full justify-start text-start rounded-r px-1.5 py-0.5 h-auto min-h-0 text-xs overflow-hidden",
+        "hover:opacity-90 hover:bg-transparent transition-opacity cursor-pointer",
         isSelected && "ring-2 ring-primary",
         isBeingDragged && "opacity-50",
         isCancelled && !isBeingDragged && "opacity-60",
@@ -205,20 +208,20 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
     >
       <div className={cn("font-medium truncate", isCancelled && "line-through")}>{event.title || t("events.no_title")}</div>
       {!event.showWithoutTime && (
-        <div className="opacity-80 text-[10px]">
+        <div className="opacity-80 text-xs">
           {timeString}
         </div>
       )}
       {getParticipantCount(event) > 0 && (
         <div
-          className="flex items-center gap-0.5 opacity-70 text-[10px]"
+          className="flex items-center gap-0.5 opacity-70 text-xs"
           title={t("participants.count", { count: getParticipantCount(event) })}
         >
           <Users className="w-3 h-3" />
           <span>{getParticipantCount(event)}</span>
         </div>
       )}
-    </button>
+    </Button>
   );
 }
 

@@ -1,4 +1,5 @@
 "use client";
+import { Loader } from "@/components/ui/loader";
 
 import { useState, useEffect, useLayoutEffect, useMemo, useRef, useCallback, useId } from "react";
 import { Email, ContactCard, Mailbox } from "@/lib/jmap/types";
@@ -13,6 +14,8 @@ import { withBasePath } from "@/lib/browser-navigation";
 import { buildContactsPath, buildMailPath } from "@/lib/deep-links";
 import { useCopyLink } from "@/hooks/use-copy-link";
 import { Button } from "@/components/ui/button";
+import { MenuButton } from "@/components/ui/menu-button";
+import { AppModal } from "@/components/ui/modal";
 import { Avatar } from "@/components/ui/avatar";
 import { formatFileSize, cn, buildMailboxTree, MailboxNode, formatDateTime, generateUUID } from "@/lib/utils";
 import { emailDisplayDate } from "@/lib/email-date";
@@ -24,65 +27,7 @@ import { getEmailTagIds } from "@/lib/thread-utils";
 import { getSecurityStatus, extractListHeaders } from "@/lib/email-headers";
 import { emailToReadView } from "@/lib/plugin-projection";
 import { generateEmailSource } from "@/lib/email-source";
-import {
-  Reply,
-  ReplyAll,
-  Forward,
-  Paperclip,
-  Trash2,
-  Archive,
-  Star,
-  MoreVertical,
-  ChevronDown,
-  ChevronUp,
-  ChevronLeft,
-  ChevronRight,
-  Download,
-  Mail,
-  MailOpen,
-  Loader2,
-  Printer,
-  FileText,
-  FileImage,
-  FileVideo,
-  FileAudio,
-  FileArchive,
-  File,
-  Eye,
-  Shield,
-  Image,
-  Tag,
-  X,
-  Check,
-  AlertTriangle,
-  Minus,
-  ShieldCheck,
-  ShieldAlert,
-  Code,
-  Copy,
-  Brain,
-  Keyboard,
-  Phone,
-  Building,
-  MapPin,
-  StickyNote,
-  PanelRightClose,
-  PanelRightOpen,
-  Send,
-  FolderInput,
-  Inbox,
-  Folder,
-  Sun,
-  Upload,
-  Moon,
-  EditIcon,
-  PlayCircle,
-  PenSquare,
-  CalendarClock,
-  Link as LinkIcon,
-  Maximize2,
-  Minimize2,
-} from "lucide-react";
+import { Reply, ReplyAll, Forward, Paperclip, Trash2, Archive, Star, MoreVertical, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Download, Mail, MailOpen, Printer, FileText, FileImage, FileVideo, FileAudio, FileArchive, File, Eye, Shield, Image, Tag, X, Check, AlertTriangle, Minus, ShieldCheck, ShieldAlert, Code, Copy, Brain, Keyboard, Phone, Building, MapPin, StickyNote, PanelRightClose, PanelRightOpen, Send, FolderInput, Inbox, Folder, Sun, Upload, Moon, EditIcon, PlayCircle, PenSquare, CalendarClock, Link as LinkIcon, Maximize2, Minimize2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import type { Attachment as PostalMimeAttachment } from 'postal-mime';
@@ -402,13 +347,15 @@ export function ContactSidebarPanel({
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-border">
         <h3 className="text-sm font-semibold text-foreground truncate">{t('contact_sidebar.title')}</h3>
-        <button
+        <Button
+          variant="ghost"
+          size="icon"
           onClick={onClose}
-          className="p-1 rounded hover:bg-muted transition-colors"
+          className="h-8 w-8"
           aria-label={t('contact_sidebar.close')}
         >
           <PanelRightClose className="w-4 h-4 text-muted-foreground" />
-        </button>
+        </Button>
       </div>
 
       {/* Content */}
@@ -448,23 +395,27 @@ export function ContactSidebarPanel({
             <Send className="w-3.5 h-3.5" />
             {t('contact_sidebar.action_email')}
           </MailtoLink>
-          <button
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => handleCopy(primaryEmail)}
-            className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground px-3 py-2 rounded-md hover:bg-muted transition-colors border border-border"
+            className="h-auto gap-1.5 px-3 py-2 text-xs font-medium text-muted-foreground"
             title={t('contact_sidebar.action_copy_title')}
           >
             <Copy className="w-3.5 h-3.5" />
             {t('contact_sidebar.action_copy')}
-          </button>
+          </Button>
           {contact && onEditContact && (
-            <button
+            <Button
+              variant="outline"
+              size="sm"
               onClick={onEditContact}
-              className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground px-3 py-2 rounded-md hover:bg-muted transition-colors border border-border"
+              className="h-auto gap-1.5 px-3 py-2 text-xs font-medium text-muted-foreground"
               title={t('contact_sidebar.action_edit_title')}
             >
               <EditIcon className="w-3.5 h-3.5" />
               {tCommon('edit')}
-            </button>
+            </Button>
           )}
         </div>
 
@@ -479,13 +430,15 @@ export function ContactSidebarPanel({
                     <MailtoLink to={e.address} className="text-sm text-primary hover:underline truncate">
                       {e.address}
                     </MailtoLink>
-                    <button
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       onClick={() => handleCopy(e.address)}
-                      className="p-1 rounded hover:bg-muted transition-colors opacity-0 group-hover:opacity-100 shrink-0"
+                      className="h-7 w-7 shrink-0 opacity-0 group-hover:opacity-100"
                       title="Copy"
                     >
                       <Copy className="w-3 h-3 text-muted-foreground" />
-                    </button>
+                    </Button>
                   </div>
                 ))}
               </SidebarSection>
@@ -499,13 +452,15 @@ export function ContactSidebarPanel({
                     <a href={`tel:${p.number}`} className="text-sm text-primary hover:underline">
                       {p.number}
                     </a>
-                    <button
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       onClick={() => handleCopy(p.number)}
-                      className="p-1 rounded hover:bg-muted transition-colors opacity-0 group-hover:opacity-100 shrink-0"
+                      className="h-7 w-7 shrink-0 opacity-0 group-hover:opacity-100"
                       title="Copy"
                     >
                       <Copy className="w-3 h-3 text-muted-foreground" />
-                    </button>
+                    </Button>
                   </div>
                 ))}
               </SidebarSection>
@@ -558,13 +513,15 @@ export function ContactSidebarPanel({
               {t('contact_sidebar.not_in_contacts')}
             </p>
             {onAddToContacts && (
-              <button
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => onAddToContacts(email, senderName)}
-                className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:text-primary/80 px-3 py-2 rounded-md hover:bg-muted transition-colors border border-border"
+                className="h-auto gap-1.5 px-3 py-2 text-xs font-medium text-primary"
               >
                 <Mail className="w-3.5 h-3.5" />
                 {t('contact_sidebar.add_to_contacts')}
-              </button>
+              </Button>
             )}
           </div>
         )}
@@ -726,7 +683,6 @@ export function EmailViewer({
   const isDraft = email?.keywords?.['$draft'] === true;
   const isScheduled = email?.isScheduled === true;
   const canCancelScheduled = isScheduled && email?.scheduledUndoStatus === 'pending';
-
 
   // Tablet list visibility
   const { isTablet, isMobile } = useDeviceDetection();
@@ -980,7 +936,6 @@ export function EmailViewer({
   useEffect(() => {
     try { localStorage.setItem('emailDetailSidebarWidth', String(detailSidebarWidth)); } catch { /* ignore */ }
   }, [detailSidebarWidth]);
-
 
   // Build mailbox tree for move-to dropdown
   const moveTargetIds = useMemo(() => new Set(
@@ -2083,17 +2038,19 @@ export function EmailViewer({
 
   // Shared "Download all" chip, shown only when bundling is worthwhile (2+).
   const downloadAllButton = effectiveAttachments.length > 1 ? (
-    <button
+    <Button
+      variant="outline"
+      size="sm"
       onClick={(e) => { e.stopPropagation(); handleDownloadAllAttachments(); }}
       disabled={isDownloadingAll}
       title={t('download_all')}
-      className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/60 rounded-md border border-border/50 transition-colors flex-shrink-0 disabled:opacity-60 disabled:cursor-wait"
+      className="h-auto shrink-0 gap-1 px-2.5 py-1.5 text-xs text-muted-foreground"
     >
       {isDownloadingAll
-        ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+        ? <Loader size="sm" color="current" />
         : <FileArchive className="w-3.5 h-3.5" />}
       {t('download_all')}
-    </button>
+    </Button>
   ) : null;
 
   // Pre-fetch object URLs for image attachments so their actual contents can be
@@ -2902,13 +2859,13 @@ export function EmailViewer({
                   <span>{tDemoWelcome('feature_privacy')}</span>
                 </div>
               </div>
-              <button
+              <Button
                 onClick={startTour}
-                className="mt-4 inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors text-sm font-medium"
+                className="mt-4 gap-2 px-5 py-2.5 text-sm font-medium"
               >
                 <PlayCircle className="w-4 h-4" />
                 {tWelcome('start_tour')}
-              </button>
+              </Button>
               <p className="text-xs text-muted-foreground/60 mt-2">{tDemoWelcome('hint')}</p>
             </div>
           </div>
@@ -3057,7 +3014,7 @@ export function EmailViewer({
           title={t('tooltips.archive')}
         >
           <Archive className="w-4 h-4" />
-          {showToolbarLabels && <span className="text-[10px] leading-tight sm:text-sm">{t('archive')}</span>}
+          {showToolbarLabels && <span className="text-xs leading-tight sm:text-sm">{t('archive')}</span>}
         </Button>
         {/* Delete */}
         <Button
@@ -3068,7 +3025,7 @@ export function EmailViewer({
           title={t('tooltips.delete')}
         >
           <Trash2 className="w-4 h-4" />
-          {showToolbarLabels && <span className="text-[10px] leading-tight sm:text-sm">{t('delete')}</span>}
+          {showToolbarLabels && <span className="text-xs leading-tight sm:text-sm">{t('delete')}</span>}
         </Button>
         {/* Move to folder */}
         {moveTree.length > 0 && onMoveToMailbox && (
@@ -3085,7 +3042,7 @@ export function EmailViewer({
               aria-expanded={moveMenuOpen}
             >
               <FolderInput className="w-4 h-4" />
-              {showToolbarLabels && <span className="text-[10px] leading-tight sm:text-sm">{t('move')}</span>}
+              {showToolbarLabels && <span className="text-xs leading-tight sm:text-sm">{t('move')}</span>}
             </Button>
             {moveMenuOpen && (
               <div
@@ -3103,15 +3060,13 @@ export function EmailViewer({
                       return (
                         <div key={node.id}>
                           {isTarget ? (
-                            <button
-                              role="menuitem"
-                              onClick={() => { onMoveToMailbox(node.id); setMoveMenuOpen(false); }}
+                            <MenuButton onClick={() => { onMoveToMailbox(node.id); setMoveMenuOpen(false); }}
                               className="w-full px-3 py-1.5 text-sm text-start hover:bg-muted flex items-center gap-2"
                               style={{ paddingLeft: `${0.75 + depth * 1}rem` }}
                             >
                               <Icon className="w-4 h-4 flex-shrink-0" />
                               <span className="truncate">{node.name}</span>
-                            </button>
+                            </MenuButton>
                           ) : (
                             <div
                               className="px-3 py-1.5 text-sm flex items-center gap-2 text-muted-foreground"
@@ -3136,17 +3091,19 @@ export function EmailViewer({
         <div data-overflow-item data-overflow-priority="6" className="hidden sm:flex items-center">
         <div className="w-px h-5 bg-border mx-0.5" />
         <div ref={tagMenuRef} className="relative">
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => { setTagMenuOpen(!tagMenuOpen); setMoreMenuOpen(false); setMoveMenuOpen(false); }}
-            className="h-8 rounded hover:bg-muted flex items-center gap-1.5 px-2"
+            className="h-8 gap-1.5 px-2"
             title={t('set_tag')}
             aria-label={t('set_tag')}
             aria-haspopup="true"
             aria-expanded={tagMenuOpen}
           >
             <Tag className="w-4 h-4" />
-            {showToolbarLabels && <span className="text-[10px] leading-tight sm:text-sm">{t('tag')}</span>}
-          </button>
+            {showToolbarLabels && <span className="text-xs leading-tight sm:text-sm">{t('tag')}</span>}
+          </Button>
           {tagMenuOpen && (
             <div className="absolute end-0 top-full mt-1 py-1 w-56 bg-background rounded-md shadow-lg border border-border z-10">
               <TagPicker
@@ -3177,7 +3134,7 @@ export function EmailViewer({
             ) : (
               <ShieldAlert className="h-4 w-4 text-red-600 dark:text-red-400" />
             )}
-            {showToolbarLabels && <span className="text-[10px] leading-tight sm:text-sm">{isInJunkFolder ? t('not_spam_short') : t('spam_short')}</span>}
+            {showToolbarLabels && <span className="text-xs leading-tight sm:text-sm">{isInJunkFolder ? t('not_spam_short') : t('spam_short')}</span>}
           </Button>
         )}
 
@@ -3197,7 +3154,7 @@ export function EmailViewer({
         >
           {isUnread ? <MailOpen className="w-4 h-4" /> : <Mail className="w-4 h-4" />}
           {showToolbarLabels && (
-            <span className="grid text-center text-[10px] leading-tight sm:text-sm">
+            <span className="grid text-center text-xs leading-tight sm:text-sm">
               <span className={cn("col-start-1 row-start-1", !isUnread && "invisible")} aria-hidden={!isUnread}>{t('read')}</span>
               <span className={cn("col-start-1 row-start-1", isUnread && "invisible")} aria-hidden={isUnread}>{t('unread')}</span>
             </span>
@@ -3280,7 +3237,7 @@ export function EmailViewer({
             onClick={() => { setMoreMenuOpen(!moreMenuOpen); setMoreMenuSlideEnabled(true); setMoreMenuSub(null); setTagMenuOpen(false); setMoveMenuOpen(false); }}
           >
             <MoreVertical className="w-4 h-4 text-muted-foreground" />
-            <span className="text-[10px] leading-tight sm:hidden">{t('more_actions')}</span>
+            <span className="text-xs leading-tight sm:hidden">{t('more_actions')}</span>
           </Button>
           {moreMenuOpen && !isMobile && (
             <div
@@ -3292,68 +3249,57 @@ export function EmailViewer({
               className="absolute end-0 top-full mt-1 w-48 bg-background rounded-md shadow-lg border border-border z-10 py-1"
             >
               {/* Star toggle */}
-              <button
-                role="menuitem"
-                onClick={() => { onToggleStar?.(); setMoreMenuOpen(false); setMoreMenuSub(null); }}
+              <MenuButton onClick={() => { onToggleStar?.(); setMoreMenuOpen(false); setMoreMenuSub(null); }}
                 className="w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2"
               >
                 <Star className={cn("w-4 h-4", isStarred && "fill-yellow-400 text-yellow-400")} />
                 {isStarred ? t('tooltips.unstar') : t('tooltips.star')}
-              </button>
+              </MenuButton>
               {/* Overflow: reply */}
-              <button
-                role="menuitem"
-                onClick={() => { onReply?.(); setMoreMenuOpen(false); setMoreMenuSub(null); }}
+              <MenuButton onClick={() => { onReply?.(); setMoreMenuOpen(false); setMoreMenuSub(null); }}
                 className={cn("w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2", hiddenPriorities.has(1) ? "" : "sm:hidden")}
               >
                 <Reply className="w-4 h-4" />
                 {t('reply')}
-              </button>
+              </MenuButton>
               {/* Overflow: reply all */}
-              <button
-                role="menuitem"
-                onClick={() => { onReplyAll?.(); setMoreMenuOpen(false); setMoreMenuSub(null); }}
+              <MenuButton onClick={() => { onReplyAll?.(); setMoreMenuOpen(false); setMoreMenuSub(null); }}
                 className={cn("w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2", hiddenPriorities.has(2) ? "" : "sm:hidden")}
               >
                 <ReplyAll className="w-4 h-4" />
                 {t('reply_all')}
-              </button>
+              </MenuButton>
               {/* Overflow: forward */}
-              <button
-                role="menuitem"
-                onClick={() => { onForward?.(); setMoreMenuOpen(false); setMoreMenuSub(null); }}
+              <MenuButton onClick={() => { onForward?.(); setMoreMenuOpen(false); setMoreMenuSub(null); }}
                 className={cn("w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2", hiddenPriorities.has(3) ? "" : "sm:hidden")}
               >
                 <Forward className="w-4 h-4" />
                 {t('forward')}
-              </button>
+              </MenuButton>
               {/* Overflow: archive */}
-              <button
-                role="menuitem"
-                onClick={() => { onArchive?.(); setMoreMenuOpen(false); setMoreMenuSub(null); }}
+              <MenuButton onClick={() => { onArchive?.(); setMoreMenuOpen(false); setMoreMenuSub(null); }}
                 className={cn("w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2", hiddenPriorities.has(4) ? "" : "sm:hidden")}
               >
                 <Archive className="w-4 h-4" />
                 {t('archive')}
-              </button>
+              </MenuButton>
               {/* Overflow: move to folder - submenu */}
               {moveTree.length > 0 && onMoveToMailbox && (
                 <div className={cn("relative", hiddenPriorities.has(5) ? "" : "sm:hidden")}
                   onMouseEnter={() => setMoreMenuSub('move')}
                   onMouseLeave={() => setMoreMenuSub(null)}
                 >
-                  <button
+                  <MenuButton
                     ref={(el) => { moreEntryRefs.current.move = el; }}
-                    role="menuitem"
                     aria-haspopup="menu"
                     aria-expanded={moreMenuSub === 'move'}
                     onClick={() => { if (moreMenuSub === 'move') leaveMoreMenuSub(); else setMoreMenuSub('move'); }}
-                    className="w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2"
+                    className="gap-2 px-3 py-1.5 text-sm"
                   >
                     <FolderInput className="w-4 h-4" />
                     <span className="flex-1">{t('move_to')}</span>
                     <ChevronRight className="w-3 h-3 text-muted-foreground" />
-                  </button>
+                  </MenuButton>
                   {moreMenuSub === 'move' && (
                     <div
                       role="menu"
@@ -3368,15 +3314,13 @@ export function EmailViewer({
                             return (
                               <div key={node.id}>
                                 {isTarget ? (
-                                  <button
-                                    role="menuitem"
-                                    onClick={() => { onMoveToMailbox(node.id); setMoreMenuOpen(false); setMoreMenuSub(null); }}
+                                  <MenuButton onClick={() => { onMoveToMailbox(node.id); setMoreMenuOpen(false); setMoreMenuSub(null); }}
                                     className="w-full px-3 py-1.5 text-sm text-start hover:bg-muted flex items-center gap-2"
                                     style={{ paddingLeft: `${0.75 + depth * 1}rem` }}
                                   >
                                     <Icon className="w-4 h-4 flex-shrink-0" />
                                     <span className="truncate">{node.name}</span>
-                                  </button>
+                                  </MenuButton>
                                 ) : (
                                   <div
                                     className="px-3 py-1.5 text-sm flex items-center gap-2 text-muted-foreground"
@@ -3403,18 +3347,17 @@ export function EmailViewer({
                   onMouseEnter={() => setMoreMenuSub('tag')}
                   onMouseLeave={() => setMoreMenuSub(null)}
                 >
-                  <button
+                  <MenuButton
                     ref={(el) => { moreEntryRefs.current.tag = el; }}
-                    role="menuitem"
                     aria-haspopup="menu"
                     aria-expanded={moreMenuSub === 'tag'}
                     onClick={() => { if (moreMenuSub === 'tag') leaveMoreMenuSub(); else setMoreMenuSub('tag'); }}
-                    className="w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2"
+                    className="gap-2 px-3 py-1.5 text-sm"
                   >
                     <Tag className="w-4 h-4" />
                     <span className="flex-1">{t('tag')}</span>
                     <ChevronRight className="w-3 h-3 text-muted-foreground" />
-                  </button>
+                  </MenuButton>
                   {moreMenuSub === 'tag' && (
                     <div
                       role="menu"
@@ -3431,9 +3374,7 @@ export function EmailViewer({
               )}
               {/* Overflow: spam */}
               {spamApplicable && (onMarkAsSpam || onUndoSpam) && (
-                <button
-                  role="menuitem"
-                  onClick={() => { (isInJunkFolder ? onUndoSpam : onMarkAsSpam)?.(); setMoreMenuOpen(false); setMoreMenuSub(null); }}
+                <MenuButton onClick={() => { (isInJunkFolder ? onUndoSpam : onMarkAsSpam)?.(); setMoreMenuOpen(false); setMoreMenuSub(null); }}
                   className={cn("w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2", hiddenPriorities.has(7) ? "" : "sm:hidden")}
                 >
                   {isInJunkFolder ? (
@@ -3442,52 +3383,42 @@ export function EmailViewer({
                     <ShieldAlert className="h-4 w-4 text-red-600 dark:text-red-400" />
                   )}
                   {isInJunkFolder ? t('spam.not_spam_title') : t('spam.button_title')}
-                </button>
+                </MenuButton>
               )}
               {/* Overflow: toggle read */}
-              <button
-                role="menuitem"
-                onClick={() => { onMarkAsRead?.(email.id, isUnread); setMoreMenuOpen(false); setMoreMenuSub(null); }}
+              <MenuButton onClick={() => { onMarkAsRead?.(email.id, isUnread); setMoreMenuOpen(false); setMoreMenuSub(null); }}
                 className={cn("w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2", hiddenPriorities.has(8) ? "" : "sm:hidden")}
               >
                 {isUnread ? <MailOpen className="w-4 h-4" /> : <Mail className="w-4 h-4" />}
                 {isUnread ? t('mark_read') : t('mark_unread')}
-              </button>
+              </MenuButton>
               {/* Overflow: print */}
-              <button
-                role="menuitem"
-                onClick={() => { handlePrint(); setMoreMenuOpen(false); setMoreMenuSub(null); }}
+              <MenuButton onClick={() => { handlePrint(); setMoreMenuOpen(false); setMoreMenuSub(null); }}
                 className={cn("w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2", hiddenPriorities.has(9) ? "" : "sm:hidden")}
               >
                 <Printer className="w-4 h-4" />
                 {t('print')}
-              </button>
+              </MenuButton>
               {/* Overflow: view source */}
-              <button
-                role="menuitem"
-                onClick={() => { setShowSourceModal(true); setMoreMenuOpen(false); setMoreMenuSub(null); }}
+              <MenuButton onClick={() => { setShowSourceModal(true); setMoreMenuOpen(false); setMoreMenuSub(null); }}
                 className={cn("w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2", hiddenPriorities.has(10) ? "" : "sm:hidden")}
               >
                 <Code className="w-4 h-4" />
                 {t('view_source')}
-              </button>
+              </MenuButton>
               {/* Overflow: dark/light mode toggle */}
               {effectiveEmailContent.isHtml && (
-                <button
-                  role="menuitem"
-                  onClick={() => { setEmailViewDarkOverride(prev => prev === null ? !(resolvedTheme === 'dark') : !prev); setMoreMenuOpen(false); setMoreMenuSub(null); }}
+                <MenuButton onClick={() => { setEmailViewDarkOverride(prev => prev === null ? !(resolvedTheme === 'dark') : !prev); setMoreMenuOpen(false); setMoreMenuSub(null); }}
                   className={cn("w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2", hiddenPriorities.has(11) ? "" : "sm:hidden")}
                 >
                   {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
                   {isDark ? 'View in light mode' : 'View in dark mode'}
-                </button>
+                </MenuButton>
               )}
               <div className="h-px bg-border my-1" />
               {/* Permalink to this message (#733) */}
               {email && (
-                <button
-                  role="menuitem"
-                  onClick={() => {
+                <MenuButton onClick={() => {
                     void copyLink(buildMailPath({ mailboxId: null, emailId: email.id, threadId: null }));
                     setMoreMenuOpen(false);
                     setMoreMenuSub(null);
@@ -3496,46 +3427,38 @@ export function EmailViewer({
                 >
                   <LinkIcon className="w-4 h-4" />
                   {tDeepLink('copy_message')}
-                </button>
+                </MenuButton>
               )}
               {/* Forward as attachment */}
               {onForwardAsAttachment && email?.blobId && (
-                <button
-                  role="menuitem"
-                  onClick={() => { onForwardAsAttachment(); setMoreMenuOpen(false); setMoreMenuSub(null); }}
+                <MenuButton onClick={() => { onForwardAsAttachment(); setMoreMenuOpen(false); setMoreMenuSub(null); }}
                   className="w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2"
                 >
                   <Paperclip className="w-4 h-4" />
                   {t('forward_as_attachment')}
-                </button>
+                </MenuButton>
               )}
               {/* Export email */}
-              <button
-                role="menuitem"
-                onClick={() => { handleExportEmail(); setMoreMenuOpen(false); setMoreMenuSub(null); }}
+              <MenuButton onClick={() => { handleExportEmail(); setMoreMenuOpen(false); setMoreMenuSub(null); }}
                 className="w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2"
               >
                 <Download className="w-4 h-4" />
                 {t('export_email')}
-              </button>
+              </MenuButton>
               {/* Import email */}
-              <button
-                role="menuitem"
-                onClick={() => { handleImportEmail(); setMoreMenuOpen(false); setMoreMenuSub(null); }}
+              <MenuButton onClick={() => { handleImportEmail(); setMoreMenuOpen(false); setMoreMenuSub(null); }}
                 className="w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2"
               >
                 <Upload className="w-4 h-4" />
                 {t('import_email')}
-              </button>
+              </MenuButton>
               {onShowShortcuts && (
-                <button
-                  role="menuitem"
-                  onClick={() => { onShowShortcuts(); setMoreMenuOpen(false); setMoreMenuSub(null); }}
+                <MenuButton onClick={() => { onShowShortcuts(); setMoreMenuOpen(false); setMoreMenuSub(null); }}
                   className="w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2"
                 >
                   <Keyboard className="w-4 h-4" />
                   {t('keyboard_shortcuts')}
-                </button>
+                </MenuButton>
               )}
             </div>
           )}
@@ -3594,15 +3517,12 @@ export function EmailViewer({
           isPaneScoped ? "py-3" : "pb-3 pt-[calc(0.75rem+env(safe-area-inset-top))]"
         )}>
           {moreMenuSub ? (
-            <button
-              ref={mobileSubBackRef}
-              role="menuitem"
+            <MenuButton ref={mobileSubBackRef}
               onClick={leaveMoreMenuSub}
-              className="flex items-center gap-1 -ms-2 px-2 py-1 rounded hover:bg-muted text-sm font-semibold text-foreground"
-            >
+              className="flex items-center gap-1 -ms-2 px-2 py-1 rounded hover:bg-muted text-sm font-semibold text-foreground">
               <ChevronLeft className="w-5 h-5" />
               {moreMenuSub === 'move' ? t('move_to') : t('tag')}
-            </button>
+            </MenuButton>
           ) : (
             <span className="text-sm font-semibold text-foreground">{t('more_actions')}</span>
           )}
@@ -3621,39 +3541,35 @@ export function EmailViewer({
           {moreMenuSub === null && (
             <>
               {/* Star toggle */}
-              <button
-                role="menuitem"
-                onClick={() => { onToggleStar?.(); setMoreMenuOpen(false); }}
+              <MenuButton onClick={() => { onToggleStar?.(); setMoreMenuOpen(false); }}
                 className="w-full px-4 py-3 min-h-[44px] text-sm text-start hover:bg-muted text-foreground flex items-center gap-3"
               >
                 <Star className={cn("w-5 h-5", isStarred && "fill-yellow-400 text-yellow-400")} />
                 {isStarred ? t('tooltips.unstar') : t('tooltips.star')}
-              </button>
+              </MenuButton>
               {/* Move to folder (opens sub-view). The toolbar's own Move button
                   is the first thing dropped when the toolbar runs out of room,
                   and on mobile the overflow has nowhere else to go - without
                   this row a narrow screen loses the action entirely (#779). */}
               {moveTree.length > 0 && onMoveToMailbox && (
-                <button
+                <MenuButton
                   ref={(el) => { moreEntryRefs.current.move = el; }}
-                  role="menuitem"
                   aria-haspopup="menu"
                   onClick={() => setMoreMenuSub('move')}
-                  className="w-full px-4 py-3 min-h-[44px] text-sm text-start hover:bg-muted text-foreground flex items-center gap-3"
+                  className="min-h-[44px] gap-3 px-4 py-3 text-sm"
                 >
                   <FolderInput className="w-5 h-5" />
                   <span className="flex-1">{t('move_to')}</span>
                   <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                </button>
+                </MenuButton>
               )}
               {/* Tag (opens sub-view) */}
               {(emailKeywords.length > 0 || currentTagIds.length > 0) && (
-                <button
+                <MenuButton
                   ref={(el) => { moreEntryRefs.current.tag = el; }}
-                  role="menuitem"
                   aria-haspopup="menu"
                   onClick={() => setMoreMenuSub('tag')}
-                  className="w-full px-4 py-3 min-h-[44px] text-sm text-start hover:bg-muted text-foreground flex items-center gap-3"
+                  className="min-h-[44px] gap-3 px-4 py-3 text-sm"
                 >
                   <Tag className="w-5 h-5" />
                   <span className="flex-1">{t('tag')}</span>
@@ -3668,70 +3584,56 @@ export function EmailViewer({
                     </div>
                   )}
                   <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                </button>
+                </MenuButton>
               )}
-              <button
-                role="menuitem"
-                onClick={() => { handlePrint(); setMoreMenuOpen(false); }}
+              <MenuButton onClick={() => { handlePrint(); setMoreMenuOpen(false); }}
                 className="w-full px-4 py-3 min-h-[44px] text-sm text-start hover:bg-muted text-foreground flex items-center gap-3"
               >
                 <Printer className="w-5 h-5" />
                 {t('print')}
-              </button>
-              <button
-                role="menuitem"
-                onClick={() => { setShowSourceModal(true); setMoreMenuOpen(false); }}
+              </MenuButton>
+              <MenuButton onClick={() => { setShowSourceModal(true); setMoreMenuOpen(false); }}
                 className="w-full px-4 py-3 min-h-[44px] text-sm text-start hover:bg-muted text-foreground flex items-center gap-3"
               >
                 <Code className="w-5 h-5" />
                 {t('view_source')}
-              </button>
+              </MenuButton>
               {effectiveEmailContent.isHtml && (
-                <button
-                  role="menuitem"
-                  onClick={() => { setEmailViewDarkOverride(prev => prev === null ? !(resolvedTheme === 'dark') : !prev); setMoreMenuOpen(false); }}
+                <MenuButton onClick={() => { setEmailViewDarkOverride(prev => prev === null ? !(resolvedTheme === 'dark') : !prev); setMoreMenuOpen(false); }}
                   className="w-full px-4 py-3 min-h-[44px] text-sm text-start hover:bg-muted text-foreground flex items-center gap-3"
                 >
                   {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
                   {isDark ? 'View in light mode' : 'View in dark mode'}
-                </button>
+                </MenuButton>
               )}
               <div className="h-px bg-border my-1" />
               {onForwardAsAttachment && email?.blobId && (
-                <button
-                  role="menuitem"
-                  onClick={() => { onForwardAsAttachment(); setMoreMenuOpen(false); }}
+                <MenuButton onClick={() => { onForwardAsAttachment(); setMoreMenuOpen(false); }}
                   className="w-full px-4 py-3 min-h-[44px] text-sm text-start hover:bg-muted text-foreground flex items-center gap-3"
                 >
                   <Paperclip className="w-5 h-5" />
                   {t('forward_as_attachment')}
-                </button>
+                </MenuButton>
               )}
-              <button
-                role="menuitem"
-                onClick={() => { handleExportEmail(); setMoreMenuOpen(false); }}
+              <MenuButton onClick={() => { handleExportEmail(); setMoreMenuOpen(false); }}
                 className="w-full px-4 py-3 min-h-[44px] text-sm text-start hover:bg-muted text-foreground flex items-center gap-3"
               >
                 <Download className="w-5 h-5" />
                 {t('export_email')}
-              </button>
-              <button
-                role="menuitem"
-                onClick={() => { handleImportEmail(); setMoreMenuOpen(false); }}
+              </MenuButton>
+              <MenuButton onClick={() => { handleImportEmail(); setMoreMenuOpen(false); }}
                 className="w-full px-4 py-3 min-h-[44px] text-sm text-start hover:bg-muted text-foreground flex items-center gap-3"
               >
                 <Upload className="w-5 h-5" />
                 {t('import_email')}
-              </button>
+              </MenuButton>
               {onShowShortcuts && (
-                <button
-                  role="menuitem"
-                  onClick={() => { onShowShortcuts(); setMoreMenuOpen(false); }}
+                <MenuButton onClick={() => { onShowShortcuts(); setMoreMenuOpen(false); }}
                   className="w-full px-4 py-3 min-h-[44px] text-sm text-start hover:bg-muted text-foreground flex items-center gap-3"
                 >
                   <Keyboard className="w-5 h-5" />
                   {t('keyboard_shortcuts')}
-                </button>
+                </MenuButton>
               )}
             </>
           )}
@@ -3743,15 +3645,13 @@ export function EmailViewer({
                 return (
                   <div key={node.id}>
                     {isTarget ? (
-                      <button
-                        role="menuitem"
-                        onClick={() => { onMoveToMailbox(node.id); setMoreMenuOpen(false); setMoreMenuSub(null); }}
+                      <MenuButton onClick={() => { onMoveToMailbox(node.id); setMoreMenuOpen(false); setMoreMenuSub(null); }}
                         className="w-full px-4 py-2.5 min-h-[44px] text-sm text-start hover:bg-muted flex items-center gap-3"
                         style={{ paddingLeft: `${1 + depth * 1}rem` }}
                       >
                         <Icon className="w-5 h-5 flex-shrink-0" />
                         <span className="truncate">{node.name}</span>
-                      </button>
+                      </MenuButton>
                     ) : (
                       <div
                         className="px-4 py-2.5 min-h-[44px] text-sm flex items-center gap-3 text-muted-foreground"
@@ -3820,16 +3720,18 @@ export function EmailViewer({
                 </h1>
                 {/* Star inline with subject (top toolbar mode) */}
                 {toolbarPosition === 'top' && (
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="icon"
                     onClick={onToggleStar}
-                    className="flex-shrink-0 p-1 rounded hover:bg-muted transition-colors"
+                    className="h-8 w-8 shrink-0 lg:h-9 lg:w-9"
                     title={isStarred ? t('tooltips.unstar') : t('tooltips.star')}
                   >
                     <Star className={cn(
                       "w-4 h-4 lg:w-5 lg:h-5 transition-colors",
                       isStarred ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground/40"
                     )} />
-                  </button>
+                  </Button>
                 )}
                 {isImportant && (
                   <span className="px-1.5 lg:px-2 py-0.5 bg-warning/15 text-warning rounded-full text-xs font-medium whitespace-nowrap flex-shrink-0 self-center">
@@ -3883,9 +3785,10 @@ export function EmailViewer({
       {/* === SENDER INFO (Desktop) === */}
       <div className="hidden lg:block bg-background border-b border-border px-6" style={{ paddingBlock: 'var(--density-header-py)' }}>
           <div className="flex items-start" style={{ gap: 'var(--density-item-gap)' }}>
-            <button
+            <Button
+              variant="ghost"
               onClick={() => sender?.email && handleViewContactSidebar(null, sender.email)}
-              className="cursor-pointer group flex-shrink-0"
+              className="group h-auto min-h-0 shrink-0 p-0"
               title={sender?.email || undefined}
             >
               <Avatar
@@ -3894,7 +3797,7 @@ export function EmailViewer({
                 size="lg"
                 className="shadow-sm w-10 h-10 group-hover:ring-2 group-hover:ring-primary/30 transition-all"
               />
-            </button>
+            </Button>
 
             <div className="flex-1 min-w-0 flex gap-4">
               <div className="flex-1 min-w-0">
@@ -3941,12 +3844,14 @@ export function EmailViewer({
                     <span>{t('recipient_to_prefix')}</span>
                     {renderClickableRecipients(email.to, currentUserEmail, t, handleViewContactSidebar)}
                     {email.to.length > 2 && (
-                      <button
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={() => setShowFullHeaders(!showFullHeaders)}
-                        className="text-blue-600 dark:text-blue-400 hover:underline text-sm"
+                        className="h-auto min-h-0 p-0 text-sm text-blue-600 hover:bg-transparent hover:underline dark:text-blue-400"
                       >
                         {t('more_count', { count: email.to.length - 2 })}
-                      </button>
+                      </Button>
                     )}
                   </>
                 )}
@@ -3970,9 +3875,11 @@ export function EmailViewer({
                     )}
                   </>
                 )}
-                <button
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={() => setShowFullHeaders(!showFullHeaders)}
-                  className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-0.5 transition-colors ms-1"
+                  className="ms-1 h-auto min-h-0 gap-0.5 px-1 py-0 text-xs text-muted-foreground"
                 >
                   {showFullHeaders ? (
                     <>
@@ -3985,9 +3892,8 @@ export function EmailViewer({
                       {t('show_details')}
                     </>
                   )}
-                </button>
+                </Button>
               </div>
-
 
               </div>
               {/* Attachments on the right (beside-sender mode) */}
@@ -4033,7 +3939,7 @@ export function EmailViewer({
                           )}>
                             {getAttachmentDisplayName(attachment.name, attachment.type)}
                           </span>
-                          <span className="text-[10px] text-muted-foreground flex-shrink-0">
+                          <span className="text-xs text-muted-foreground flex-shrink-0">
                             {formatFileSize(attachment.size)}
                           </span>
                         </div>
@@ -4041,21 +3947,25 @@ export function EmailViewer({
                           "absolute bg-background/95 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1 px-1.5 rounded-md",
                           thumbUrl ? "top-1 end-1" : "inset-y-0 end-0 rounded-s-none rounded-e-md",
                         )}>
-                          <button
-                            className="p-1 hover:bg-accent rounded transition-colors"
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7 min-w-0"
                             title={t('download')}
                             onClick={(e) => { e.stopPropagation(); handleEffectiveAttachmentDownload(attachment); }}
                           >
                             <Download className="w-3.5 h-3.5 text-foreground" />
-                          </button>
+                          </Button>
                           {opensPreview && (
-                            <button
-                              className="p-1 hover:bg-accent rounded transition-colors"
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-7 w-7 min-w-0"
                               title={tFiles('preview')}
                               onClick={(e) => { e.stopPropagation(); handleEffectiveAttachmentOpen(attachment); }}
                             >
                               <Eye className="w-3.5 h-3.5 text-foreground" />
-                            </button>
+                            </Button>
                           )}
                           <PluginSlot
                             name="attachment-actions"
@@ -4077,12 +3987,14 @@ export function EmailViewer({
                     );
                   })}
                   {effectiveAttachments.length > 2 && (
-                    <button
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={() => setShowAllBesideAttachments(!showAllBesideAttachments)}
-                      className="text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-0.5"
+                      className="h-auto min-h-0 px-2 py-0.5 text-xs text-muted-foreground"
                     >
                       +{effectiveAttachments.length - 2} {t('more')}
-                    </button>
+                    </Button>
                   )}
                   {downloadAllButton}
                   {/* Floating popup for remaining attachments */}
@@ -4110,25 +4022,29 @@ export function EmailViewer({
                               <span className="text-xs text-foreground truncate max-w-[180px]">
                                 {getAttachmentDisplayName(attachment.name, attachment.type)}
                               </span>
-                              <span className="text-[10px] text-muted-foreground ms-auto flex-shrink-0">
+                              <span className="text-xs text-muted-foreground ms-auto flex-shrink-0">
                                 {formatFileSize(attachment.size)}
                               </span>
                               <div className="absolute inset-y-0 end-0 rounded-e-md bg-background/95 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1 px-1.5">
-                                <button
-                                  className="p-1 hover:bg-accent rounded transition-colors"
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-7 w-7 min-w-0"
                                   title={t('download')}
                                   onClick={(e) => { e.stopPropagation(); handleEffectiveAttachmentDownload(attachment); setShowAllBesideAttachments(false); }}
                                 >
                                   <Download className="w-3.5 h-3.5 text-foreground" />
-                                </button>
+                                </Button>
                                 {opensPreview && (
-                                  <button
-                                    className="p-1 hover:bg-accent rounded transition-colors"
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="h-7 w-7 min-w-0"
                                     title={tFiles('preview')}
                                     onClick={(e) => { e.stopPropagation(); handleEffectiveAttachmentOpen(attachment); setShowAllBesideAttachments(false); }}
                                   >
                                     <Eye className="w-3.5 h-3.5 text-foreground" />
-                                  </button>
+                                  </Button>
                                 )}
                                 <PluginSlot
                                   name="attachment-actions"
@@ -4161,9 +4077,10 @@ export function EmailViewer({
         {/* Mobile/Tablet Sender Info - scrolls with content */}
         <div className="lg:hidden bg-background border-b border-border px-4" style={{ paddingBlock: 'var(--density-header-py)' }}>
           <div className="flex items-start" style={{ gap: 'var(--density-item-gap)' }}>
-            <button
+            <Button
+              variant="ghost"
               onClick={() => sender?.email && handleViewContactSidebar(null, sender.email)}
-              className="cursor-pointer group flex-shrink-0"
+              className="group h-auto min-h-0 shrink-0 p-0"
               title={sender?.email || undefined}
             >
               <Avatar
@@ -4172,7 +4089,7 @@ export function EmailViewer({
                 size="lg"
                 className="shadow-sm w-10 h-10 group-hover:ring-2 group-hover:ring-primary/30 transition-all"
               />
-            </button>
+            </Button>
             <div className="flex-1 min-w-0">
               {/* Row 1: Sender name + badges */}
               <div className="flex items-center gap-1.5 flex-wrap">
@@ -4223,9 +4140,11 @@ export function EmailViewer({
                     )}
                   </>
                 )}
-                <button
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={() => setShowFullHeaders(!showFullHeaders)}
-                  className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-0.5 transition-colors ms-1"
+                  className="ms-1 h-auto min-h-0 gap-0.5 px-1 py-0 text-xs text-muted-foreground"
                 >
                   {showFullHeaders ? (
                     <>
@@ -4238,7 +4157,7 @@ export function EmailViewer({
                       {t('show_details')}
                     </>
                   )}
-                </button>
+                </Button>
               </div>
             </div>
             {/* Date/time + size on the right (mobile) */}
@@ -4294,7 +4213,7 @@ export function EmailViewer({
           const totalAttachmentSize = effectiveAttachments.reduce((s, a) => s + (a.size || 0), 0);
           const topMimeType = email.bodyStructure?.type;
           const SectionHeader = ({ children }: { children: React.ReactNode }) => (
-            <div className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase mb-1.5">
+            <div className="text-xs font-semibold tracking-wider text-muted-foreground uppercase mb-1.5">
               {children}
             </div>
           );
@@ -4328,7 +4247,7 @@ export function EmailViewer({
               >
                 <Icon className={cn("w-3.5 h-3.5 flex-shrink-0", status.color)} />
                 <span className="font-medium text-foreground">{name}</span>
-                <span className={cn("text-[10px] uppercase tracking-wider", status.color)}>
+                <span className={cn("text-xs uppercase tracking-wider", status.color)}>
                   {translateAuthResult(result)}
                 </span>
                 {extra && (
@@ -4470,7 +4389,7 @@ export function EmailViewer({
                           )} />
                           <span className="font-medium text-foreground">{t('authentication.spam_score')}</span>
                           <span className={cn(
-                            "text-[10px] uppercase tracking-wider",
+                            "text-xs uppercase tracking-wider",
                             email.spamScore > 5 ? "text-red-700 dark:text-red-400" :
                             email.spamScore > 2 ? "text-amber-700 dark:text-amber-400" :
                             "text-green-700 dark:text-green-400",
@@ -4695,7 +4614,7 @@ export function EmailViewer({
                     </div>
                     <div className="flex-1 min-w-0 space-y-2">
                       <div>
-                        <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                        <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                           External Content
                         </div>
                         <div className="text-sm font-medium text-foreground break-words">
@@ -4704,16 +4623,20 @@ export function EmailViewer({
                       </div>
                       <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
                         {externalContentPolicy === 'ask' && (
-                          <button
+                          <Button
+                            variant="outline"
+                            size="sm"
                             onClick={() => setAllowExternalContent(true)}
-                            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground px-3 py-1.5 rounded-md border border-border hover:bg-muted transition-colors min-h-[36px]"
+                            className="h-auto min-h-[36px] gap-1.5 px-3 py-1.5 text-sm text-muted-foreground"
                           >
                             <Image className="w-3.5 h-3.5" />
                             {t('load_external_content')}
-                          </button>
+                          </Button>
                         )}
                         {email.from?.[0]?.email && (
-                          <button
+                          <Button
+                            variant="outline"
+                            size="sm"
                             onClick={() => {
                               const senderEmail = email.from?.[0]?.email;
                               if (senderEmail) {
@@ -4725,18 +4648,16 @@ export function EmailViewer({
                                 setAllowExternalContent(true);
                               }
                             }}
-                            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground px-3 py-1.5 rounded-md border border-border hover:bg-muted transition-colors min-h-[36px]"
+                            className="h-auto min-h-[36px] gap-1.5 px-3 py-1.5 text-sm text-muted-foreground"
                           >
                             <ShieldCheck className="w-3.5 h-3.5" />
                             {t('trust_sender')}
-                          </button>
+                          </Button>
                         )}
                       </div>
                     </div>
                   </div>
                 )}
-
-
 
                 {/* Read-receipt (MDN) request banner — only in "ask" mode */}
                 {readReceiptResponse === 'ask' && shouldOfferReadReceipt && readReceiptRequestedBy && (
@@ -4858,21 +4779,25 @@ export function EmailViewer({
                     "absolute rounded-md bg-background/95 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1 px-1.5",
                     thumbUrl ? "top-1 end-1" : "inset-y-0 end-0 rounded-e-md rounded-s-none",
                   )}>
-                    <button
-                      className="p-1 hover:bg-accent rounded transition-colors"
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-7 w-7 min-w-0"
                       title={t('download')}
                       onClick={(e) => { e.stopPropagation(); handleEffectiveAttachmentDownload(attachment); }}
                     >
                       <Download className="w-4 h-4 text-foreground" />
-                    </button>
+                    </Button>
                     {opensPreview && (
-                      <button
-                        className="p-1 hover:bg-accent rounded transition-colors"
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-7 w-7 min-w-0"
                         title={tFiles('preview')}
                         onClick={(e) => { e.stopPropagation(); handleEffectiveAttachmentOpen(attachment); }}
                       >
                         <Eye className="w-4 h-4 text-foreground" />
-                      </button>
+                      </Button>
                     )}
                     <PluginSlot
                       name="attachment-actions"
@@ -4894,12 +4819,14 @@ export function EmailViewer({
               );
             })}
             {visibleBelowHeaderCount !== null && effectiveAttachments.length > visibleBelowHeaderCount && (
-              <button
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => setShowAllBelowHeaderAttachments(!showAllBelowHeaderAttachments)}
-                className="inline-flex items-center px-2.5 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/60 rounded-md border border-border/50 transition-colors flex-shrink-0"
+                className="h-auto shrink-0 px-2.5 py-1.5 text-xs text-muted-foreground"
               >
                 +{effectiveAttachments.length - visibleBelowHeaderCount} {t('attachments').toLowerCase()}
-              </button>
+              </Button>
             )}
           </div>
             {downloadAllButton}
@@ -4931,21 +4858,25 @@ export function EmailViewer({
                           {formatFileSize(attachment.size)}
                         </span>
                         <div className="absolute inset-y-0 end-0 rounded-e-md bg-background/95 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1 px-1.5">
-                          <button
-                            className="p-1 hover:bg-accent rounded transition-colors"
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7 min-w-0"
                             title={t('download')}
                             onClick={(e) => { e.stopPropagation(); handleEffectiveAttachmentDownload(attachment); setShowAllBelowHeaderAttachments(false); }}
                           >
                             <Download className="w-4 h-4 text-foreground" />
-                          </button>
+                          </Button>
                           {opensPreview && (
-                            <button
-                              className="p-1 hover:bg-accent rounded transition-colors"
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-7 w-7 min-w-0"
                               title={tFiles('preview')}
                               onClick={(e) => { e.stopPropagation(); handleEffectiveAttachmentOpen(attachment); setShowAllBelowHeaderAttachments(false); }}
                             >
                               <Eye className="w-4 h-4 text-foreground" />
-                            </button>
+                            </Button>
                           )}
                           <PluginSlot
                             name="attachment-actions"
@@ -5025,21 +4956,25 @@ export function EmailViewer({
                       "absolute bg-background/95 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1 px-1.5 rounded-md",
                       thumbUrl ? "top-1 end-1" : "inset-y-0 end-0 rounded-s-none rounded-e-md",
                     )}>
-                      <button
-                        className="p-1 hover:bg-accent rounded transition-colors"
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-7 w-7 min-w-0"
                         title={t('download')}
                         onClick={(e) => { e.stopPropagation(); handleEffectiveAttachmentDownload(attachment); }}
                       >
                         <Download className="w-4 h-4 text-foreground" />
-                      </button>
+                      </Button>
                       {opensPreview && (
-                        <button
-                          className="p-1 hover:bg-accent rounded transition-colors"
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-7 w-7 min-w-0"
                           title={tFiles('preview')}
                           onClick={(e) => { e.stopPropagation(); handleEffectiveAttachmentOpen(attachment); }}
                         >
                           <Eye className="w-4 h-4 text-foreground" />
-                        </button>
+                        </Button>
                       )}
                       <PluginSlot
                         name="attachment-actions"
@@ -5061,12 +4996,14 @@ export function EmailViewer({
                 );
               })}
               {effectiveAttachments.length > 2 && (
-                <button
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={() => setShowAllMobileAttachments(!showAllMobileAttachments)}
-                  className="text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-0.5"
+                  className="h-auto min-h-0 px-2 py-0.5 text-xs text-muted-foreground"
                 >
                   +{effectiveAttachments.length - 2} {t('more')}
-                </button>
+                </Button>
               )}
               {downloadAllButton}
               {showAllMobileAttachments && effectiveAttachments.length > 2 && (
@@ -5093,25 +5030,29 @@ export function EmailViewer({
                           <span className="text-xs text-foreground truncate max-w-[180px]">
                             {getAttachmentDisplayName(attachment.name, attachment.type)}
                           </span>
-                          <span className="text-[10px] text-muted-foreground ms-auto flex-shrink-0">
+                          <span className="text-xs text-muted-foreground ms-auto flex-shrink-0">
                             {formatFileSize(attachment.size)}
                           </span>
                           <div className="absolute inset-y-0 end-0 rounded-e-md bg-background/95 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1 px-1.5">
-                            <button
-                              className="p-1 hover:bg-accent rounded transition-colors"
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-7 w-7 min-w-0"
                               title={t('download')}
                               onClick={(e) => { e.stopPropagation(); handleEffectiveAttachmentDownload(attachment); setShowAllMobileAttachments(false); }}
                             >
                               <Download className="w-3.5 h-3.5 text-foreground" />
-                            </button>
+                            </Button>
                             {opensPreview && (
-                              <button
-                                className="p-1 hover:bg-accent rounded transition-colors"
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-7 w-7 min-w-0"
                                 title={tFiles('preview')}
                                 onClick={(e) => { e.stopPropagation(); handleEffectiveAttachmentOpen(attachment); setShowAllMobileAttachments(false); }}
                               >
                                 <Eye className="w-3.5 h-3.5 text-foreground" />
-                              </button>
+                              </Button>
                             )}
                             <PluginSlot
                               name="attachment-actions"
@@ -5260,7 +5201,7 @@ export function EmailViewer({
                         >
                           {isSendingQuickReply ? (
                             <>
-                              <Loader2 className="w-4 h-4 me-1 animate-spin" />
+                              <Loader size="sm" color="current" className="me-1" />
                               {t('sending')}
                             </>
                           ) : (
@@ -5282,54 +5223,48 @@ export function EmailViewer({
 
       {/* Email Source Modal - pane-scoped inside a Pro pane so it never
           covers the neighbouring split pane. */}
-      {showSourceModal && email && (
-        <div
-          className={cn(
-            "bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4",
-            isPaneScoped ? "absolute inset-0" : "fixed inset-0",
-          )}
-          onClick={() => setShowSourceModal(false)}
-        >
-          <div
-            className="bg-background rounded-lg shadow-2xl border border-border w-full max-w-4xl max-h-[90vh] flex flex-col"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Modal Header */}
-            <div className="flex items-center justify-between p-4 border-b border-border">
-              <div className="flex items-center gap-2">
-                <Code className="w-5 h-5 text-primary" />
-                <h2 className="text-lg font-semibold text-foreground">{t('email_source')}</h2>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={copySourceToClipboard}
-                  className="flex items-center gap-1.5"
-                >
-                  <Copy className="w-4 h-4" />
-                  {t('copy_source')}
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setShowSourceModal(false)}
-                  className="h-10 w-10 lg:h-8 lg:w-8"
-                >
-                  <X className="w-4 h-4" />
-                </Button>
-              </div>
+      <AppModal
+        isOpen={showSourceModal && !!email}
+        onClose={() => setShowSourceModal(false)}
+        size="lg"
+        paneScoped={isPaneScoped}
+        className="max-w-4xl max-h-[90vh]"
+        bodyClassName="overflow-auto bg-muted/30 p-4"
+        header={(
+          <div className="flex items-center justify-between gap-4 border-b border-border p-4">
+            <div className="flex items-center gap-2">
+              <Code className="w-5 h-5 text-primary" />
+              <h2 className="text-lg font-semibold text-foreground">{t('email_source')}</h2>
             </div>
-
-            {/* Modal Content */}
-            <div className="flex-1 overflow-auto p-4 bg-muted/30">
-              <pre className="text-xs font-mono text-foreground whitespace-pre-wrap break-words bg-background border border-border rounded-lg p-4">
-                {generateEmailSource(email)}
-              </pre>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={copySourceToClipboard}
+                className="flex items-center gap-1.5"
+              >
+                <Copy className="w-4 h-4" />
+                {t('copy_source')}
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowSourceModal(false)}
+                className="h-10 w-10 lg:h-8 lg:w-8"
+                aria-label={tCommon('close')}
+              >
+                <X className="w-4 h-4" />
+              </Button>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      >
+        {email && (
+          <pre className="text-xs font-mono text-foreground whitespace-pre-wrap break-words rounded-lg border border-border bg-background p-4">
+            {generateEmailSource(email)}
+          </pre>
+        )}
+      </AppModal>
     </div>
 
     {/* Mobile bottom action bar - pane-scoped inside a Pro pane (the
@@ -5341,66 +5276,78 @@ export function EmailViewer({
         isPaneScoped ? "absolute bottom-0 left-0 right-0" : "fixed bottom-0 left-0 right-0 sm:hidden",
       )}>
         <div className="flex items-center overflow-x-auto mobile-scroll-hidden">
-          <button
+          <Button
+            variant="ghost"
             onClick={onNavigatePrev}
             disabled={!onNavigatePrev}
+            tooltip={false}
             className={cn(
-              "flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px] transition-colors duration-150",
+              "flex min-h-[44px] shrink-0 grow basis-[64px] flex-col items-center justify-center gap-1 rounded-none px-1 py-2 h-auto",
               onNavigatePrev ? "text-muted-foreground active:text-foreground" : "text-muted-foreground/30"
             )}
             aria-label={t('tooltips.previous')}
           >
             <ChevronLeft className="w-5 h-5" />
-            <span className="text-[10px] font-medium leading-tight truncate max-w-full">{t('previous')}</span>
-          </button>
+            <span className="max-w-full truncate text-xs font-medium leading-tight">{t('previous')}</span>
+          </Button>
           {isDraft && onEditDraft ? (
-            <button
+            <Button
+              variant="ghost"
               onClick={() => onEditDraft()}
-              className="flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px] text-primary active:text-primary/80 transition-colors duration-150"
+              tooltip={false}
+              className="flex min-h-[44px] shrink-0 grow basis-[64px] flex-col items-center justify-center gap-1 rounded-none px-1 py-2 h-auto text-primary active:text-primary/80"
               aria-label={t('tooltips.edit_draft')}
             >
               <EditIcon className="w-5 h-5" />
-              <span className="text-[10px] font-medium leading-tight truncate max-w-full">{t('edit_draft')}</span>
-            </button>
+              <span className="max-w-full truncate text-xs font-medium leading-tight">{t('edit_draft')}</span>
+            </Button>
           ) : (
           <>
-          <button
+          <Button
+            variant="ghost"
             onClick={() => onReply?.()}
-            className="flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px] text-muted-foreground active:text-foreground transition-colors duration-150"
+            tooltip={false}
+            className="flex min-h-[44px] shrink-0 grow basis-[64px] flex-col items-center justify-center gap-1 rounded-none px-1 py-2 h-auto text-muted-foreground active:text-foreground"
             aria-label={t('tooltips.reply')}
           >
             <Reply className="w-5 h-5" />
-            <span className="text-[10px] font-medium leading-tight truncate max-w-full">{t('reply')}</span>
-          </button>
-          <button
+            <span className="max-w-full truncate text-xs font-medium leading-tight">{t('reply')}</span>
+          </Button>
+          <Button
+            variant="ghost"
             onClick={onReplyAll}
-            className="flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px] text-muted-foreground active:text-foreground transition-colors duration-150"
+            tooltip={false}
+            className="flex min-h-[44px] shrink-0 grow basis-[64px] flex-col items-center justify-center gap-1 rounded-none px-1 py-2 h-auto text-muted-foreground active:text-foreground"
             aria-label={t('tooltips.reply_all')}
           >
             <ReplyAll className="w-5 h-5" />
-            <span className="text-[10px] font-medium leading-tight truncate max-w-full">{t('reply_all')}</span>
-          </button>
-          <button
+            <span className="max-w-full truncate text-xs font-medium leading-tight">{t('reply_all')}</span>
+          </Button>
+          <Button
+            variant="ghost"
             onClick={onForward}
-            className="flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px] text-muted-foreground active:text-foreground transition-colors duration-150"
+            tooltip={false}
+            className="flex min-h-[44px] shrink-0 grow basis-[64px] flex-col items-center justify-center gap-1 rounded-none px-1 py-2 h-auto text-muted-foreground active:text-foreground"
             aria-label={t('tooltips.forward')}
           >
             <Forward className="w-5 h-5" />
-            <span className="text-[10px] font-medium leading-tight truncate max-w-full">{t('forward')}</span>
-          </button>
+            <span className="max-w-full truncate text-xs font-medium leading-tight">{t('forward')}</span>
+          </Button>
           </>)}
-          <button
+          <Button
+            variant="ghost"
             onClick={onNavigateNext}
             disabled={!onNavigateNext}
+            tooltip={false}
             className={cn(
-              "flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px] transition-colors duration-150",
+              "flex min-h-[44px] shrink-0 grow basis-[64px] flex-col items-center justify-center gap-1 rounded-none px-1 py-2 h-auto",
               onNavigateNext ? "text-muted-foreground active:text-foreground" : "text-muted-foreground/30"
             )}
             aria-label={t('tooltips.next')}
           >
             <ChevronRight className="w-5 h-5" />
-            <span className="text-[10px] font-medium leading-tight truncate max-w-full">{t('next')}</span>
-          </button>
+            <span className="max-w-full truncate text-xs font-medium leading-tight">{t('next')}</span>
+          </Button>
         </div>
       </nav>
     )}

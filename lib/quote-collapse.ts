@@ -169,7 +169,7 @@ export function setupQuoteCollapse(doc: Document, labels: QuoteCollapseLabels): 
   // inline. Neutral grays read fine after the dark-mode invert filter too.
   button.style.cssText =
     'display:inline-block;margin:12px 0 4px;padding:3px 12px;border:none;' +
-    'border-radius:999px;background:#e3e6ea;color:#3c4043;font-size:11px;' +
+    'border-radius:999px;background:#e3e6ea;color:#3c4043;font-size:12px;' +
     'line-height:1;letter-spacing:2px;cursor:pointer;font-family:inherit;';
   button.addEventListener('mouseenter', () => { button.style.background = '#d4d8dd'; });
   button.addEventListener('mouseleave', () => { button.style.background = '#e3e6ea'; });
@@ -253,7 +253,7 @@ export function collapsePlainTextQuotes(safeHtml: string, labels: QuoteCollapseL
   const summary =
     `<summary title="${escapeAttr(labels.show)}" style="display:inline-block;` +
     'list-style:none;margin:4px 0;padding:3px 12px;border-radius:999px;' +
-    'background:#e3e6ea;color:#3c4043;font-size:11px;line-height:1;' +
+    'background:#e3e6ea;color:#3c4043;font-size:12px;line-height:1;' +
     `letter-spacing:2px;cursor:pointer;">•••</summary>`;
   return `${before}\n<details>${summary}${quoted}</details>${after ? '\n' + after : ''}`;
 }

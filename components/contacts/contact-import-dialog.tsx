@@ -4,18 +4,22 @@ import { useState, useRef, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { Upload, FileText, AlertTriangle, X, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { AppModal } from "@/components/ui/modal";
 import { cn } from "@/lib/utils";
 import { parseVCard, detectDuplicates } from "@/lib/vcard";
 import type { ContactCard } from "@/lib/jmap/types";
 import { getContactDisplayName, getContactPrimaryEmail } from "@/stores/contact-store";
 
 interface ContactImportDialogProps {
+  isOpen: boolean;
   existingContacts: ContactCard[];
   onImport: (contacts: ContactCard[]) => Promise<number>;
   onClose: () => void;
 }
 
 export function ContactImportDialog({
+  isOpen,
   existingContacts,
   onImport,
   onClose,
@@ -28,6 +32,15 @@ export function ContactImportDialog({
   const [isImporting, setIsImporting] = useState(false);
   const [result, setResult] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const handleClose = () => {
+    setParsed([]);
+    setSelected(new Set());
+    setDuplicates(new Map());
+    setResult(null);
+    setError(null);
+    onClose();
+  };
 
   const handleFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -100,14 +113,36 @@ export function ContactImportDialog({
   };
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="px-6 py-4 border-b border-border flex items-center justify-between">
-        <h2 className="text-lg font-semibold">{t("import.title")}</h2>
-        <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8">
-          <X className="w-4 h-4" />
-        </Button>
-      </div>
-
+    <AppModal
+      isOpen={isOpen}
+      onClose={handleClose}
+      size="lg"
+      className="max-w-2xl max-h-[80vh]"
+      bodyClassName="p-0 overflow-hidden flex flex-col"
+      header={(
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+          <h2 className="text-lg font-semibold">{t("import.title")}</h2>
+          <Button variant="ghost" size="icon" onClick={handleClose} className="h-8 w-8" aria-label={t("import.close")}>
+            <X className="w-4 h-4" />
+          </Button>
+        </div>
+      )}
+      footer={parsed.length > 0 && result === null ? (
+        <div className="flex items-center justify-between w-full">
+          <p className="text-sm text-muted-foreground">
+            {t("import.selected", { count: selected.size })}
+          </p>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={handleClose} disabled={isImporting}>
+              {t("form.cancel")}
+            </Button>
+            <Button onClick={handleImport} disabled={isImporting || selected.size === 0}>
+              {isImporting ? t("import.importing") : t("import.import_button")}
+            </Button>
+          </div>
+        </div>
+      ) : undefined}
+    >
       <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
         {result !== null ? (
           <div className="flex flex-col items-center justify-center py-12">
@@ -115,7 +150,7 @@ export function ContactImportDialog({
               <Check className="w-6 h-6 text-green-600 dark:text-green-400" />
             </div>
             <p className="text-sm font-medium">{t("import.success", { count: result })}</p>
-            <Button variant="outline" size="sm" onClick={onClose} className="mt-4">
+            <Button variant="outline" size="sm" onClick={handleClose} className="mt-4">
               {t("import.close")}
             </Button>
           </div>
@@ -129,11 +164,12 @@ export function ContactImportDialog({
               className="hidden"
             />
 
-            <button
+            <Button
               type="button"
+              variant="outline"
               onClick={() => fileRef.current?.click()}
               className={cn(
-                "w-full border-2 border-dashed rounded-lg py-12 px-4",
+                "w-full border-2 border-dashed rounded-lg py-12 px-4 h-auto",
                 "flex flex-col items-center gap-3 transition-colors",
                 "hover:border-primary hover:bg-primary/5",
                 "text-muted-foreground"
@@ -142,7 +178,7 @@ export function ContactImportDialog({
               <Upload className="w-8 h-8" />
               <p className="text-sm font-medium">{t("import.drop_hint")}</p>
               <p className="text-xs">{t("import.file_types")}</p>
-            </button>
+            </Button>
 
             {error && (
               <div className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950 px-3 py-2 rounded flex items-center gap-2">
@@ -182,21 +218,28 @@ export function ContactImportDialog({
                 const isSelected = selected.has(idx);
 
                 return (
-                  <button
+                  <div
                     key={idx}
-                    type="button"
+                    role="button"
+                    tabIndex={0}
                     onClick={() => toggleSelect(idx)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        toggleSelect(idx);
+                      }
+                    }}
                     className={cn(
-                      "w-full flex items-center gap-3 px-3 py-2.5 text-start transition-colors hover:bg-muted",
+                      "w-full flex items-center gap-3 px-3 py-2.5 text-start transition-colors hover:bg-muted cursor-pointer",
                       isSelected && "bg-primary/5"
                     )}
                   >
-                    <div className={cn(
-                      "w-5 h-5 rounded border flex items-center justify-center flex-shrink-0 transition-colors",
-                      isSelected ? "bg-primary border-primary text-primary-foreground" : "border-border"
-                    )}>
-                      {isSelected && <Check className="w-3 h-3" />}
-                    </div>
+                    <Checkbox
+                      isSelected={isSelected}
+                      onChange={() => toggleSelect(idx)}
+                      aria-label={cName || cEmail || String(idx)}
+                      className="flex-shrink-0"
+                    />
                     <FileText className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-medium truncate">{cName || cEmail || "-"}</div>
@@ -209,29 +252,13 @@ export function ContactImportDialog({
                         {t("import.duplicate")}
                       </span>
                     )}
-                  </button>
+                  </div>
                 );
               })}
             </div>
           </>
         )}
       </div>
-
-      {parsed.length > 0 && result === null && (
-        <div className="flex items-center justify-between px-6 py-4 border-t border-border">
-          <p className="text-sm text-muted-foreground">
-            {t("import.selected", { count: selected.size })}
-          </p>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={onClose} disabled={isImporting}>
-              {t("form.cancel")}
-            </Button>
-            <Button onClick={handleImport} disabled={isImporting || selected.size === 0}>
-              {isImporting ? t("import.importing") : t("import.import_button")}
-            </Button>
-          </div>
-        </div>
-      )}
-    </div>
+    </AppModal>
   );
 }

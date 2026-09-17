@@ -9,12 +9,14 @@ vi.mock('@/lib/stalwart/jmap-passthrough', () => ({
   },
 }));
 
+let hasStalwartCapability = true;
+
 vi.mock('@/stores/auth-store', () => ({
   useAuthStore: {
     getState: () => ({
       client: {
         getAccountId: () => 'acc-primary',
-        hasAccountCapability: (cap: string) => cap === 'urn:stalwart:jmap',
+        hasAccountCapability: (cap: string) => hasStalwartCapability && cap === 'urn:stalwart:jmap',
       },
     }),
   },
@@ -31,6 +33,7 @@ function resetStore() {
 
 describe('account-security-store', () => {
   beforeEach(() => {
+    hasStalwartCapability = true;
     mockedJmap.mockReset();
     resetStore();
   });
@@ -152,6 +155,16 @@ describe('account-security-store', () => {
   });
 
   describe('fetchPrincipal', () => {
+    it('skips the passthrough when the account lacks urn:stalwart:jmap', async () => {
+      hasStalwartCapability = false;
+
+      await useAccountSecurityStore.getState().fetchPrincipal();
+
+      expect(mockedJmap).not.toHaveBeenCalled();
+      expect(useAccountSecurityStore.getState().isLoadingPrincipal).toBe(false);
+      expect(useAccountSecurityStore.getState().error).toBeNull();
+    });
+
     it('combines primary name with enabled aliases and exposes quota/roles', async () => {
       mockedJmap.mockResolvedValueOnce([
         ['x:Account/get', {

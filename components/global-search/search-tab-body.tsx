@@ -1,7 +1,8 @@
 "use client";
+import { Loader } from "@/components/ui/loader";
 
 import { useEffect, useMemo, useState } from "react";
-import { Loader2, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useGlobalSearch } from "@/hooks/use-global-search";
 import { openHit } from "@/lib/global-search/open-hit";
@@ -118,7 +119,7 @@ export function SearchTabBody({ tabId, data }: SearchTabBodyProps) {
             placeholder={t('placeholder')}
             className="flex-1 min-w-0 bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
           />
-          {isSearching && <Loader2 className="w-4 h-4 shrink-0 animate-spin text-muted-foreground" aria-label={t('searching')} />}
+          {isSearching && <Loader size="sm" color="current" />}
         </div>
         <div className="flex-1 min-h-0 overflow-y-auto">
           <SearchResultList

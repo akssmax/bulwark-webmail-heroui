@@ -1,9 +1,11 @@
 "use client";
+import { Loader } from "@/components/ui/loader";
 
 import { useState, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
-import { X, Download, Loader2, ExternalLink } from "lucide-react";
+import { X, Download, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AppModal } from "@/components/ui/modal";
 import { getFilePreviewKind, isMimeTypeSafeForInlinePreview } from "@/lib/file-preview";
 import dynamic from "next/dynamic";
 import { EmlPreview, type ParsedEml } from "@/components/files/eml-preview";
@@ -279,53 +281,45 @@ export function FilePreviewModal({ name, onClose, onDownload, getFileContent }: 
     };
   }, [getFileContent, name]);
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        e.stopPropagation();
-        onClose();
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown, { capture: true });
-    return () => window.removeEventListener("keydown", handleKeyDown, { capture: true });
-  }, [onClose]);
-
   return (
-    <div role="dialog" aria-label={name} className="fixed inset-0 z-50 flex flex-col bg-black/80" onClick={onClose}>
-      {/* The dialog is `fixed inset-0` under `viewport-fit=cover`, so in an
-          installed iOS PWA (no browser chrome above it) the header would sit
-          underneath the status bar and its buttons - including the close
-          button - became unreachable (#936). Pad the bar itself so its
-          background still bleeds behind the status bar / notch. The insets are
-          physical, so pl/pr (not ps/pe) is correct in RTL too. */}
-      <div className="flex items-center justify-between gap-2 pl-[calc(1rem+env(safe-area-inset-left))] pr-[calc(1rem+env(safe-area-inset-right))] pt-[calc(0.75rem+env(safe-area-inset-top))] pb-3 bg-background/90 backdrop-blur border-b border-border" onClick={(e) => e.stopPropagation()}>
-        <h3 className="text-sm font-medium truncate">{name}</h3>
-        <div className="flex items-center gap-2">
-          {objectUrl && canOpenInNewTab && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              title={t("open_in_new_tab")}
-              aria-label={t("open_in_new_tab")}
-              onClick={() => window.open(objectUrl, "_blank", "noopener,noreferrer")}
-            >
-              <ExternalLink className="w-4 h-4" />
+    <AppModal
+      isOpen
+      onClose={onClose}
+      size="full"
+      className="bg-black/80"
+      header={(
+        <div
+          className="flex items-center justify-between gap-2 pl-[calc(1rem+env(safe-area-inset-left))] pr-[calc(1rem+env(safe-area-inset-right))] pt-[calc(0.75rem+env(safe-area-inset-top))] pb-3 bg-background/90 backdrop-blur border-b border-border"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <h3 className="text-sm font-medium truncate">{name}</h3>
+          <div className="flex items-center gap-2">
+            {objectUrl && canOpenInNewTab && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                title={t("open_in_new_tab")}
+                aria-label={t("open_in_new_tab")}
+                onClick={() => window.open(objectUrl, "_blank", "noopener,noreferrer")}
+              >
+                <ExternalLink className="w-4 h-4" />
+              </Button>
+            )}
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => void onDownload()}>
+              <Download className="w-4 h-4" />
             </Button>
-          )}
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => void onDownload()}>
-            <Download className="w-4 h-4" />
-          </Button>
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onClose}>
-            <X className="w-4 h-4" />
-          </Button>
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onClose} aria-label={t("cancel")}>
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
-      </div>
-
-      <div className="flex-1 flex items-center justify-center overflow-auto p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pl-[calc(1rem+env(safe-area-inset-left))] pr-[calc(1rem+env(safe-area-inset-right))]">
+      )}
+      bodyClassName="flex-1 flex items-center justify-center overflow-auto p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pl-[calc(1rem+env(safe-area-inset-left))] pr-[calc(1rem+env(safe-area-inset-right))]"
+    >
         {loading && (
           <div className="flex flex-col items-center gap-2 text-muted-foreground">
-            <Loader2 className="w-8 h-8 animate-spin" />
+            <Loader size="lg" color="current" />
           </div>
         )}
 
@@ -415,7 +409,6 @@ export function FilePreviewModal({ name, onClose, onDownload, getFileContent }: 
             onClick={(e) => e.stopPropagation()}
           />
         )}
-      </div>
-    </div>
+    </AppModal>
   );
 }

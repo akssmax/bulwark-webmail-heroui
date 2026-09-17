@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo, useState, useCallback, useEffect, useRef, type DragEvent } from "react";
+import { useMemo, useState, useCallback, type DragEvent } from "react";
 import { useTranslations } from "next-intl";
 import { BookUser, User, Users, Plus, Share2, Book, BookPlus, ChevronRight, ChevronDown, UserPlus, UsersRound, Upload, Tag, Pencil, Trash2, Settings, Mail, Star } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { Dropdown } from "@/components/ui/dropdown";
 import { ContextMenu, ContextMenuItem, ContextMenuSeparator, ContextMenuSubMenu } from "@/components/ui/context-menu";
 import { useContextMenu } from "@/hooks/use-context-menu";
 import { cn } from "@/lib/utils";
@@ -117,9 +118,6 @@ export function ContactsSidebar({
   const { contextMenu: keywordContextMenu, openContextMenu: openKeywordContextMenu, closeContextMenu: closeKeywordContextMenu, menuRef: keywordMenuRef } = useContextMenu<string>();
 
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>(loadCollapsed);
-  const [showMenu, setShowMenu] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-  const menuBtnRef = useRef<HTMLButtonElement>(null);
 
   const toggleSection = useCallback((key: string) => {
     setCollapsed(prev => {
@@ -128,21 +126,6 @@ export function ContactsSidebar({
       return next;
     });
   }, []);
-
-  // Close dropdown on outside click
-  useEffect(() => {
-    if (!showMenu) return;
-    const handler = (e: MouseEvent) => {
-      if (
-        menuRef.current && !menuRef.current.contains(e.target as Node) &&
-        menuBtnRef.current && !menuBtnRef.current.contains(e.target as Node)
-      ) {
-        setShowMenu(false);
-      }
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [showMenu]);
 
   const sortedGroups = useMemo(() => {
     return [...groups].sort((a, b) =>
@@ -270,69 +253,64 @@ export function ContactsSidebar({
   }, [groups, individuals]);
 
   return (
-    <div className={cn("flex flex-col h-full bg-secondary", className)}>
+    <div className={cn("flex flex-col h-full bg-sidebar", className)}>
       {/* Header */}
       <div className="px-3 border-b border-border flex items-center justify-between" style={{ paddingBlock: 'var(--density-header-py)' }}>
         <span className="text-sm font-semibold truncate">{t("title")}</span>
-        <div className="relative flex-shrink-0">
-          <Button
-            ref={menuBtnRef}
-            size="icon"
-            variant="ghost"
-            onClick={() => setShowMenu(v => !v)}
-            className="h-7 w-7"
-          >
-            <Plus className="w-4 h-4" />
-          </Button>
-          {showMenu && (
-            <div
-              ref={menuRef}
-              className="absolute end-0 top-full mt-1 w-44 rounded-md border border-border bg-background text-foreground shadow-md z-50 py-1"
+        <Dropdown>
+          <Dropdown.Trigger>
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-7 w-7"
+              aria-label={t("create_new")}
             >
-              <button
-                className="w-full flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-accent transition-colors text-start"
-                onClick={() => { setShowMenu(false); onCreateContact(); }}
-              >
-                <UserPlus className="w-4 h-4" />
-                {t("create_new")}
-              </button>
-              <button
-                className="w-full flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-accent transition-colors text-start"
-                onClick={() => { setShowMenu(false); onCreateGroup(); }}
-              >
-                <UsersRound className="w-4 h-4" />
-                {t("groups.create")}
-              </button>
+              <Plus className="w-4 h-4" />
+            </Button>
+          </Dropdown.Trigger>
+          <Dropdown.Popover placement="bottom end" className="w-44">
+            <Dropdown.Menu>
+              <Dropdown.Item onAction={onCreateContact}>
+                <span className="flex items-center gap-2">
+                  <UserPlus className="w-4 h-4" />
+                  {t("create_new")}
+                </span>
+              </Dropdown.Item>
+              <Dropdown.Item onAction={onCreateGroup}>
+                <span className="flex items-center gap-2">
+                  <UsersRound className="w-4 h-4" />
+                  {t("groups.create")}
+                </span>
+              </Dropdown.Item>
               {onCreateAddressBook && (
-                <button
-                  className="w-full flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-accent transition-colors text-start"
-                  onClick={() => { setShowMenu(false); onCreateAddressBook(); }}
-                >
-                  <BookPlus className="w-4 h-4" />
-                  {t("address_books.create")}
-                </button>
+                <Dropdown.Item onAction={onCreateAddressBook}>
+                  <span className="flex items-center gap-2">
+                    <BookPlus className="w-4 h-4" />
+                    {t("address_books.create")}
+                  </span>
+                </Dropdown.Item>
               )}
               {onImport && (
-                <button
-                  className="w-full flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-accent transition-colors text-start"
-                  onClick={() => { setShowMenu(false); onImport(); }}
-                >
-                  <Upload className="w-4 h-4" />
-                  {t("import.title")}
-                </button>
+                <Dropdown.Item onAction={onImport}>
+                  <span className="flex items-center gap-2">
+                    <Upload className="w-4 h-4" />
+                    {t("import.title")}
+                  </span>
+                </Dropdown.Item>
               )}
-            </div>
-          )}
-        </div>
+            </Dropdown.Menu>
+          </Dropdown.Popover>
+        </Dropdown>
       </div>
 
       {/* Navigation */}
       <div className="flex-1 overflow-y-auto py-1">
         {/* All contacts */}
-        <button
+        <Button
+          variant="ghost"
           onClick={() => onSelectCategory("all")}
           className={cn(
-            "w-full flex items-center gap-2 px-3 text-sm transition-colors",
+            "w-full flex items-center gap-2 justify-start px-3 text-sm h-auto min-h-0 font-normal",
             isAllActive
               ? "bg-accent text-accent-foreground font-medium"
               : "text-foreground/80 hover:bg-muted"
@@ -344,7 +322,7 @@ export function ContactsSidebar({
           <span className="ms-auto text-xs text-muted-foreground tabular-nums">
             {individuals.length}
           </span>
-        </button>
+        </Button>
 
         {/* Address Books: per-account groups in multi-account Pro mode, else the
             classic "My Address Books" section. */}
@@ -356,9 +334,10 @@ export function ContactsSidebar({
             return (
               <div key={group.key} className="mt-2">
                 <div className="flex items-center px-3 py-1 group">
-                  <button
+                  <Button
+                    variant="ghost"
                     onClick={() => toggleSection(sectionKey)}
-                    className="flex items-center gap-1 flex-1 min-w-0 text-start"
+                    className="flex items-center gap-1 flex-1 min-w-0 justify-start h-auto min-h-0 px-0 py-0 font-normal"
                   >
                     {expanded ? (
                       <ChevronDown className="w-3 h-3 text-muted-foreground" />
@@ -369,13 +348,13 @@ export function ContactsSidebar({
                     <span className="text-xs font-semibold text-foreground/90 uppercase tracking-wider truncate">
                       {group.label}
                     </span>
-                  </button>
+                  </Button>
                 </div>
                 {expanded && (
                   <div className="ps-2">
                     {owned.length > 0 && (
                       <div className="mt-1">
-                        <div className="px-3 py-0.5 text-[10px] font-medium text-muted-foreground/80 uppercase tracking-wider">
+                        <div className="px-3 py-0.5 text-xs font-medium text-muted-foreground/80 uppercase tracking-wider">
                           {t("address_books.title")}
                         </div>
                         {owned.map((book) => (
@@ -393,7 +372,7 @@ export function ContactsSidebar({
                     )}
                     {sharedGroups.map((sg) => (
                       <div key={`${group.key}-shared-${sg.label}`} className="mt-1">
-                        <div className="px-3 py-0.5 text-[10px] font-medium text-muted-foreground/80 uppercase tracking-wider flex items-center gap-1">
+                        <div className="px-3 py-0.5 text-xs font-medium text-muted-foreground/80 uppercase tracking-wider flex items-center gap-1">
                           <Share2 className="w-3 h-3" />
                           {sg.label}
                         </div>
@@ -419,9 +398,10 @@ export function ContactsSidebar({
           personalBooks.length > 0 && (
             <div className="mt-2">
               <div className="flex items-center px-3 py-1 group">
-                <button
+                <Button
+                  variant="ghost"
                   onClick={() => toggleSection("addressBooks")}
-                  className="flex items-center gap-1 flex-1 text-start"
+                  className="flex items-center gap-1 flex-1 min-w-0 justify-start h-auto min-h-0 px-0 py-0 font-normal"
                 >
                   {collapsed.addressBooks ? (
                     <ChevronRight className="w-3 h-3 text-muted-foreground" />
@@ -431,18 +411,22 @@ export function ContactsSidebar({
                   <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     {t("address_books.title")}
                   </span>
-                </button>
-                <button
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
                   onClick={(e) => {
                     e.stopPropagation();
                     try { localStorage.setItem('settings-active-tab', 'contacts'); } catch { /* ignore */ }
                     router.push('/settings');
                   }}
-                  className="p-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-150 hover:bg-muted"
+                  className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity duration-150"
                   title={t("address_books.manage")}
+                  aria-label={t("address_books.manage")}
                 >
                   <Settings className="w-3 h-3 text-muted-foreground" />
-                </button>
+                </Button>
               </div>
               {!collapsed.addressBooks && personalBooks.map((book) => (
                 <AddressBookItem
@@ -462,9 +446,10 @@ export function ContactsSidebar({
         {/* Groups section */}
         {sortedGroups.length > 0 && (
           <div className="mt-2">
-            <button
+            <Button
+              variant="ghost"
               onClick={() => toggleSection("groups")}
-              className="flex items-center gap-1 px-3 py-1 w-full text-start group"
+              className="flex items-center gap-1 px-3 py-1 w-full justify-start h-auto min-h-0 font-normal"
             >
               {collapsed.groups ? (
                 <ChevronRight className="w-3 h-3 text-muted-foreground" />
@@ -474,19 +459,20 @@ export function ContactsSidebar({
               <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 {t("tabs.groups")}
               </span>
-            </button>
+            </Button>
 
             {!collapsed.groups && sortedGroups.map((group) => {
               const isActive = typeof activeCategory === "object" && "groupId" in activeCategory && activeCategory.groupId === group.id;
               const memberCount = memberCountByGroup[group.id] || 0;
 
               return (
-                <button
+                <Button
                   key={group.id}
+                  variant="ghost"
                   onClick={() => onSelectCategory({ groupId: group.id })}
                   onContextMenu={(e) => openGroupContextMenu(e, group)}
                   className={cn(
-                    "w-full flex items-center gap-2 ps-5 pe-3 text-sm transition-colors",
+                    "w-full flex items-center gap-2 justify-start ps-5 pe-3 text-sm h-auto min-h-0 font-normal",
                     isActive
                       ? "bg-accent text-accent-foreground font-medium"
                       : "text-foreground/80 hover:bg-muted"
@@ -498,7 +484,7 @@ export function ContactsSidebar({
                   <span className="ms-auto text-xs text-muted-foreground tabular-nums">
                     {memberCount}
                   </span>
-                </button>
+                </Button>
               );
             })}
           </div>
@@ -506,9 +492,10 @@ export function ContactsSidebar({
 
         {/* Categories section (from contact keywords) */}
         <div className="mt-2">
-          <button
+          <Button
+            variant="ghost"
             onClick={() => toggleSection("categories")}
-            className="flex items-center gap-1 px-3 py-1 w-full text-start group"
+            className="flex items-center gap-1 px-3 py-1 w-full justify-start h-auto min-h-0 font-normal"
           >
             {collapsed.categories ? (
               <ChevronRight className="w-3 h-3 text-muted-foreground" />
@@ -518,15 +505,16 @@ export function ContactsSidebar({
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
               {t("detail.categories")}
             </span>
-          </button>
+          </Button>
 
           {!collapsed.categories && (
             <>
               {/* No Category item */}
-              <button
+              <Button
+                variant="ghost"
                 onClick={() => onSelectCategory("uncategorized")}
                 className={cn(
-                  "w-full flex items-center gap-2 ps-5 pe-3 text-sm transition-colors",
+                  "w-full flex items-center gap-2 justify-start ps-5 pe-3 text-sm h-auto min-h-0 font-normal",
                   activeCategory === "uncategorized"
                     ? "bg-accent text-accent-foreground font-medium"
                     : "text-foreground/80 hover:bg-muted"
@@ -538,7 +526,7 @@ export function ContactsSidebar({
                 <span className="ms-auto text-xs text-muted-foreground tabular-nums">
                   {uncategorizedCount}
                 </span>
-              </button>
+              </Button>
               {allKeywords.map(([keyword, count]) => {
                 const isActive = typeof activeCategory === "object" && "keyword" in activeCategory && activeCategory.keyword === keyword;
                 return (
@@ -562,9 +550,10 @@ export function ContactsSidebar({
         {!multiAccountMode && sharedBookGroups.map((group) => (
           <div key={group.accountId} className="mt-2">
             <div className="flex items-center px-3 py-1 group">
-              <button
+              <Button
+                variant="ghost"
                 onClick={() => toggleSection(`shared-${group.accountId}`)}
-                className="flex items-center gap-1 flex-1 min-w-0 text-start"
+                className="flex items-center gap-1 flex-1 min-w-0 justify-start h-auto min-h-0 px-0 py-0 font-normal"
               >
                 {collapsed[`shared-${group.accountId}`] ? (
                   <ChevronRight className="w-3 h-3 text-muted-foreground" />
@@ -575,18 +564,22 @@ export function ContactsSidebar({
                 <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider truncate">
                   {t("address_books.shared_prefix", { name: group.accountName })}
                 </span>
-              </button>
-              <button
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
                 onClick={(e) => {
                   e.stopPropagation();
                   try { localStorage.setItem('settings-active-tab', 'contacts'); } catch { /* ignore */ }
                   router.push('/settings');
                 }}
-                className="p-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-150 hover:bg-muted"
+                className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity duration-150"
                 title={t("address_books.manage")}
+                aria-label={t("address_books.manage")}
               >
                 <Settings className="w-3 h-3 text-muted-foreground" />
-              </button>
+              </Button>
             </div>
             {!collapsed[`shared-${group.accountId}`] && group.books.map((book) => (
               <AddressBookItem
@@ -788,14 +781,15 @@ function CategoryItem({
   }, [keyword, onDropContacts]);
 
   return (
-    <button
+    <Button
+      variant="ghost"
       onClick={onSelect}
       onContextMenu={onContextMenu}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       className={cn(
-        "w-full flex items-center gap-2 ps-5 pe-3 text-sm transition-colors",
+        "w-full flex items-center gap-2 justify-start ps-5 pe-3 text-sm h-auto min-h-0 font-normal",
         isActive
           ? "bg-accent text-accent-foreground font-medium"
           : "text-foreground/80 hover:bg-muted",
@@ -808,7 +802,7 @@ function CategoryItem({
       <span className="ms-auto text-xs text-muted-foreground tabular-nums">
         {count}
       </span>
-    </button>
+    </Button>
   );
 }
 
@@ -856,7 +850,8 @@ function AddressBookItem({
   }, [book, onDropContacts]);
 
   return (
-    <button
+    <Button
+      variant="ghost"
       onClick={onSelect}
       onContextMenu={onContextMenu}
       onDragOver={handleDragOver}
@@ -866,7 +861,7 @@ function AddressBookItem({
       data-book-name={book.name}
       data-account={book.accountName ?? ''}
       className={cn(
-        "w-full flex items-center gap-2 ps-5 pe-3 text-sm transition-colors",
+        "w-full flex items-center gap-2 justify-start ps-5 pe-3 text-sm h-auto min-h-0 font-normal",
         isActive
           ? "bg-accent text-accent-foreground font-medium"
           : "text-foreground/80 hover:bg-muted",
@@ -885,6 +880,6 @@ function AddressBookItem({
       )}>
         {contactCount}
       </span>
-    </button>
+    </Button>
   );
 }

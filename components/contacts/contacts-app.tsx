@@ -810,10 +810,11 @@ export function ContactsApp({ linkSegments }: ContactsAppProps = {}) {
                   ? Object.values(group.members).filter(Boolean).length
                   : 0;
                 return (
-                  <button
+                  <Button
                     key={group.id}
+                    variant="ghost"
                     onClick={() => handleBulkAddToGroupConfirm(group.id)}
-                    className="w-full flex items-center gap-3 px-6 py-3 text-start hover:bg-muted transition-colors"
+                    className="w-full flex items-center gap-3 justify-start px-6 py-3 h-auto min-h-0 font-normal"
                   >
                     <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                       <Users className="w-4 h-4 text-primary" />
@@ -824,7 +825,7 @@ export function ContactsApp({ linkSegments }: ContactsAppProps = {}) {
                         {t("groups.member_count", { count: memberCount })}
                       </div>
                     </div>
-                  </button>
+                  </Button>
                 );
               })}
             </div>
@@ -896,7 +897,7 @@ export function ContactsApp({ linkSegments }: ContactsAppProps = {}) {
       <div className={cn("flex flex-1 min-h-0 overflow-hidden", isMobile && "flex-col")}>
       {/* Navigation Rail - desktop only (hidden when embedded in Pro shell) */}
       {!isMobile && !isEmbedded && (
-        <div className="w-14 bg-secondary flex flex-col flex-shrink-0" style={{ borderRight: '1px solid rgba(128, 128, 128, 0.3)' }}>
+        <div className="w-14 bg-sidebar flex flex-col flex-shrink-0 border-e border-sidebar-border">
           <NavigationRail
             collapsed
             quota={quota}
@@ -1137,17 +1138,12 @@ export function ContactsApp({ linkSegments }: ContactsAppProps = {}) {
           }}
         />
       )}
-      {showImportDialog && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-background rounded-lg border border-border shadow-xl w-full max-w-2xl max-h-[80vh] overflow-hidden">
-            <ContactImportDialog
-              existingContacts={contacts}
-              onImport={handleImportContacts}
-              onClose={() => setShowImportDialog(false)}
-            />
-          </div>
-        </div>
-      )}
+      <ContactImportDialog
+        isOpen={showImportDialog}
+        existingContacts={contacts}
+        onImport={handleImportContacts}
+        onClose={() => setShowImportDialog(false)}
+      />
       {sharingAddressBookId && client && (() => {
         const book = addressBooks.find((b) => b.id === sharingAddressBookId);
         if (!book) return null;

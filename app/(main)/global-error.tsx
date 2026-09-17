@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { AlertTriangle, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 /**
  * Global error boundary for the root layout.
@@ -40,13 +41,10 @@ export default function GlobalError({
             <p className="text-gray-600 dark:text-gray-400 mb-6">
               An unexpected error occurred. Please try again.
             </p>
-            <button
-              onClick={reset}
-              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              <RefreshCw className="w-4 h-4 me-2" />
+            <Button onClick={reset} className="gap-2">
+              <RefreshCw className="w-4 h-4" />
               Try again
-            </button>
+            </Button>
           </div>
         </div>
       </body>

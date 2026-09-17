@@ -21,6 +21,8 @@ import { TableCell } from "@tiptap/extension-table-cell";
 import { QuotedHtml, serializeEditorContent } from "@/components/email/quoted-html";
 import { SignatureBlock } from "@/components/email/signature-block";
 import { styledBlockAttributes } from "@/components/email/styled-block-attributes";
+import { Button } from "@/components/ui/button";
+import { MenuButton } from "@/components/ui/menu-button";
 import { cn } from "@/lib/utils";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useTranslations } from "next-intl";
@@ -98,19 +100,19 @@ function ToolbarButton({
   disabled?: boolean;
 }) {
   return (
-    <button
-      type="button"
+    <Button
+      variant="ghost"
+      size="icon"
       onClick={onClick}
       disabled={disabled}
       title={title}
       className={cn(
-        "p-1.5 rounded hover:bg-accent transition-colors",
+        "h-7 w-7 min-w-7 rounded hover:bg-accent",
         active && "bg-accent text-accent-foreground",
-        disabled && "opacity-40 cursor-not-allowed"
       )}
     >
       {children}
-    </button>
+    </Button>
   );
 }
 
@@ -144,13 +146,14 @@ function TableSizePicker({ onPick }: { onPick: (rows: number, cols: number) => v
           const c = i % TABLE_PICKER_COLS;
           const active = hover && r <= hover.r && c <= hover.c;
           return (
-            <button
+            <Button
               key={i}
-              type="button"
+              variant="ghost"
+              size="icon"
               onMouseEnter={() => setHover({ r, c })}
               onClick={() => onPick(r + 1, c + 1)}
               className={cn(
-                "w-4 h-4 border border-border/60 rounded-[2px] transition-colors",
+                "h-4 w-4 min-w-4 rounded-[2px] border border-border/60 p-0 transition-colors",
                 active ? "bg-primary border-primary" : "bg-background hover:bg-accent"
               )}
             />
@@ -413,40 +416,38 @@ export function RichTextEditor({
             ) : (
               <span className="flex items-baseline justify-center leading-none" aria-hidden>
                 <span className="text-sm font-semibold">A</span>
-                <span className="text-[9px] font-semibold">A</span>
+                <span className="text-xs font-semibold">A</span>
               </span>
             )}
           </ToolbarButton>
           {fontSizeMenuOpen && (
             <div className="absolute z-50 top-full start-0 mt-1 bg-popover border border-border rounded-md shadow-md p-1 min-w-[64px]">
               {FONT_SIZES.map((size) => (
-                <button
+                <MenuButton
                   key={size}
-                  type="button"
                   onClick={() => {
                     editor.chain().focus().setFontSize(size).run();
                     setFontSizeMenuOpen(false);
                   }}
                   className={cn(
-                    "block w-full text-start px-2 py-1 rounded hover:bg-accent transition-colors",
+                    "rounded px-2 py-1",
                     currentFontSize === size && "bg-accent text-accent-foreground"
                   )}
                   style={{ fontSize: size, lineHeight: 1.4 }}
                 >
                   {size}
-                </button>
+                </MenuButton>
               ))}
               <div className="h-px bg-border my-1" />
-              <button
-                type="button"
-                className="flex items-center gap-2 px-2 py-1 text-sm rounded hover:bg-accent text-start w-full"
+              <MenuButton
+                className="rounded px-2 py-1"
                 onClick={() => {
                   editor.chain().focus().unsetFontSize().run();
                   setFontSizeMenuOpen(false);
                 }}
               >
                 <RemoveFormatting className="w-4 h-4" /> {tToolbar("font_size_default")}
-              </button>
+              </MenuButton>
             </div>
           )}
         </div>
@@ -494,16 +495,17 @@ export function RichTextEditor({
             <div className="absolute z-50 top-full start-0 mt-1 bg-popover border border-border rounded-md shadow-md p-2">
               <div className="grid gap-0.5" style={{ gridTemplateColumns: "repeat(8, 1fr)" }}>
                 {TEXT_COLORS.map((color) => (
-                  <button
+                  <Button
                     key={color}
-                    type="button"
+                    variant="ghost"
+                    size="icon"
                     title={color}
                     onClick={() => {
                       editor.chain().focus().setColor(color).run();
                       setColorMenuOpen(false);
                     }}
                     className={cn(
-                      "w-4 h-4 border border-border/60 rounded-[2px] transition-transform hover:scale-110",
+                      "h-4 w-4 min-w-4 rounded-[2px] border border-border/60 p-0 transition-transform hover:scale-110",
                       editor.getAttributes("textStyle").color === color && "ring-1 ring-ring ring-offset-1"
                     )}
                     style={{ backgroundColor: color }}
@@ -511,16 +513,15 @@ export function RichTextEditor({
                 ))}
               </div>
               <div className="h-px bg-border my-1.5" />
-              <button
-                type="button"
-                className="flex items-center gap-2 px-2 py-1 text-sm rounded hover:bg-accent text-start w-full"
+              <MenuButton
+                className="rounded px-2 py-1"
                 onClick={() => {
                   editor.chain().focus().unsetColor().run();
                   setColorMenuOpen(false);
                 }}
               >
                 <RemoveFormatting className="w-4 h-4" /> {tToolbar("remove_color")}
-              </button>
+              </MenuButton>
             </div>
           )}
         </div>
@@ -548,16 +549,17 @@ export function RichTextEditor({
             <div className="absolute z-50 top-full start-0 mt-1 bg-popover border border-border rounded-md shadow-md p-2">
               <div className="grid gap-0.5" style={{ gridTemplateColumns: "repeat(8, 1fr)" }}>
                 {TEXT_COLORS.map((color) => (
-                  <button
+                  <Button
                     key={color}
-                    type="button"
+                    variant="ghost"
+                    size="icon"
                     title={color}
                     onClick={() => {
                       editor.chain().focus().setBackgroundColor(color).run();
                       setBgColorMenuOpen(false);
                     }}
                     className={cn(
-                      "w-4 h-4 border border-border/60 rounded-[2px] transition-transform hover:scale-110",
+                      "h-4 w-4 min-w-4 rounded-[2px] border border-border/60 p-0 transition-transform hover:scale-110",
                       currentBgColor === color && "ring-1 ring-ring ring-offset-1"
                     )}
                     style={{ backgroundColor: color }}
@@ -565,16 +567,15 @@ export function RichTextEditor({
                 ))}
               </div>
               <div className="h-px bg-border my-1.5" />
-              <button
-                type="button"
-                className="flex items-center gap-2 px-2 py-1 text-sm rounded hover:bg-accent text-start w-full"
+              <MenuButton
+                className="rounded px-2 py-1"
                 onClick={() => {
                   editor.chain().focus().unsetBackgroundColor().run();
                   setBgColorMenuOpen(false);
                 }}
               >
                 <RemoveFormatting className="w-4 h-4" /> {tToolbar("remove_background_color")}
-              </button>
+              </MenuButton>
             </div>
           )}
         </div>
@@ -689,64 +690,56 @@ export function RichTextEditor({
             <div className="absolute z-50 top-full start-0 mt-1 bg-popover border border-border rounded-md shadow-md p-2 min-w-[200px]">
               {editor.isActive("table") ? (
                 <div className="flex flex-col gap-0.5">
-                  <button
-                    type="button"
-                    className="flex items-center gap-2 px-2 py-1.5 text-sm rounded hover:bg-accent text-start"
+                  <MenuButton
+                    className="rounded px-2 py-1.5"
                     onClick={() => { editor.chain().focus().addRowBefore().run(); setTableMenuOpen(false); }}
                   >
                     <Rows3 className="w-4 h-4" /> {tToolbar("add_row_above")}
-                  </button>
-                  <button
-                    type="button"
-                    className="flex items-center gap-2 px-2 py-1.5 text-sm rounded hover:bg-accent text-start"
+                  </MenuButton>
+                  <MenuButton
+                    className="rounded px-2 py-1.5"
                     onClick={() => { editor.chain().focus().addRowAfter().run(); setTableMenuOpen(false); }}
                   >
                     <Rows3 className="w-4 h-4" /> {tToolbar("add_row_below")}
-                  </button>
-                  <button
-                    type="button"
-                    className="flex items-center gap-2 px-2 py-1.5 text-sm rounded hover:bg-accent text-start"
+                  </MenuButton>
+                  <MenuButton
+                    className="rounded px-2 py-1.5"
                     onClick={() => { editor.chain().focus().addColumnBefore().run(); setTableMenuOpen(false); }}
                   >
                     <Columns3 className="w-4 h-4" /> {tToolbar("add_column_before")}
-                  </button>
-                  <button
-                    type="button"
-                    className="flex items-center gap-2 px-2 py-1.5 text-sm rounded hover:bg-accent text-start"
+                  </MenuButton>
+                  <MenuButton
+                    className="rounded px-2 py-1.5"
                     onClick={() => { editor.chain().focus().addColumnAfter().run(); setTableMenuOpen(false); }}
                   >
                     <Columns3 className="w-4 h-4" /> {tToolbar("add_column_after")}
-                  </button>
+                  </MenuButton>
                   <div className="h-px bg-border my-1" />
-                  <button
-                    type="button"
-                    className="flex items-center gap-2 px-2 py-1.5 text-sm rounded hover:bg-accent text-start"
+                  <MenuButton
+                    className="rounded px-2 py-1.5"
                     onClick={() => { editor.chain().focus().deleteRow().run(); setTableMenuOpen(false); }}
                   >
                     <Trash2 className="w-4 h-4" /> {tToolbar("delete_row")}
-                  </button>
-                  <button
-                    type="button"
-                    className="flex items-center gap-2 px-2 py-1.5 text-sm rounded hover:bg-accent text-start"
+                  </MenuButton>
+                  <MenuButton
+                    className="rounded px-2 py-1.5"
                     onClick={() => { editor.chain().focus().deleteColumn().run(); setTableMenuOpen(false); }}
                   >
                     <Trash2 className="w-4 h-4" /> {tToolbar("delete_column")}
-                  </button>
-                  <button
-                    type="button"
-                    className="flex items-center gap-2 px-2 py-1.5 text-sm rounded hover:bg-accent text-start"
+                  </MenuButton>
+                  <MenuButton
+                    className="rounded px-2 py-1.5"
                     onClick={() => { editor.chain().focus().toggleHeaderRow().run(); setTableMenuOpen(false); }}
                   >
                     <Rows3 className="w-4 h-4" /> {tToolbar("toggle_header_row")}
-                  </button>
+                  </MenuButton>
                   <div className="h-px bg-border my-1" />
-                  <button
-                    type="button"
-                    className="flex items-center gap-2 px-2 py-1.5 text-sm rounded hover:bg-accent text-start text-red-600 dark:text-red-400"
+                  <MenuButton
+                    className="rounded px-2 py-1.5 text-red-600 dark:text-red-400"
                     onClick={() => { editor.chain().focus().deleteTable().run(); setTableMenuOpen(false); }}
                   >
                     <Trash2 className="w-4 h-4" /> {tToolbar("delete_table")}
-                  </button>
+                  </MenuButton>
                 </div>
               ) : (
                 <TableSizePicker

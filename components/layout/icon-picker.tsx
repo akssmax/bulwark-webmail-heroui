@@ -6,6 +6,7 @@ import { icons as lucideIcons, type LucideIcon } from 'lucide-react';
 import { Search, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 // Curated list of commonly useful icons, organized by category
 const POPULAR_ICONS = [
@@ -98,45 +99,47 @@ export function IconPicker({ value, onChange, className }: IconPickerProps) {
             className="ps-8 h-8 text-xs"
           />
           {search && (
-            <button
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={() => setSearch('')}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              className="absolute right-1 top-1/2 h-6 w-6 min-w-6 -translate-y-1/2 text-muted-foreground"
+              aria-label={t('search_icons')}
             >
               <X className="w-3 h-3" />
-            </button>
+            </Button>
           )}
         </div>
-        <button
+        <Button
+          variant={showAll ? 'default' : 'outline'}
+          size="sm"
           onClick={() => setShowAll(!showAll)}
-          className={cn(
-            'text-xs px-2 py-1 rounded-md border transition-colors whitespace-nowrap',
-            showAll
-              ? 'bg-primary/10 text-primary border-primary/30'
-              : 'bg-muted text-muted-foreground border-border hover:text-foreground'
-          )}
+          className="h-8 whitespace-nowrap text-xs"
         >
           {showAll ? t('show_popular') : t('show_all')}
-        </button>
+        </Button>
       </div>
       <div
         ref={gridRef}
         className="grid grid-cols-8 gap-1 max-h-[200px] overflow-y-auto p-1 border rounded-md bg-muted/30"
       >
         {filteredIcons.map(name => (
-          <button
+          <Button
             key={name}
             type="button"
+            variant={value === name ? 'default' : 'ghost'}
+            size="icon"
             onClick={() => onChange(name)}
             title={name}
             className={cn(
-              'flex items-center justify-center w-8 h-8 rounded-md transition-colors',
+              'h-8 w-8 min-w-8',
               value === name
                 ? 'bg-primary text-primary-foreground'
-                : 'hover:bg-muted text-muted-foreground hover:text-foreground'
+                : 'text-muted-foreground hover:text-foreground',
             )}
           >
             {renderIcon(name)}
-          </button>
+          </Button>
         ))}
         {filteredIcons.length === 0 && (
           <p className="col-span-8 py-4 text-center text-xs text-muted-foreground">

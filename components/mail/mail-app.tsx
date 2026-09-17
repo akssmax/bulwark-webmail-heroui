@@ -4,6 +4,7 @@ import { useEffect, useState, useRef, useMemo, useCallback, useId } from "react"
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Sidebar } from "@/components/layout/sidebar";
+import { Loader, LoaderBlock } from "@/components/ui/loader";
 import { EmailList } from "@/components/email/email-list";
 import { MessageListTabs } from "@/components/email/message-list-tabs";
 import dynamic from "next/dynamic";
@@ -89,9 +90,11 @@ import { EML_IMPORT_ACCEPT, expandImportableEmails } from "@/lib/eml-import";
 import { findDraftIdentityId, findReplyIdentityId, resolveComposeAccountEmail } from "@/lib/reply-identity";
 import { buildReplyRecipients, isSelfSent } from "@/lib/reply-recipients";
 import { useProMultiAccountIdentities } from "@/hooks/use-pro-multi-account-identities";
-import { Filter, ChevronDown, X, Paperclip, Star, Mail, MailOpen, RotateCcw, PenSquare, PenLine, CheckSquare, Square, AlertTriangle, ArrowLeft } from "lucide-react";
+import { Filter, ChevronDown, X, Paperclip, Star, Mail, MailOpen, RotateCcw, PenSquare, PenLine, AlertTriangle, ArrowLeft } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { ResizeHandle } from "@/components/layout/resize-handle";
 import { Button } from "@/components/ui/button";
+import { AppSelect } from "@/components/ui/select";
 import { useConfig } from "@/hooks/use-config";
 import { usePluginStore } from "@/stores/plugin-store";
 import { AppTopBannerSlot } from "@/components/plugins/app-top-banner-slot";
@@ -3223,10 +3226,7 @@ export function MailApp({ linkSegments }: MailAppProps = {}) {
   if (!initialCheckDone || authLoading || (!isAuthenticated || !client)) {
     return (
       <div className="flex h-screen items-center justify-center bg-background">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-foreground mx-auto"></div>
-          <p className="mt-4 text-sm text-muted-foreground">{t("common.loading")}</p>
-        </div>
+        <LoaderBlock label={t("common.loading")} size="lg" />
       </div>
     );
   }
@@ -3452,19 +3452,20 @@ export function MailApp({ linkSegments }: MailAppProps = {}) {
   };
 
   const ToggleChip = ({ icon, label, value, onClick }: { icon: React.ReactNode; label: string; value: boolean | null; onClick: () => void }) => (
-    <button
+    <Button
       type="button"
+      variant={value === true ? "secondary" : value === false ? "ghost" : "outline"}
+      size="sm"
       onClick={onClick}
       className={cn(
-        "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs transition-colors border",
+        "h-7 min-h-7 rounded-full px-2.5 text-xs gap-1.5",
         value === true && "bg-primary/10 border-primary/30 text-primary",
-        value === false && "bg-muted border-border text-muted-foreground line-through",
-        value === null && "bg-background border-border text-muted-foreground hover:text-foreground hover:border-muted-foreground"
+        value === false && "line-through opacity-70",
       )}
     >
       {icon}
       {label}
-    </button>
+    </Button>
   );
 
   if (!isAuthenticated) {
@@ -3492,7 +3493,7 @@ export function MailApp({ linkSegments }: MailAppProps = {}) {
         <div className="flex flex-1 overflow-hidden">
         {/* Desktop Navigation Rail (hidden when embedded inside Pro shell) */}
         {!isMobile && !isTablet && !isEmbedded && (
-          <div className="w-14 bg-secondary flex flex-col flex-shrink-0" style={{ borderRight: '1px solid rgba(128, 128, 128, 0.3)' }}>
+          <div className="w-14 bg-sidebar flex flex-col flex-shrink-0 border-e border-sidebar-border">
             <NavigationRail
               collapsed
               quota={quota}
@@ -3694,39 +3695,26 @@ export function MailApp({ linkSegments }: MailAppProps = {}) {
               )}
               <div className="px-3 h-14 flex items-center">
                 <div className="flex items-center gap-1.5 w-full">
-                  {/* Select / Select All toggle */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (selectedEmailIds.size > 0) {
-                        if (selectedEmailIds.size === activeEmails.length) {
-                          clearSelection();
-                        } else {
-                          selectAllEmails();
-                        }
-                      } else if (activeEmails.length > 0) {
+                  <Checkbox
+                    isSelected={selectedEmailIds.size > 0 && selectedEmailIds.size === activeEmails.length}
+                    isIndeterminate={selectedEmailIds.size > 0 && selectedEmailIds.size < activeEmails.length}
+                    isDisabled={isScheduledView}
+                    aria-label={isScheduledView ? t('email_viewer.scheduled_actions_only') : selectedEmailIds.size > 0 ? (selectedEmailIds.size === activeEmails.length ? t('email_list.batch_actions.clear_selection') : t('email_list.batch_actions.select_all')) : t('email_list.batch_actions.select')}
+                    contentClassName="p-2"
+                    onChange={(selected) => {
+                      if (selectedEmailIds.size === 0) {
+                        if (activeEmails.length === 0) return;
                         const currentId = selectedEmail?.id;
                         const target = currentId && activeEmails.some((e) => e.id === currentId)
                           ? currentId
                           : activeEmails[0].id;
                         toggleEmailSelection(target);
+                        return;
                       }
+                      if (selected) selectAllEmails();
+                      else clearSelection();
                     }}
-                    disabled={isScheduledView}
-                    className={cn(
-                      "flex-shrink-0 p-2 rounded-md transition-colors",
-                      selectedEmailIds.size > 0
-                        ? "bg-primary/10 text-primary"
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                    )}
-                    title={isScheduledView ? t('email_viewer.scheduled_actions_only') : selectedEmailIds.size > 0 ? (selectedEmailIds.size === activeEmails.length ? t('email_list.batch_actions.clear_selection') : t('email_list.batch_actions.select_all')) : t('email_list.batch_actions.select')}
-                  >
-                    {selectedEmailIds.size > 0 ? (
-                      <CheckSquare className="w-4 h-4" />
-                    ) : (
-                      <Square className="w-4 h-4" />
-                    )}
-                  </button>
+                  />
                   <SearchBox
                     value={searchQuery}
                     onChange={setSearchQuery}
@@ -3740,40 +3728,43 @@ export function MailApp({ linkSegments }: MailAppProps = {}) {
                     disabled={isScheduledView}
                     title={isScheduledView ? t('email_viewer.scheduled_actions_only') : undefined}
                   />
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
+                    size="icon"
                     onClick={toggleAdvancedSearch}
                     disabled={isScheduledView}
                     className={cn(
-                      "relative flex-shrink-0 p-2 rounded-md transition-colors",
-                      isScheduledView && "opacity-50 cursor-not-allowed",
+                      "relative flex-shrink-0 size-9 min-w-9",
                       isAdvancedSearchOpen || activeFilterCount(searchFilters) > 0
                         ? "bg-primary/10 text-primary"
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                        : "text-muted-foreground",
                     )}
                     title={isScheduledView ? t('email_viewer.scheduled_actions_only') : t("advanced_search.toggle_filters")}
                   >
                     <Filter className="w-4 h-4" />
                     {!isAdvancedSearchOpen && activeFilterCount(searchFilters) > 0 && (
-                      <span className="absolute -top-1 -right-1 flex items-center justify-center w-4 h-4 text-[10px] font-bold rounded-full bg-primary text-primary-foreground">
+                      <span className="absolute -top-1 -right-1 flex items-center justify-center w-4 h-4 text-xs font-bold rounded-full bg-primary text-primary-foreground">
                         {activeFilterCount(searchFilters)}
                       </span>
                     )}
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
+                    variant="ghost"
+                    size="icon"
                     onClick={handleManualRefresh}
                     disabled={!client || isManualRefreshing}
-                    className={cn(
-                      "flex-shrink-0 p-2 rounded-md transition-colors",
-                      "text-muted-foreground hover:text-foreground hover:bg-muted",
-                      (!client || isManualRefreshing) && "opacity-50 cursor-not-allowed"
-                    )}
+                    className="flex-shrink-0 size-9 min-w-9 text-muted-foreground"
                     title={tCommon("refresh")}
                     aria-label={tCommon("refresh")}
                   >
-                    <RotateCcw className={cn("w-4 h-4", isManualRefreshing && "animate-spin")} />
-                  </button>
+                    {isManualRefreshing ? (
+                      <Loader size="sm" color="current" />
+                    ) : (
+                      <RotateCcw className="w-4 h-4" />
+                    )}
+                  </Button>
                 </div>
               </div>
 
@@ -3811,14 +3802,16 @@ export function MailApp({ linkSegments }: MailAppProps = {}) {
                   </div>
 
                   {/* "More" expand for advanced fields */}
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
+                    size="sm"
                     onClick={() => setShowAdvancedFields(!showAdvancedFields)}
-                    className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                    className="h-7 min-h-7 px-1 text-xs text-muted-foreground"
                   >
                     <ChevronDown className={cn("w-3.5 h-3.5 transition-transform", showAdvancedFields && "rotate-180")} />
                     <span>{t("advanced_search.title")}</span>
-                  </button>
+                  </Button>
 
                   {/* Advanced fields */}
                   {showAdvancedFields && (
@@ -3872,23 +3865,20 @@ export function MailApp({ linkSegments }: MailAppProps = {}) {
                       {!isUnifiedView && (
                         <div>
                           <label className="text-xs text-muted-foreground mb-1 block">{t("advanced_search.folder")}</label>
-                          <select
+                          <AppSelect
                             value={searchMailboxId}
-                            onChange={(e) => {
-                              setSearchMailboxId(e.target.value);
+                            onChange={(next) => {
+                              setSearchMailboxId(next);
                               // Only re-query when a search is actually running;
                               // otherwise just remember the scope for the next one.
                               if (searchQuery.trim() || !isFilterEmpty(searchFilters)) handleAdvancedSearch();
                             }}
-                            className="w-full h-8 text-sm rounded-md border border-input bg-background px-3 text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
-                          >
-                            <option value="">{t("advanced_search.all_folders")}</option>
-                            {mailboxes.map((mb) => (
-                              <option key={mb.id} value={mb.id}>
-                                {mb.name}
-                              </option>
-                            ))}
-                          </select>
+                            placeholder={t("advanced_search.all_folders")}
+                            options={[
+                              { value: "", label: t("advanced_search.all_folders") },
+                              ...mailboxes.map((mb) => ({ value: mb.id, label: mb.name })),
+                            ]}
+                          />
                         </div>
                       )}
 
@@ -4212,24 +4202,31 @@ export function MailApp({ linkSegments }: MailAppProps = {}) {
             <>
             {/* Pending draft banner */}
             {pendingDraft && (
-              <button
-                onClick={() => {
-                  setShowComposer(true);
-                  if (isMobile) setActiveView('viewer');
-                }}
-                className="flex items-center gap-3 px-4 py-2.5 bg-primary/10 border-b border-primary/20 hover:bg-primary/15 transition-colors cursor-pointer w-full text-start"
-              >
-                <PenLine className="w-4 h-4 text-primary shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <span className="text-sm font-medium text-primary">{t('email_composer.continue_draft')}</span>
-                  {pendingDraft.subject && (
-                    <span className="text-xs text-muted-foreground ms-2 truncate">{pendingDraft.subject}</span>
-                  )}
-                </div>
-                <X
-                  className="w-4 h-4 text-muted-foreground hover:text-foreground shrink-0"
-                  onClick={async (e) => {
-                    e.stopPropagation();
+              <div className="flex items-center gap-2 border-b border-primary/20 bg-primary/10 px-2 py-1.5">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => {
+                    setShowComposer(true);
+                    if (isMobile) setActiveView('viewer');
+                  }}
+                  className="flex h-auto min-h-0 flex-1 items-center justify-start gap-3 rounded-md px-2 py-1.5 hover:bg-primary/15"
+                >
+                  <PenLine className="w-4 h-4 text-primary shrink-0" />
+                  <div className="flex-1 min-w-0 text-start">
+                    <span className="text-sm font-medium text-primary">{t('email_composer.continue_draft')}</span>
+                    {pendingDraft.subject && (
+                      <span className="text-xs text-muted-foreground ms-2 truncate">{pendingDraft.subject}</span>
+                    )}
+                  </div>
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="size-7 min-w-7 shrink-0 text-muted-foreground"
+                  aria-label={t('email_composer.discard_draft_title')}
+                  onClick={async () => {
                     const confirmed = await confirmDialog({
                       title: t('email_composer.discard_draft_title'),
                       message: t('email_composer.discard_draft_confirm'),
@@ -4240,8 +4237,10 @@ export function MailApp({ linkSegments }: MailAppProps = {}) {
                       setPendingDraft(null);
                     }
                   }}
-                />
-              </button>
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
             )}
             {/* Mobile Conversation View - shown when thread is selected on mobile */}
             {isMobile && conversationThread ? (

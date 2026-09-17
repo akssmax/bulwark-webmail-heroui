@@ -4,6 +4,8 @@ import { useState, useEffect, useRef, useMemo, useCallback, useLayoutEffect } fr
 import { useTranslations, useLocale } from "next-intl";
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Popover } from "@/components/ui/popover";
 import { LinkifiedText } from "@/components/ui/linkified-text";
 import {
   X, Clock, MapPin, Video, Users, Repeat, Bell, AlignLeft,
@@ -41,45 +43,8 @@ interface EventDetailPopoverProps {
   isMobile?: boolean;
 }
 
-const POPOVER_WIDTH = 360;
 const POPOVER_GAP = 8;
-const VIEWPORT_MARGIN = 12;
 const MAX_HEIGHT = 480;
-
-function computePosition(
-  anchorRect: DOMRect,
-  popoverHeight: number
-): { top: number; left: number } {
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
-  const clampedHeight = Math.min(popoverHeight, MAX_HEIGHT);
-
-  const clampTop = (top: number) =>
-    Math.min(Math.max(VIEWPORT_MARGIN, top), vh - clampedHeight - VIEWPORT_MARGIN);
-  const clampLeft = (left: number) =>
-    Math.min(Math.max(VIEWPORT_MARGIN, left), vw - POPOVER_WIDTH - VIEWPORT_MARGIN);
-
-  const rightLeft = anchorRect.right + POPOVER_GAP;
-  if (rightLeft + POPOVER_WIDTH + VIEWPORT_MARGIN <= vw) {
-    return { top: clampTop(anchorRect.top), left: rightLeft };
-  }
-
-  const leftLeft = anchorRect.left - POPOVER_GAP - POPOVER_WIDTH;
-  if (leftLeft >= VIEWPORT_MARGIN) {
-    return { top: clampTop(anchorRect.top), left: leftLeft };
-  }
-
-  const belowTop = anchorRect.bottom + POPOVER_GAP;
-  if (belowTop + clampedHeight + VIEWPORT_MARGIN <= vh) {
-    return { top: belowTop, left: clampLeft(anchorRect.left) };
-  }
-
-  const aboveTop = anchorRect.top - POPOVER_GAP - clampedHeight;
-  return {
-    top: Math.max(VIEWPORT_MARGIN, aboveTop),
-    left: clampLeft(anchorRect.left),
-  };
-}
 
 function formatDurationDisplay(minutes: number): string {
   if (minutes < 60) return `${minutes}min`;
@@ -128,10 +93,8 @@ export function EventDetailPopover({
 }: EventDetailPopoverProps) {
   const t = useTranslations("calendar");
   const locale = useLocale();
-  const popoverRef = useRef<HTMLDivElement>(null);
+  const anchorRef = useRef<HTMLDivElement>(null);
   const noteInputRef = useRef<HTMLTextAreaElement>(null);
-  const [position, setPosition] = useState<{ top: number; left: number } | null>(null);
-  const [ready, setReady] = useState(false);
   const [noteText, setNoteText] = useState("");
   const [noteExpanded, setNoteExpanded] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -187,11 +150,15 @@ export function EventDetailPopover({
   );
 
   useLayoutEffect(() => {
-    if (!popoverRef.current) return;
-    const height = popoverRef.current.offsetHeight;
-    setPosition(computePosition(anchorRect, height));
-    if (!ready) requestAnimationFrame(() => setReady(true));
-  }, [anchorRect, noteExpanded, showDeleteConfirm, ready]);
+    const el = anchorRef.current;
+    if (!el || isMobile) return;
+    el.style.position = "fixed";
+    el.style.top = `${anchorRect.top}px`;
+    el.style.left = `${anchorRect.left}px`;
+    el.style.width = `${Math.max(anchorRect.width, 1)}px`;
+    el.style.height = `${Math.max(anchorRect.height, 1)}px`;
+    el.style.pointerEvents = "none";
+  }, [anchorRect, isMobile]);
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
@@ -208,23 +175,6 @@ export function EventDetailPopover({
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
   }, [onClose, onEdit, noteExpanded, canEditBody]);
-
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (popoverRef.current && !popoverRef.current.contains(e.target as Node)) {
-        onClose();
-      }
-    };
-
-    const timer = setTimeout(() => {
-      document.addEventListener("mousedown", handleClickOutside);
-    }, 0);
-
-    return () => {
-      clearTimeout(timer);
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [onClose]);
 
   const handleSaveNote = useCallback(async () => {
     const trimmed = noteText.trim();
@@ -258,32 +208,8 @@ export function EventDetailPopover({
 
   const formatEventDate = useFormatEventDate();
 
-  const popover = (
-    <div
-      ref={popoverRef}
-      role="dialog"
-      aria-label={event.title || t("events.no_title")}
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}
-      className={cn(
-        "fixed z-[60] bg-background border border-border shadow-xl overflow-hidden transition-[opacity,transform] duration-150 ease-out",
-        isMobile
-          ? "inset-0 rounded-none flex flex-col"
-          : "rounded-lg"
-      )}
-      style={isMobile ? {
-        opacity: 1,
-        transform: "none",
-      } : {
-        width: POPOVER_WIDTH,
-        maxHeight: MAX_HEIGHT,
-        top: position?.top ?? -9999,
-        left: position?.left ?? -9999,
-        opacity: ready ? 1 : 0,
-        transform: ready ? "scale(1)" : "scale(0.95)",
-        visibility: position ? "visible" : "hidden",
-      }}
-    >
+  const popoverBody = (
+    <>
       {/* Color accent bar */}
       <div className="h-1 w-full" style={{ backgroundColor: color }} />
 
@@ -306,25 +232,27 @@ export function EventDetailPopover({
             <p className="text-xs text-muted-foreground mt-0.5 ps-[18px]">
               {calendar.name}
               {event.status === "tentative" && (
-                <span className="ms-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-warning/15 text-warning">
+                <span className="ms-2 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-warning/15 text-warning">
                   {t("detail.tentative")}
                 </span>
               )}
               {event.status === "cancelled" && (
-                <span className="ms-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 line-through">
+                <span className="ms-2 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 line-through">
                   {t("detail.cancelled")}
                 </span>
               )}
             </p>
           )}
         </div>
-        <button
+        <Button
+          variant="ghost"
+          size="icon"
           onClick={onClose}
-          className="p-1.5 rounded-md hover:bg-muted transition-colors duration-150 flex-shrink-0 mt-0.5 text-muted-foreground hover:text-foreground"
+          className="flex-shrink-0 mt-0.5 h-8 w-8"
           aria-label={t("form.cancel")}
         >
           <X className="w-4 h-4" />
-        </button>
+        </Button>
       </div>
 
       {/* Content */}
@@ -492,7 +420,7 @@ export function EventDetailPopover({
         <div className="px-4 py-2 border-t border-border">
           {noteExpanded ? (
             <div className="space-y-2">
-              <textarea
+              <Textarea
                 ref={noteInputRef}
                 value={noteText}
                 onChange={(e) => setNoteText(e.target.value)}
@@ -500,7 +428,7 @@ export function EventDetailPopover({
                 placeholder={t("detail.add_note")}
                 rows={2}
                 autoFocus
-                className="w-full rounded-md border border-input bg-muted/30 px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ring"
+                className="min-h-0 resize-none bg-muted/30"
               />
               <div className="flex justify-end gap-1.5">
                 <Button
@@ -526,13 +454,14 @@ export function EventDetailPopover({
               </div>
             </div>
           ) : (
-            <button
+            <Button
+              variant="ghost"
               onClick={() => setNoteExpanded(true)}
-              className="flex items-center gap-2 w-full text-sm text-muted-foreground hover:text-foreground transition-colors py-1"
+              className="flex items-center gap-2 w-full justify-start h-auto min-h-0 px-0 py-1 text-sm font-normal text-muted-foreground hover:text-foreground"
             >
               <AlignLeft className="w-4 h-4" />
               {t("detail.add_note")}
-            </button>
+            </Button>
           )}
         </div>
       )}
@@ -644,10 +573,32 @@ export function EventDetailPopover({
           </>
         )}
       </div>
-    </div>
+    </>
   );
 
-  return createPortal(popover, document.body);
+  return createPortal(
+    <>
+      {!isMobile && <div ref={anchorRef} aria-hidden="true" />}
+      <Popover.Content
+        isOpen
+        onOpenChange={(open) => { if (!open) onClose(); }}
+        triggerRef={isMobile ? undefined : anchorRef}
+        placement="right top"
+        offset={POPOVER_GAP}
+        onMouseEnter={onMouseEnter}
+        onMouseLeave={onMouseLeave}
+        className={cn(
+          "z-[60] bg-background border border-border shadow-xl overflow-hidden p-0",
+          isMobile ? "fixed inset-0 rounded-none" : "rounded-lg w-[360px] max-h-[480px]",
+        )}
+      >
+        <Popover.Dialog aria-label={event.title || t("events.no_title")} className="flex flex-col outline-none">
+          {popoverBody}
+        </Popover.Dialog>
+      </Popover.Content>
+    </>,
+    document.body,
+  );
 }
 
 function ParticipantStatusBadge({
@@ -670,7 +621,7 @@ function ParticipantStatusBadge({
     "needs-action": "participants.needs_action",
   };
   return (
-    <span className={`text-[10px] flex-shrink-0 ${colors[status] || ""}`}>
+    <span className={`text-xs flex-shrink-0 ${colors[status] || ""}`}>
       {t(labels[status] || labels["needs-action"])}
     </span>
   );

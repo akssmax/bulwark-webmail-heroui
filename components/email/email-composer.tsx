@@ -1,11 +1,16 @@
 "use client";
+import { Loader } from "@/components/ui/loader";
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
+import { MenuButton } from "@/components/ui/menu-button";
+import { AppModal } from "@/components/ui/modal";
+import { AppSelect } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { X, Paperclip, Send, Save, Check, Loader2, AlertCircle, FileText, BookmarkPlus, CalendarClock, ChevronDown, MailCheck, Search, Users, PackageCheck, LockKeyhole } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { X, Paperclip, Send, Save, Check, AlertCircle, FileText, BookmarkPlus, CalendarClock, ChevronDown, MailCheck, Search, Users, PackageCheck, LockKeyhole } from "lucide-react";
 import { cn, formatFileSize, formatDateTime, generateUUID } from "@/lib/utils";
 import { debug } from "@/lib/debug";
 import { toast } from "@/stores/toast-store";
@@ -646,6 +651,33 @@ export function EmailComposer({
   const [shakeField, setShakeField] = useState<string | null>(null);
   const [selectedIdentityId, setSelectedIdentityId] = useState<string | null>(initialData?.selectedIdentityId ?? null);
   const [subAddressTag, setSubAddressTag] = useState<string>(initialData?.subAddressTag ?? '');
+  const identitySelectGroups = useMemo(
+    () => identityGroups.map((group) => ({
+      label: group.accountLabel,
+      options: group.identities.map((identity) => {
+        const displayEmail = subAddressTag
+          ? generateSubAddress(identity.email, subAddressTag, subAddressDelimiter)
+          : identity.email;
+        return {
+          value: identity.id,
+          label: identity.name ? `${identity.name} <${displayEmail}>` : displayEmail,
+        };
+      }),
+    })),
+    [identityGroups, subAddressTag, subAddressDelimiter],
+  );
+  const identitySelectOptions = useMemo(
+    () => identities.map((identity) => {
+      const displayEmail = subAddressTag
+        ? generateSubAddress(identity.email, subAddressTag, subAddressDelimiter)
+        : identity.email;
+      return {
+        value: identity.id,
+        label: identity.name ? `${identity.name} <${displayEmail}>` : displayEmail,
+      };
+    }),
+    [identities, subAddressTag, subAddressDelimiter],
+  );
   const [fromOverrideEnabled, setFromOverrideEnabled] = useState<boolean>(initialData?.fromOverrideEnabled ?? false);
   const [fromOverrideEmail, setFromOverrideEmail] = useState<string>(initialData?.fromOverrideEmail ?? '');
   const [fromOverrideName, setFromOverrideName] = useState<string>(initialData?.fromOverrideName ?? '');
@@ -666,30 +698,6 @@ export function EmailComposer({
   const [showSendMenu, setShowSendMenu] = useState(false);
   const sendMenuRef = useRef<HTMLDivElement>(null);
   const mobileSendMenuRef = useRef<HTMLDivElement>(null);
-
-  const saveTemplateModalRef = useFocusTrap({
-    isActive: showSaveAsTemplate,
-    onEscape: () => setShowSaveAsTemplate(false),
-    restoreFocus: true,
-  });
-
-  const closeDialogRef = useFocusTrap({
-    isActive: showCloseDialog,
-    onEscape: () => dismissCloseDialog(),
-    restoreFocus: true,
-  });
-
-  const attachmentWarningRef = useFocusTrap({
-    isActive: showAttachmentWarning,
-    onEscape: () => setShowAttachmentWarning(false),
-    restoreFocus: true,
-  });
-
-  const emptySubjectWarningRef = useFocusTrap({
-    isActive: showEmptySubjectWarning,
-    onEscape: () => setShowEmptySubjectWarning(false),
-    restoreFocus: true,
-  });
 
   const { client } = useAuthStore();
   const currentIdentity = selectedIdentityId
@@ -1030,7 +1038,6 @@ export function EmailComposer({
         }));
         setRecipients(fullyEnriched);
     };
-
 
     useEffect(() => { processEnrichment(to, setTo); }, [to]);
     useEffect(() => { processEnrichment(cc, setCc); }, [cc]);
@@ -2641,15 +2648,13 @@ export function EmailComposer({
             </Button>
             {showSendMenu && (
               <div role="menu" className="absolute end-0 top-full z-50 mt-2 min-w-44 rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-lg">
-                <button
-                  type="button"
-                  role="menuitem"
+                <MenuButton
                   onClick={openScheduleDialog}
-                  className="flex w-full items-center gap-2 rounded-sm px-3 py-2 text-start text-sm hover:bg-accent hover:text-accent-foreground"
+                  className="rounded-sm"
                 >
                   <CalendarClock className="w-4 h-4" />
                   {t('schedule_send')}
-                </button>
+                </MenuButton>
               </div>
             )}
           </div>
@@ -2695,38 +2700,14 @@ export function EmailComposer({
                   />
                 </div>
               ) : identities.length > 1 ? (
-                <select
+                <AppSelect
                   data-testid="composer-from"
                   value={selectedIdentityId || primaryIdentity?.id || ''}
-                  onChange={(e) => setSelectedIdentityId(e.target.value)}
-                  className="flex-1 bg-transparent text-sm text-foreground outline-none cursor-pointer hover:text-muted-foreground transition-colors min-w-0 truncate"
-                >
-                  {identityGroups.length > 0
-                    ? identityGroups.map((group) => (
-                        <optgroup key={group.localAccountId} label={group.accountLabel}>
-                          {group.identities.map((identity) => {
-                            const displayEmail = subAddressTag
-                              ? generateSubAddress(identity.email, subAddressTag, subAddressDelimiter)
-                              : identity.email;
-                            return (
-                              <option key={identity.id} value={identity.id} dir="ltr">
-                                {identity.name ? `${identity.name} <${displayEmail}>` : displayEmail}
-                              </option>
-                            );
-                          })}
-                        </optgroup>
-                      ))
-                    : identities.map((identity) => {
-                        const displayEmail = subAddressTag
-                          ? generateSubAddress(identity.email, subAddressTag, subAddressDelimiter)
-                          : identity.email;
-                        return (
-                          <option key={identity.id} value={identity.id} dir="ltr">
-                            {identity.name ? `${identity.name} <${displayEmail}>` : displayEmail}
-                          </option>
-                        );
-                      })}
-                </select>
+                  onChange={(value) => setSelectedIdentityId(value)}
+                  groups={identitySelectGroups.length > 0 ? identitySelectGroups : undefined}
+                  options={identitySelectOptions}
+                  className="flex-1 min-w-0"
+                />
               ) : (
                 <span data-testid="composer-from" className="text-sm text-foreground flex-1 truncate">
                   {subAddressTag ? (
@@ -2955,7 +2936,7 @@ export function EmailComposer({
       <div className="flex-1 min-h-0 overflow-auto">
         {/* Body */}
         {plainTextMode ? (
-          <textarea
+          <Textarea
             ref={bodyRef}
             value={body}
             onChange={(e) => {
@@ -2964,7 +2945,7 @@ export function EmailComposer({
             }}
             placeholder={t('body_placeholder')}
             className={cn(
-              "w-full min-h-[300px] px-4 py-3 text-sm text-foreground bg-transparent resize-y focus:outline-none font-mono",
+              "min-h-[300px] border-0 bg-transparent px-4 py-3 font-mono shadow-none focus-visible:ring-0 resize-y",
               validationErrors.body && "ring-2 ring-red-500 dark:ring-red-400 rounded"
             )}
             style={{ height: 'calc(100vh - 350px)' }}
@@ -3047,42 +3028,45 @@ export function EmailComposer({
                   )}
                   <div className="relative flex items-center gap-2">
                     {att.uploading ? (
-                      <Loader2 className="w-3 h-3 animate-spin flex-shrink-0" />
+                      <Loader size="sm" color="current" />
                     ) : att.error ? (
                       <AlertCircle className="w-3 h-3 flex-shrink-0" />
                     ) : (
                       <Paperclip className="w-3 h-3 flex-shrink-0" />
                     )}
                     {canPreview ? (
-                      <button
-                        type="button"
+                      <Button
+                        variant="ghost"
                         onClick={() => setPreviewAttachment(att)}
                         title={att.name}
-                        className="flex items-center gap-2 min-w-0 hover:underline"
+                        className="h-auto min-h-0 min-w-0 gap-2 p-0 font-normal hover:underline"
                       >
                         {label}
-                      </button>
+                      </Button>
                     ) : (
                       <div className="flex items-center gap-2 min-w-0">{label}</div>
                     )}
-                    <button
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       onClick={() => removeAttachment(index)}
-                      className="ms-1 hover:text-red-500 min-w-[20px] min-h-[20px] flex items-center justify-center"
+                      className="ms-1 h-5 w-5 min-w-5 hover:text-red-500"
                       title={att.uploading ? t('upload_cancel') : undefined}
                     >
                       <X className="w-3 h-3" />
-                    </button>
+                    </Button>
                   </div>
                 </div>
                 );
               })}
               {attachments.length > 3 && (
-                <button
+                <Button
+                  variant="ghost"
                   onClick={() => setShowAllAttachments(prev => !prev)}
-                  className="flex items-center gap-1 px-3 py-1.5 rounded-md text-sm bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                  className="h-auto gap-1 rounded-md bg-muted px-3 py-1.5 text-sm font-normal text-muted-foreground hover:text-foreground"
                 >
                   {showAllAttachments ? t('show_less') : `+${attachments.length - 3}`}
-                </button>
+                </Button>
               )}
             </div>
           </div>
@@ -3192,13 +3176,13 @@ export function EmailComposer({
 
           {/* Right side - Discard + Send (desktop) */}
           <div className="flex items-center gap-2">
-            <button
-              type="button"
+            <Button
+              variant="ghost"
               onClick={() => handleClose()}
-              className="text-sm text-muted-foreground hover:text-red-500 transition-colors px-2 py-1"
+              className="h-auto min-h-0 px-2 py-1 text-sm font-normal text-muted-foreground hover:text-red-500"
             >
               {t('discard')}
-            </button>
+            </Button>
             {composerClient?.hasDelayedSend() ? (
               <div ref={sendMenuRef} className="relative hidden md:inline-flex">
                 <Button
@@ -3227,15 +3211,13 @@ export function EmailComposer({
                     role="menu"
                     className="absolute end-0 bottom-full z-50 mb-2 min-w-44 rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-lg"
                   >
-                    <button
-                      type="button"
-                      role="menuitem"
+                    <MenuButton
                       onClick={openScheduleDialog}
-                      className="flex w-full items-center gap-2 rounded-sm px-3 py-2 text-start text-sm hover:bg-accent hover:text-accent-foreground"
+                      className="rounded-sm"
                     >
                       <CalendarClock className="w-4 h-4" />
                       {t('schedule_send')}
-                    </button>
+                    </MenuButton>
                   </div>
                 )}
               </div>
@@ -3262,170 +3244,141 @@ export function EmailComposer({
         />
       )}
 
-      {showSaveAsTemplate && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-in fade-in duration-150">
-          <div
-            ref={saveTemplateModalRef}
-            role="dialog"
-            aria-modal="true"
-            className="bg-background border border-border rounded-lg shadow-xl w-full max-w-lg p-6 animate-in zoom-in-95 duration-200"
-          >
-            <h3 className="text-lg font-semibold text-foreground mb-4">{t('save_as_template')}</h3>
-            <TemplateForm
-              initialData={{
-                subject,
-                body,
-                to: withInput(to, toInput).map(r => formatRecipient(r.name, r.email)),
-                cc: withInput(cc, ccInput).map(r => formatRecipient(r.name, r.email)),
-                bcc: withInput(bcc, bccInput).map(r => formatRecipient(r.name, r.email)),
+      <AppModal
+        isOpen={showSaveAsTemplate}
+        onClose={() => setShowSaveAsTemplate(false)}
+        title={t('save_as_template')}
+        size="lg"
+        className="max-w-lg"
+      >
+        <TemplateForm
+          initialData={{
+            subject,
+            body,
+            to: withInput(to, toInput).map(r => formatRecipient(r.name, r.email)),
+            cc: withInput(cc, ccInput).map(r => formatRecipient(r.name, r.email)),
+            bcc: withInput(bcc, bccInput).map(r => formatRecipient(r.name, r.email)),
+          }}
+          onSave={(data) => {
+            addTemplate(data);
+            setShowSaveAsTemplate(false);
+          }}
+          onCancel={() => setShowSaveAsTemplate(false)}
+        />
+      </AppModal>
+
+      <AppModal
+        isOpen={showScheduleDialog}
+        onClose={() => setShowScheduleDialog(false)}
+        title={t('schedule_send')}
+        size="md"
+        className="max-w-md"
+        footer={(
+          <>
+            <Button variant="ghost" onClick={() => setShowScheduleDialog(false)}>{tCommon('cancel')}</Button>
+            <Button onClick={handleScheduleSend} disabled={!canSend || isSending}>{t('schedule_send')}</Button>
+          </>
+        )}
+      >
+        <p className="text-sm text-muted-foreground mb-4">{t('schedule_send_description')}</p>
+        <Input
+          type="datetime-local"
+          value={scheduleValue}
+          onChange={(e) => {
+            setScheduleValue(e.target.value);
+            setScheduleError('');
+          }}
+          className={cn(scheduleError && "border-destructive focus-visible:ring-destructive")}
+        />
+        {scheduleError && <p className="mt-2 text-sm text-destructive">{scheduleError}</p>}
+      </AppModal>
+
+      <AppModal
+        isOpen={showAttachmentWarning}
+        onClose={() => setShowAttachmentWarning(false)}
+        title={t('forgot_attachment.title')}
+        size="md"
+        className="max-w-md"
+        footer={(
+          <>
+            <Button variant="outline" onClick={() => setShowAttachmentWarning(false)}>
+              {t('forgot_attachment.back')}
+            </Button>
+            <Button onClick={() => { setShowAttachmentWarning(false); handleSend({ skipAttachmentCheck: true, skipSubjectCheck: true, delayedUntil: attachmentWarningDelayedUntil }); setAttachmentWarningDelayedUntil(undefined); }}>
+              {t('forgot_attachment.send_anyway')}
+            </Button>
+          </>
+        )}
+      >
+        <p className="text-sm text-muted-foreground">
+          {t('forgot_attachment.message', { keyword: attachmentWarningKeyword })}
+        </p>
+      </AppModal>
+
+      <AppModal
+        isOpen={showEmptySubjectWarning}
+        onClose={() => setShowEmptySubjectWarning(false)}
+        title={t('empty_subject.title')}
+        size="md"
+        className="max-w-md"
+        footer={(
+          <>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowEmptySubjectWarning(false);
+                setEmptySubjectDelayedUntil(undefined);
+                setTimeout(() => subjectInputRef.current?.focus(), 0);
               }}
-              onSave={(data) => {
-                addTemplate(data);
-                setShowSaveAsTemplate(false);
+            >
+              {t('empty_subject.back')}
+            </Button>
+            <Button
+              onClick={() => {
+                if (emptySubjectDontAskAgain) updateSetting('emptySubjectWarningEnabled', false);
+                setShowEmptySubjectWarning(false);
+                handleSend({ skipSubjectCheck: true, delayedUntil: emptySubjectDelayedUntil });
+                setEmptySubjectDelayedUntil(undefined);
               }}
-              onCancel={() => setShowSaveAsTemplate(false)}
-            />
-          </div>
-        </div>
-      )}
-
-      {showScheduleDialog && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-in fade-in duration-150">
-          <div className="bg-background border border-border rounded-lg shadow-xl w-full max-w-md p-6 animate-in zoom-in-95 duration-200">
-            <h3 className="text-lg font-semibold text-foreground mb-2">{t('schedule_send')}</h3>
-            <p className="text-sm text-muted-foreground mb-4">{t('schedule_send_description')}</p>
-            <Input
-              type="datetime-local"
-              value={scheduleValue}
-              onChange={(e) => {
-                setScheduleValue(e.target.value);
-                setScheduleError('');
-              }}
-              className={cn(scheduleError && "border-destructive focus-visible:ring-destructive")}
-            />
-            {scheduleError && <p className="mt-2 text-sm text-destructive">{scheduleError}</p>}
-            <div className="mt-5 flex justify-end gap-2">
-              <Button variant="ghost" onClick={() => setShowScheduleDialog(false)}>{tCommon('cancel')}</Button>
-              <Button onClick={handleScheduleSend} disabled={!canSend || isSending}>{t('schedule_send')}</Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showAttachmentWarning && (
-        <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-[1px] flex items-center justify-center z-[60] p-4 animate-in fade-in duration-150"
-          onClick={() => setShowAttachmentWarning(false)}
+            >
+              {t('empty_subject.send_anyway')}
+            </Button>
+          </>
+        )}
+      >
+        <p className="text-sm text-muted-foreground">{t('empty_subject.message')}</p>
+        <Checkbox
+          isSelected={emptySubjectDontAskAgain}
+          onChange={setEmptySubjectDontAskAgain}
+          className="mt-4 text-sm text-muted-foreground"
         >
-          <div
-            ref={attachmentWarningRef}
-            role="alertdialog"
-            aria-modal="true"
-            onClick={(e) => e.stopPropagation()}
-            className="bg-background border border-border rounded-lg shadow-xl w-full max-w-md animate-in zoom-in-95 duration-200"
-          >
-            <div className="p-6">
-              <h2 className="text-lg font-semibold text-foreground">{t('forgot_attachment.title')}</h2>
-              <p className="mt-2 text-sm text-muted-foreground">
-                {t('forgot_attachment.message', { keyword: attachmentWarningKeyword })}
-              </p>
-            </div>
-            <div className="flex items-center justify-end gap-3 px-6 pb-6">
-              <Button variant="outline" onClick={() => setShowAttachmentWarning(false)}>
-                {t('forgot_attachment.back')}
-              </Button>
-              <Button onClick={() => { setShowAttachmentWarning(false); handleSend({ skipAttachmentCheck: true, skipSubjectCheck: true, delayedUntil: attachmentWarningDelayedUntil }); setAttachmentWarningDelayedUntil(undefined); }}>
-                {t('forgot_attachment.send_anyway')}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+          {t('empty_subject.dont_ask_again')}
+        </Checkbox>
+      </AppModal>
 
-      {showEmptySubjectWarning && (
-        <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-[1px] flex items-center justify-center z-[60] p-4 animate-in fade-in duration-150"
-          onClick={() => setShowEmptySubjectWarning(false)}
-        >
-          <div
-            ref={emptySubjectWarningRef}
-            role="alertdialog"
-            aria-modal="true"
-            onClick={(e) => e.stopPropagation()}
-            className="bg-background border border-border rounded-lg shadow-xl w-full max-w-md animate-in zoom-in-95 duration-200"
-          >
-            <div className="p-6">
-              <h2 className="text-lg font-semibold text-foreground">{t('empty_subject.title')}</h2>
-              <p className="mt-2 text-sm text-muted-foreground">{t('empty_subject.message')}</p>
-              <label className="mt-4 flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={emptySubjectDontAskAgain}
-                  onChange={(e) => setEmptySubjectDontAskAgain(e.target.checked)}
-                  className="rounded border-input"
-                />
-                {t('empty_subject.dont_ask_again')}
-              </label>
-            </div>
-            <div className="flex items-center justify-end gap-3 px-6 pb-6">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setShowEmptySubjectWarning(false);
-                  setEmptySubjectDelayedUntil(undefined);
-                  // After the focus trap tears down it restores focus to the
-                  // Send button, so claim the subject field on the next tick.
-                  setTimeout(() => subjectInputRef.current?.focus(), 0);
-                }}
-              >
-                {t('empty_subject.back')}
-              </Button>
-              <Button
-                onClick={() => {
-                  if (emptySubjectDontAskAgain) updateSetting('emptySubjectWarningEnabled', false);
-                  setShowEmptySubjectWarning(false);
-                  handleSend({ skipSubjectCheck: true, delayedUntil: emptySubjectDelayedUntil });
-                  setEmptySubjectDelayedUntil(undefined);
-                }}
-              >
-                {t('empty_subject.send_anyway')}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showCloseDialog && (
-        <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-[1px] flex items-center justify-center z-[60] p-4 animate-in fade-in duration-150"
-          onClick={() => dismissCloseDialog()}
-        >
-          <div
-            ref={closeDialogRef}
-            role="alertdialog"
-            aria-modal="true"
-            onClick={(e) => e.stopPropagation()}
-            className="bg-background border border-border rounded-lg shadow-xl w-full max-w-md animate-in zoom-in-95 duration-200"
-          >
-            <div className="p-6">
-              <h2 className="text-lg font-semibold text-foreground">{t('close_draft_title')}</h2>
-              <p className="mt-2 text-sm text-muted-foreground">{t('close_draft_message')}</p>
-            </div>
-            <div className="flex items-center justify-end gap-3 px-6 pb-6">
-              <Button variant="outline" onClick={() => dismissCloseDialog()}>
-                {t('cancel')}
-              </Button>
-              <Button variant="destructive" onClick={handleDiscardAndClose}>
-                {t('discard')}
-              </Button>
-              <Button onClick={handleSaveDraftAndClose}>
-                <Save className="w-4 h-4 me-2" />
-                {tCommon('save')}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      <AppModal
+        isOpen={showCloseDialog}
+        onClose={() => dismissCloseDialog()}
+        title={t('close_draft_title')}
+        size="md"
+        className="max-w-md"
+        footer={(
+          <>
+            <Button variant="outline" onClick={() => dismissCloseDialog()}>
+              {t('cancel')}
+            </Button>
+            <Button variant="destructive" onClick={handleDiscardAndClose}>
+              {t('discard')}
+            </Button>
+            <Button onClick={handleSaveDraftAndClose}>
+              <Save className="w-4 h-4 me-2" />
+              {tCommon('save')}
+            </Button>
+          </>
+        )}
+      >
+        <p className="text-sm text-muted-foreground">{t('close_draft_message')}</p>
+      </AppModal>
 
       {previewAttachment && (
         <FilePreviewModal
@@ -3457,14 +3410,14 @@ const AutocompleteDropdown = React.forwardRef<HTMLDivElement, {
   return (
     <div ref={ref} id={id} role="listbox" className="absolute top-full left-0 right-0 z-50 mt-1 bg-background border border-border rounded-md shadow-lg max-h-48 overflow-y-auto">
       {results.map((r, i) => (
-        <button
+        <Button
           key={i}
           id={`autocomplete-option-${i}`}
-          type="button"
+          variant="ghost"
           role="option"
           aria-selected={i === selectedIndex}
           className={cn(
-            "w-full px-3 py-2 text-start text-sm flex items-center gap-2",
+            "h-auto w-full justify-start gap-2 rounded-none px-3 py-2 text-start text-sm font-normal",
             i === selectedIndex ? "bg-accent text-accent-foreground" : "hover:bg-muted"
           )}
           onMouseDown={(e) => {
@@ -3477,7 +3430,7 @@ const AutocompleteDropdown = React.forwardRef<HTMLDivElement, {
               <Users className="w-3.5 h-3.5 text-primary" aria-hidden />
             </span>
           ) : (
-            <Avatar name={r.name} email={r.email} size="sm" className="shrink-0 w-6 h-6 text-[10px]" />
+            <Avatar name={r.name} email={r.email} size="sm" className="shrink-0 w-6 h-6 text-xs" />
           )}
           <span className="font-medium truncate">{r.name || r.email}</span>
           {r.group ? (
@@ -3487,14 +3440,14 @@ const AutocompleteDropdown = React.forwardRef<HTMLDivElement, {
           ) : r.name && (
             <span className="text-muted-foreground truncate">&lt;{r.email}&gt;</span>
           )}
-        </button>
+        </Button>
       ))}
       {onSearchServer && (
-        <button
-          type="button"
+        <Button
+          variant="ghost"
           disabled={isSearchingServer}
           className={cn(
-            "w-full px-3 py-2 text-left text-sm flex items-center gap-2 text-muted-foreground hover:bg-muted disabled:opacity-60 disabled:cursor-default",
+            "h-auto w-full justify-start gap-2 rounded-none px-3 py-2 text-start text-sm font-normal text-muted-foreground hover:bg-muted disabled:opacity-60",
             results.length > 0 && "border-t border-border"
           )}
           onMouseDown={(e) => {
@@ -3503,12 +3456,12 @@ const AutocompleteDropdown = React.forwardRef<HTMLDivElement, {
           }}
         >
           {isSearchingServer
-            ? <Loader2 className="w-4 h-4 shrink-0 animate-spin" />
+            ? <Loader size="sm" color="current" />
             : <Search className="w-4 h-4 shrink-0" />}
           <span className="truncate">
             {isSearchingServer ? t('autocomplete_searching') : t('autocomplete_search_server')}
           </span>
-        </button>
+        </Button>
       )}
     </div>
   );
@@ -3917,9 +3870,10 @@ function RecipientChipInput({
                   <span className="truncate">{chipDisplay}</span>
                 </span>
               )}
-              <button
-                type="button"
-                className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-muted-foreground/20 transition-colors"
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-4 w-4 min-w-4 rounded-full hover:bg-muted-foreground/20"
                 onClick={(e) => {
                   e.stopPropagation();
                   if (isEditing) {
@@ -3935,7 +3889,7 @@ function RecipientChipInput({
                 ) : (
                   <X className="w-3 h-3" />
                 )}
-              </button>
+              </Button>
             </span>
             </React.Fragment>
           );

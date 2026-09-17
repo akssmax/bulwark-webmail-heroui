@@ -1,13 +1,16 @@
 'use client';
+import { Loader } from "@/components/ui/loader";
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import QRCode from 'qrcode';
 import * as OTPAuth from 'otpauth';
-import { Shield, Key, Smartphone, Lock, Trash2, Plus, Eye, EyeOff, Copy, Check, Loader2, Monitor, Terminal, QrCode, Unlock } from 'lucide-react';
+import { Shield, Key, Smartphone, Lock, Trash2, Plus, Eye, EyeOff, Copy, Check, Monitor, Terminal, QrCode, Unlock } from "lucide-react";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { AppSelect } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { SettingsSection, SettingItem, ToggleSwitch } from './settings-section';
 import { useAccountSecurityStore, type AppPasswordInfo, type ApiKeyInfo, type AppCredentialInput } from '@/stores/account-security-store';
 import { useAuthStore } from '@/stores/auth-store';
@@ -71,13 +74,16 @@ function PasswordChangeSection() {
               autoComplete="current-password"
               className="pe-10"
             />
-            <button
+            <Button
               type="button"
+              size="icon"
+              variant="ghost"
               onClick={() => setShowCurrent(!showCurrent)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
+              aria-label={showCurrent ? 'Hide password' : 'Show password'}
             >
               {showCurrent ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            </button>
+            </Button>
           </div>
         </div>
         <div>
@@ -92,13 +98,16 @@ function PasswordChangeSection() {
               autoComplete="new-password"
               className="pe-10"
             />
-            <button
+            <Button
               type="button"
+              size="icon"
+              variant="ghost"
               onClick={() => setShowNew(!showNew)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
+              aria-label={showNew ? 'Hide password' : 'Show password'}
             >
               {showNew ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            </button>
+            </Button>
           </div>
         </div>
         <div>
@@ -120,7 +129,7 @@ function PasswordChangeSection() {
           size="sm"
           disabled={isSaving || !currentPassword || !newPassword || !confirmPassword}
         >
-          {isSaving ? <Loader2 className="w-4 h-4 me-2 animate-spin" /> : null}
+          {isSaving ? <Loader size="sm" color="current" className="me-2" /> : null}
           {t('password.submit')}
         </Button>
       </form>
@@ -152,7 +161,7 @@ function DisplayNameSection() {
   if (isLoadingPrincipal) {
     return (
       <SettingItem label={t('display_name.label')} description={t('display_name.description')}>
-        <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+        <Loader size="sm" color="current" />
       </SettingItem>
     );
   }
@@ -171,7 +180,7 @@ function DisplayNameSection() {
           onClick={handleSave}
           disabled={isSaving || name === displayName}
         >
-          {saved ? <Check className="w-4 h-4" /> : isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : t('display_name.save')}
+          {saved ? <Check className="w-4 h-4" /> : isSaving ? <Loader size="sm" color="current" /> : t('display_name.save')}
         </Button>
       </div>
     </SettingItem>
@@ -273,7 +282,7 @@ function TotpSection() {
   if (isLoadingAuth) {
     return (
       <SettingItem label={t('totp.label')} description={t('totp.description')}>
-        <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+        <Loader size="sm" color="current" />
       </SettingItem>
     );
   }
@@ -315,7 +324,7 @@ function TotpSection() {
           {setupError && <p className="text-xs text-destructive">{setupError}</p>}
           <div className="flex gap-2">
             <Button size="sm" onClick={confirmSetup} disabled={isSaving || !password || !otpCode}>
-              {isSaving ? <Loader2 className="w-4 h-4 me-1 animate-spin" /> : null}
+              {isSaving ? <Loader size="sm" color="current" className="me-1" /> : null}
               {t('totp.confirm')}
             </Button>
             <Button size="sm" variant="ghost" onClick={cancelSetup}>{t('app_passwords.cancel')}</Button>
@@ -336,7 +345,7 @@ function TotpSection() {
           {setupError && <p className="text-xs text-destructive">{setupError}</p>}
           <div className="flex gap-2">
             <Button size="sm" variant="destructive" onClick={handleDisable} disabled={isSaving || !password}>
-              {isSaving ? <Loader2 className="w-4 h-4 me-1 animate-spin" /> : null}
+              {isSaving ? <Loader size="sm" color="current" className="me-1" /> : null}
               {t('totp.disable')}
             </Button>
             <Button size="sm" variant="ghost" onClick={() => { setDisableOpen(false); setPassword(''); setSetupError(null); }}>
@@ -372,7 +381,7 @@ function CredentialRow({ entry, onRemove, isSaving }: { entry: AppPasswordInfo |
             {entry.allowedIps.map((ip) => (
               <span
                 key={ip}
-                className="text-[10px] font-mono bg-background border border-border rounded px-1.5 py-0.5 text-muted-foreground"
+                className="text-xs font-mono bg-background border border-border rounded px-1.5 py-0.5 text-muted-foreground"
               >
                 {ip}
               </span>
@@ -457,7 +466,7 @@ function CredentialSection({ icon: Icon, i18nNamespace, entries, onCreate, onRem
           <Icon className="w-4 h-4 text-muted-foreground" />
           <h4 className="text-sm font-medium text-foreground">{tk('title')}</h4>
         </div>
-        <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+        <Loader size="sm" color="current" />
       </div>
     );
   }
@@ -517,11 +526,11 @@ function CredentialSection({ icon: Icon, i18nNamespace, entries, onCreate, onRem
               rows={2}
               className="w-full text-xs font-mono px-3 py-2 rounded-md border border-border bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             />
-            <p className="text-[10px] text-muted-foreground mt-1">{t('app_passwords.allowed_ips_hint')}</p>
+            <p className="text-xs text-muted-foreground mt-1">{t('app_passwords.allowed_ips_hint')}</p>
           </div>
           <div className="flex gap-2">
             <Button type="submit" size="sm" disabled={isSaving || !newDescription.trim()}>
-              {isSaving ? <Loader2 className="w-4 h-4 me-1 animate-spin" /> : null}
+              {isSaving ? <Loader size="sm" color="current" className="me-1" /> : null}
               {t('app_passwords.create')}
             </Button>
             <Button type="button" variant="ghost" size="sm" onClick={() => setShowAdd(false)}>
@@ -666,7 +675,7 @@ function PublicKeysSection() {
           <Lock className="w-4 h-4 text-muted-foreground" />
           <h4 className="text-sm font-medium text-foreground">{tk('title')}</h4>
         </div>
-        <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+        <Loader size="sm" color="current" />
       </div>
     );
   }
@@ -709,7 +718,7 @@ function PublicKeysSection() {
           </div>
           <div className="flex gap-2">
             <Button type="submit" size="sm" disabled={isSaving || !description.trim() || !publicKey.trim()}>
-              {isSaving ? <Loader2 className="w-4 h-4 me-1 animate-spin" /> : null}
+              {isSaving ? <Loader size="sm" color="current" className="me-1" /> : null}
               {t('app_passwords.create')}
             </Button>
             <Button type="button" variant="ghost" size="sm" onClick={() => setShowAdd(false)}>
@@ -725,41 +734,38 @@ function PublicKeysSection() {
           
           <div>
             <label className="text-xs text-muted-foreground mb-1 block">{t('encryption.algorithm_label')}</label>
-            <select
+            <AppSelect
               value={selectedAlgorithm}
-              onChange={(e) => setSelectedAlgorithm(e.target.value as 'Aes128' | 'Aes256')}
-              className="w-full text-xs px-3 py-1.5 rounded-md border border-border bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-            >
-              <option value="Aes256">AES-256</option>
-              <option value="Aes128">AES-128</option>
-            </select>
+              onChange={(value) => setSelectedAlgorithm(value as 'Aes128' | 'Aes256')}
+              options={[
+                { value: 'Aes256', label: 'AES-256' },
+                { value: 'Aes128', label: 'AES-128' },
+              ]}
+              aria-label={t('encryption.algorithm_label')}
+            />
           </div>
 
           <div className="space-y-2">
-            <label className="flex items-center gap-2 cursor-pointer text-xs text-foreground">
-              <input
-                type="checkbox"
-                checked={encryptOnAppend}
-                onChange={(e) => setEncryptOnAppend(e.target.checked)}
-                className="rounded border-border text-primary focus:ring-ring"
-              />
+            <Checkbox
+              isSelected={encryptOnAppend}
+              onChange={setEncryptOnAppend}
+              className="text-xs text-foreground"
+            >
               {t('encryption.encrypt_on_append')}
-            </label>
+            </Checkbox>
 
-            <label className="flex items-center gap-2 cursor-pointer text-xs text-foreground">
-              <input
-                type="checkbox"
-                checked={allowSpamTraining}
-                onChange={(e) => setAllowSpamTraining(e.target.checked)}
-                className="rounded border-border text-primary focus:ring-ring"
-              />
+            <Checkbox
+              isSelected={allowSpamTraining}
+              onChange={setAllowSpamTraining}
+              className="text-xs text-foreground"
+            >
               {t('encryption.allow_spam_training')}
-            </label>
+            </Checkbox>
           </div>
 
           <div className="flex gap-2 pt-1">
             <Button type="submit" size="sm" disabled={isSaving}>
-              {isSaving ? <Loader2 className="w-4 h-4 me-1 animate-spin" /> : null}
+              {isSaving ? <Loader size="sm" color="current" className="me-1" /> : null}
               {t('encryption.enable_button')}
             </Button>
             <Button
@@ -786,7 +792,7 @@ function PublicKeysSection() {
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-medium text-foreground truncate">{key.description || key.id}</span>
                     {isEncryptedWithThisKey && (
-                      <span className="text-[10px] bg-green-500/10 text-green-600 dark:text-green-400 font-medium px-1.5 py-0.5 rounded border border-green-500/20">
+                      <span className="text-xs bg-green-500/10 text-green-600 dark:text-green-400 font-medium px-1.5 py-0.5 rounded border border-green-500/20">
                         {encryptionConfig.type}
                       </span>
                     )}
@@ -796,7 +802,7 @@ function PublicKeysSection() {
                       {new Date(key.createdAt).toLocaleDateString()}
                     </span>
                   )}
-                  <code className="text-[10px] font-mono bg-background border border-border rounded px-1.5 py-0.5 text-muted-foreground truncate mt-1">
+                  <code className="text-xs font-mono bg-background border border-border rounded px-1.5 py-0.5 text-muted-foreground truncate mt-1">
                     {key.key}
                   </code>
                 </div>
@@ -865,20 +871,21 @@ function EmailClientSection() {
             {t('email_client.jmap_username_label')}
           </label>
           <div className="flex rounded-lg">
-            <input
+            <Input
               type="text"
               readOnly
               value={jmapUsername}
-              className="py-2 px-3 block w-full bg-background border border-border border-e-transparent rounded-s-lg text-sm text-foreground focus:z-10 focus:border-ring focus:ring-ring"
+              className="rounded-e-none border-e-0"
             />
-            <button
+            <Button
               type="button"
+              variant="outline"
               onClick={handleCopy}
-              className="h-[38px] px-3 shrink-0 inline-flex items-center gap-1.5 rounded-e-lg border border-border bg-muted text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              className="rounded-s-none shrink-0"
             >
               {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
               {copied ? t('email_client.copied') : t('email_client.copy')}
-            </button>
+            </Button>
           </div>
         </div>
         <p className="text-xs text-muted-foreground pt-1">{t('email_client.password_instructions')}</p>
@@ -1004,7 +1011,7 @@ function LinkDeviceSection() {
             <img src={qrDataUrl} alt="Pairing QR code" className="rounded bg-white p-2" />
           </div>
           <p className="text-xs text-muted-foreground text-center">{t('link_device.instructions')}</p>
-          <p className="text-[11px] text-muted-foreground text-center">
+          <p className="text-xs text-muted-foreground text-center">
             {t('link_device.expires_in', { seconds: remaining })}
           </p>
         </div>
@@ -1014,7 +1021,7 @@ function LinkDeviceSection() {
 
       <Button variant="outline" size="sm" onClick={() => void generate()} disabled={loading}>
         {loading ? (
-          <Loader2 className="w-3 h-3 me-1 animate-spin" />
+          <Loader size="sm" color="current" className="me-1" />
         ) : (
           <QrCode className="w-3 h-3 me-1" />
         )}
@@ -1055,7 +1062,7 @@ export function AccountSecuritySettings() {
     return (
       <SettingsSection title={t('title')} description={t('description')}>
         <div className="flex items-center gap-2 py-4">
-          <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+          <Loader size="sm" color="current" />
           <span className="text-sm text-muted-foreground">{t('detecting')}</span>
         </div>
       </SettingsSection>

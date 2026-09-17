@@ -1,8 +1,9 @@
 'use client';
+import { Loader } from "@/components/ui/loader";
 
 import { useEffect, useState } from 'react';
-import { Save, Loader2, Lock, Plus, Trash2, ArrowUp, ArrowDown } from 'lucide-react';
-import { icons as lucideIcons, type LucideIcon } from 'lucide-react';
+import { Save, Lock, Plus, Trash2, ArrowUp, ArrowDown } from "lucide-react";
+import { icons as lucideIcons, type LucideIcon } from "lucide-react";
 import type { SettingsPolicy, FeatureGates, PushRelayOption, AdminSidebarApp } from '@/lib/admin/types';
 import { DEFAULT_FEATURE_GATES, DEFAULT_POLICY } from '@/lib/admin/types';
 import { apiFetch } from '@/lib/browser-navigation';
@@ -14,6 +15,10 @@ import {
   normalizeRelayUrl,
   resolveDefaultRelayUrl,
 } from '@/lib/push-relays';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
 
 // `allMailViewEnabled` is deprecated (folded into `crossAllViewEnabled`, normalized
 // forward on policy load), so it is hidden from the admin UI.
@@ -260,14 +265,10 @@ export function PolicyTab() {
           <p className="text-sm text-muted-foreground mt-1">Control which features and settings users can access</p>
         </div>
         {dirty && (
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="inline-flex items-center gap-2 h-9 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 disabled:opacity-50 transition-all shadow-sm"
-          >
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+          <Button onClick={handleSave} disabled={saving} className="h-9 gap-2">
+            {saving ? <Loader size="sm" color="current" /> : <Save className="w-4 h-4" />}
             Save policy
-          </button>
+          </Button>
         )}
       </div>
 
@@ -296,11 +297,7 @@ export function PolicyTab() {
                   <span className="text-sm text-foreground">{label}</span>
                   <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
                 </div>
-                <button type="button" role="switch" aria-checked={enabled} aria-label={label}
-                  onClick={() => toggleFeature(key)}
-                  className={`shrink-0 relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${enabled ? 'bg-primary' : 'bg-muted-foreground/25 dark:bg-muted-foreground/50'}`}>
-                  <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-background shadow transition-transform ${enabled ? 'translate-x-[18px]' : 'translate-x-[3px]'}`} />
-                </button>
+                <Switch checked={enabled} onChange={() => toggleFeature(key)} aria-label={label} className="shrink-0" />
               </div>
             );
           })}
@@ -323,13 +320,10 @@ export function PolicyTab() {
                 Mark one as the default. Relays without a valid URL are not offered to users.
               </p>
             </div>
-            <button
-              onClick={addPushRelay}
-              className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-md border border-input bg-background text-xs text-foreground hover:bg-muted transition-colors shrink-0"
-            >
+            <Button variant="outline" size="sm" onClick={addPushRelay} className="h-8 gap-1.5 shrink-0">
               <Plus className="w-3.5 h-3.5" />
               Add relay
-            </button>
+            </Button>
           </div>
 
           <div className="rounded-md border border-border bg-muted/20 p-3">
@@ -337,7 +331,7 @@ export function PolicyTab() {
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-foreground">Bulwark relay</span>
-                  <span className="text-[10px] font-medium uppercase tracking-wider px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                  <span className="text-xs font-medium uppercase tracking-wider px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
                     built-in
                   </span>
                 </div>
@@ -360,21 +354,21 @@ export function PolicyTab() {
             <div key={index} className="rounded-md border border-border bg-muted/20 p-3 space-y-2">
               <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 items-start">
                 <div className="sm:col-span-4">
-                  <label className="block text-[11px] font-medium text-muted-foreground mb-1">Name</label>
-                  <input
+                  <label className="block text-xs font-medium text-muted-foreground mb-1">Name</label>
+                  <Input
                     type="text"
                     autoComplete="off"
                     spellCheck={false}
                     value={relay.label}
                     onChange={(e) => updatePushRelay(index, { label: e.target.value })}
                     placeholder="Company relay"
-                    className="h-8 w-full rounded-md border border-input bg-background px-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="h-8"
                   />
                 </div>
                 <div className="sm:col-span-8">
-                  <label className="block text-[11px] font-medium text-muted-foreground mb-1">Relay URL</label>
+                  <label className="block text-xs font-medium text-muted-foreground mb-1">Relay URL</label>
                   <div className="flex items-center gap-2">
-                    <input
+                    <Input
                       type="url"
                       inputMode="url"
                       autoComplete="off"
@@ -382,15 +376,17 @@ export function PolicyTab() {
                       value={relay.url}
                       onChange={(e) => updatePushRelay(index, { url: e.target.value })}
                       placeholder="https://notifications.relay.example.com"
-                      className="h-8 w-full rounded-md border border-input bg-background px-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      className="h-8"
                     />
-                    <button
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       onClick={() => removePushRelay(index)}
-                      className="shrink-0 text-muted-foreground hover:text-destructive"
-                      title="Remove relay"
+                      className="shrink-0 h-8 w-8 text-muted-foreground hover:text-destructive"
+                      aria-label="Remove relay"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -408,15 +404,13 @@ export function PolicyTab() {
             </div>
           ))}
 
-          <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer w-fit">
-            <input
-              type="checkbox"
-              checked={!!policy.pushRelayUrlLocked}
-              onChange={togglePushRelayLocked}
-              className="rounded border-input"
-            />
+          <Checkbox
+            isSelected={!!policy.pushRelayUrlLocked}
+            onChange={togglePushRelayLocked}
+            className="text-xs text-muted-foreground w-fit"
+          >
             <Lock className="w-3 h-3" /> Lock - users are pinned to the default relay
-          </label>
+          </Checkbox>
         </div>
       </div>
 
@@ -438,14 +432,16 @@ export function PolicyTab() {
                 are framed inside the webmail, so the target must allow being embedded.
               </p>
             </div>
-            <button
+            <Button
+              variant="outline"
+              size="sm"
               onClick={addDefaultApp}
               disabled={defaultSidebarApps.length >= MAX_DEFAULT_SIDEBAR_APPS}
-              className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-md border border-input bg-background text-xs text-foreground hover:bg-muted transition-colors shrink-0 disabled:opacity-50 disabled:pointer-events-none"
+              className="h-8 gap-1.5 shrink-0"
             >
               <Plus className="w-3.5 h-3.5" />
               Add app
-            </button>
+            </Button>
           </div>
 
           {defaultSidebarApps.length === 0 && (
@@ -461,8 +457,8 @@ export function PolicyTab() {
               <div key={app.id} className="rounded-md border border-border bg-muted/20 p-3 space-y-2">
                 <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 items-start">
                   <div className="sm:col-span-4">
-                    <label className="block text-[11px] font-medium text-muted-foreground mb-1">Name</label>
-                    <input
+                    <label className="block text-xs font-medium text-muted-foreground mb-1">Name</label>
+                    <Input
                       type="text"
                       autoComplete="off"
                       spellCheck={false}
@@ -470,12 +466,12 @@ export function PolicyTab() {
                       value={app.name}
                       onChange={(e) => updateDefaultApp(index, { name: e.target.value })}
                       placeholder="Intranet"
-                      className="h-8 w-full rounded-md border border-input bg-background px-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      className="h-8"
                     />
                   </div>
                   <div className="sm:col-span-5">
-                    <label className="block text-[11px] font-medium text-muted-foreground mb-1">URL</label>
-                    <input
+                    <label className="block text-xs font-medium text-muted-foreground mb-1">URL</label>
+                    <Input
                       type="url"
                       inputMode="url"
                       autoComplete="off"
@@ -484,20 +480,20 @@ export function PolicyTab() {
                       value={app.url}
                       onChange={(e) => updateDefaultApp(index, { url: e.target.value })}
                       placeholder="https://intranet.example.com"
-                      className={`h-8 w-full rounded-md border bg-background px-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${urlInvalid ? 'border-destructive' : 'border-input'}`}
+                      className={`h-8 ${urlInvalid ? 'border-destructive' : ''}`}
                     />
                     {urlInvalid && (
-                      <p className="text-[11px] text-destructive mt-1">Enter a valid http or https URL</p>
+                      <p className="text-xs text-destructive mt-1">Enter a valid http or https URL</p>
                     )}
                   </div>
                   <div className="sm:col-span-3">
-                    <label className="block text-[11px] font-medium text-muted-foreground mb-1">
+                    <label className="block text-xs font-medium text-muted-foreground mb-1">
                       Icon (
                       <a href="https://lucide.dev/icons" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">Lucide</a>
                       )
                     </label>
                     <div className="flex items-center gap-2">
-                      <input
+                      <Input
                         type="text"
                         autoComplete="off"
                         spellCheck={false}
@@ -505,13 +501,13 @@ export function PolicyTab() {
                         value={app.icon}
                         onChange={(e) => updateDefaultApp(index, { icon: e.target.value })}
                         placeholder="Globe"
-                        className="h-8 w-full rounded-md border border-input bg-background px-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        className="h-8"
                       />
                       <span
                         className="shrink-0 w-8 h-8 rounded-md border border-border bg-background flex items-center justify-center text-muted-foreground"
                         title={AppIcon ? app.icon : 'Unknown icon - falls back to Globe'}
                       >
-                        {AppIcon ? <AppIcon className="w-4 h-4" /> : <span className="text-[10px]">?</span>}
+                        {AppIcon ? <AppIcon className="w-4 h-4" /> : <span className="text-xs">?</span>}
                       </span>
                     </div>
                   </div>
@@ -540,39 +536,43 @@ export function PolicyTab() {
                       Inline
                     </label>
                   </div>
-                  <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={app.showOnMobile}
-                      onChange={() => updateDefaultApp(index, { showOnMobile: !app.showOnMobile })}
-                      className="rounded border-input"
-                    />
+                  <Checkbox
+                    isSelected={app.showOnMobile}
+                    onChange={(selected) => updateDefaultApp(index, { showOnMobile: selected })}
+                    className="text-xs text-muted-foreground"
+                  >
                     Show on mobile
-                  </label>
+                  </Checkbox>
                   <div className="flex items-center gap-1 ms-auto">
-                    <button
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       onClick={() => moveDefaultApp(index, -1)}
                       disabled={index === 0}
-                      className="text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:pointer-events-none p-1"
-                      title="Move up"
+                      className="h-8 w-8"
+                      aria-label="Move up"
                     >
                       <ArrowUp className="w-3.5 h-3.5" />
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       onClick={() => moveDefaultApp(index, 1)}
                       disabled={index === defaultSidebarApps.length - 1}
-                      className="text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:pointer-events-none p-1"
-                      title="Move down"
+                      className="h-8 w-8"
+                      aria-label="Move down"
                     >
                       <ArrowDown className="w-3.5 h-3.5" />
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       onClick={() => removeDefaultApp(index)}
-                      className="text-muted-foreground hover:text-destructive p-1"
-                      title="Remove app"
+                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                      aria-label="Remove app"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -593,16 +593,20 @@ export function PolicyTab() {
                 <div key={setting.key} className="px-4 py-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                   <span className="text-sm text-foreground">{setting.label}</span>
                   <div className="flex items-center gap-3 shrink-0">
-                    <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer">
-                      <input type="checkbox" checked={!!restriction.locked} onChange={() => toggleLocked(setting.key)}
-                        className="rounded border-input" />
+                    <Checkbox
+                      isSelected={!!restriction.locked}
+                      onChange={() => toggleLocked(setting.key)}
+                      className="text-xs text-muted-foreground"
+                    >
                       <Lock className="w-3 h-3" /> Lock
-                    </label>
-                    <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer">
-                      <input type="checkbox" checked={!!restriction.hidden} onChange={() => toggleHidden(setting.key)}
-                        className="rounded border-input" />
+                    </Checkbox>
+                    <Checkbox
+                      isSelected={!!restriction.hidden}
+                      onChange={() => toggleHidden(setting.key)}
+                      className="text-xs text-muted-foreground"
+                    >
                       Hide
-                    </label>
+                    </Checkbox>
                   </div>
                 </div>
               );

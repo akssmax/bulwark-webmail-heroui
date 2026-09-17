@@ -1,11 +1,14 @@
 'use client';
+import { Loader } from "@/components/ui/loader";
 
 import { useEffect, useState, useRef } from 'react';
-import { Upload, Trash2, Power, PowerOff, AlertTriangle, Loader2, Package, Save, Shield, Lock, LockOpen, Settings } from 'lucide-react';
+import { Upload, Trash2, Power, PowerOff, AlertTriangle, Package, Save, Shield, Lock, LockOpen, Settings } from "lucide-react";
 import type { SettingsPolicy } from '@/lib/admin/types';
 import { DEFAULT_POLICY } from '@/lib/admin/types';
 import { apiFetch } from '@/lib/browser-navigation';
 import { PluginConfigPanel } from './plugin-config-panel';
+import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
 
 interface PluginEntry {
   id: string;
@@ -272,27 +275,27 @@ export function PluginsTab() {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {policyDirty && (
-            <button
-              onClick={handleSavePolicy}
-              disabled={savingPolicy}
-              className="inline-flex items-center gap-2 h-9 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 disabled:opacity-50 transition-all shadow-sm"
-            >
-              {savingPolicy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+            <Button onClick={handleSavePolicy} disabled={savingPolicy} className="h-9 gap-2">
+              {savingPolicy ? <Loader size="sm" color="current" /> : <Save className="w-4 h-4" />}
               Save Policy
-            </button>
+            </Button>
           )}
-          <label className="inline-flex items-center gap-2 h-9 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 cursor-pointer transition-all shadow-sm">
-            {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+          <Button
+            className="h-9 gap-2"
+            disabled={uploading}
+            onClick={() => fileInputRef.current?.click()}
+          >
+            {uploading ? <Loader size="sm" color="current" /> : <Upload className="w-4 h-4" />}
             Upload Plugin
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".zip"
-              onChange={handleUpload}
-              disabled={uploading}
-              className="sr-only"
-            />
-          </label>
+          </Button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".zip"
+            onChange={handleUpload}
+            disabled={uploading}
+            className="sr-only"
+          />
         </div>
       </div>
 
@@ -316,11 +319,7 @@ export function PluginsTab() {
               <span className="text-sm text-foreground">Plugins Enabled</span>
               <p className="text-xs text-muted-foreground mt-0.5">Allow the plugin system to load and run plugins for users</p>
             </div>
-            <button type="button" role="switch" aria-checked={pluginsEnabled} aria-label="Plugins Enabled"
-              onClick={togglePluginsEnabled}
-              className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${pluginsEnabled ? 'bg-primary' : 'bg-muted-foreground/25 dark:bg-muted-foreground/50'}`}>
-              <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-background shadow transition-transform ${pluginsEnabled ? 'translate-x-[18px]' : 'translate-x-[3px]'}`} />
-            </button>
+            <Switch checked={pluginsEnabled} onChange={togglePluginsEnabled} aria-label="Plugins Enabled" />
           </div>
 
           <div className="px-4 py-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
@@ -328,11 +327,7 @@ export function PluginsTab() {
               <span className="text-sm text-foreground">User Plugin Uploads</span>
               <p className="text-xs text-muted-foreground mt-0.5">Allow users to upload plugin ZIP files in Settings</p>
             </div>
-            <button type="button" role="switch" aria-checked={pluginsUploadEnabled} aria-label="User Plugin Uploads"
-              onClick={togglePluginsUploadEnabled}
-              className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${pluginsUploadEnabled ? 'bg-primary' : 'bg-muted-foreground/25 dark:bg-muted-foreground/50'}`}>
-              <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-background shadow transition-transform ${pluginsUploadEnabled ? 'translate-x-[18px]' : 'translate-x-[3px]'}`} />
-            </button>
+            <Switch checked={pluginsUploadEnabled} onChange={togglePluginsUploadEnabled} aria-label="User Plugin Uploads" />
           </div>
 
           <div className="px-4 py-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
@@ -340,11 +335,7 @@ export function PluginsTab() {
               <span className="text-sm text-foreground">Require Admin Approval</span>
               <p className="text-xs text-muted-foreground mt-0.5">User-uploaded plugins must be approved by an admin before they can be enabled</p>
             </div>
-            <button type="button" role="switch" aria-checked={requirePluginApproval} aria-label="Require Admin Approval"
-              onClick={toggleRequirePluginApproval}
-              className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${requirePluginApproval ? 'bg-primary' : 'bg-muted-foreground/25 dark:bg-muted-foreground/50'}`}>
-              <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-background shadow transition-transform ${requirePluginApproval ? 'translate-x-[18px]' : 'translate-x-[3px]'}`} />
-            </button>
+            <Switch checked={requirePluginApproval} onChange={toggleRequirePluginApproval} aria-label="Require Admin Approval" />
           </div>
 
           {plugins.length > 0 && (
@@ -354,20 +345,14 @@ export function PluginsTab() {
                 <p className="text-xs text-muted-foreground mt-0.5">Bulk toggle all deployed plugins at once</p>
               </div>
               <div className="flex items-center gap-2">
-                <button
-                  onClick={forceEnableAll}
-                  className="inline-flex items-center gap-1.5 h-7 px-3 rounded-md bg-emerald-600 text-white text-xs font-medium hover:bg-emerald-700 transition-colors"
-                >
+                <Button size="sm" onClick={forceEnableAll} className="h-7 gap-1.5 bg-emerald-600 text-white hover:bg-emerald-700">
                   <Power className="w-3.5 h-3.5" />
                   Enable All
-                </button>
-                <button
-                  onClick={forceDisableAll}
-                  className="inline-flex items-center gap-1.5 h-7 px-3 rounded-md bg-muted text-muted-foreground text-xs font-medium hover:bg-accent hover:text-foreground transition-colors"
-                >
+                </Button>
+                <Button variant="secondary" size="sm" onClick={forceDisableAll} className="h-7 gap-1.5">
                   <PowerOff className="w-3.5 h-3.5" />
                   Disable All
-                </button>
+                </Button>
               </div>
             </div>
           )}
@@ -422,35 +407,40 @@ export function PluginsTab() {
               </div>
 
               <div className="flex items-center gap-2">
-                <button
-                  type="button"
+                <Button
+                  variant="ghost"
+                  size="icon"
                   onClick={() => setConfiguringId(plugin.id)}
-                  title="Configure"
-                  className="p-2 rounded-md hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label="Configure"
                 >
                   <Settings className="w-4 h-4" />
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
                   onClick={() => toggleForceEnabled(plugin.id, !plugin.forceEnabled)}
-                  title={plugin.forceEnabled ? 'Remove force-enable (users can disable)' : 'Force enable (users cannot disable)'}
-                  className={`p-2 rounded-md transition-colors ${plugin.forceEnabled ? 'bg-amber-100 text-amber-700 hover:bg-amber-200 dark:bg-amber-950/30 dark:text-amber-400 dark:hover:bg-amber-950/50' : 'hover:bg-accent text-muted-foreground hover:text-foreground'}`}
+                  aria-label={plugin.forceEnabled ? 'Remove force-enable (users can disable)' : 'Force enable (users cannot disable)'}
+                  className={plugin.forceEnabled ? 'bg-amber-100 text-amber-700 hover:bg-amber-200 dark:bg-amber-950/30 dark:text-amber-400 dark:hover:bg-amber-950/50' : undefined}
                 >
                   {plugin.forceEnabled ? <Lock className="w-4 h-4" /> : <LockOpen className="w-4 h-4" />}
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
                   onClick={() => togglePlugin(plugin.id, !plugin.enabled)}
-                  title={plugin.enabled ? 'Disable' : 'Enable'}
-                  className="p-2 rounded-md hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label={plugin.enabled ? 'Disable' : 'Enable'}
                 >
                   <Power className="w-4 h-4" />
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
                   onClick={() => deletePlugin(plugin.id, plugin.name)}
-                  title="Remove"
-                  className="p-2 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                  aria-label="Remove"
+                  className="hover:text-destructive"
                 >
                   <Trash2 className="w-4 h-4" />
-                </button>
+                </Button>
               </div>
             </div>
           ))}

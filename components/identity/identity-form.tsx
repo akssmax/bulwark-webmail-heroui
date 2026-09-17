@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import type { Identity, EmailAddress } from '@/lib/jmap/types';
 import { sanitizeSignatureHtml, sanitizeSignatureHtmlForDisplay } from '@/lib/email-sanitization';
 import { getEmailValidationError, validateEmailList } from '@/lib/validation';
@@ -271,7 +272,7 @@ export function IdentityForm({ identity, onSave, onCancel }: IdentityFormProps) 
         <label htmlFor="identity-text-sig" className="block text-sm font-medium mb-1">
           {t('text_signature_label')}
         </label>
-        <textarea
+        <Textarea
           id="identity-text-sig"
           value={formData.textSignature ?? ''}
           onChange={(e) => setFormData({ ...formData, textSignature: truncateToUtf8Bytes(e.target.value, SIGNATURE_MAX_BYTES) })}
@@ -279,7 +280,7 @@ export function IdentityForm({ identity, onSave, onCancel }: IdentityFormProps) 
           disabled={isSubmitting}
           aria-label={t('text_signature_label')}
           aria-describedby="identity-text-sig-counter"
-          className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground transition-all duration-200 placeholder:text-muted-foreground hover:border-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:border-ring disabled:cursor-not-allowed disabled:opacity-50"
+          className="min-h-[80px]"
         />
         <SignatureByteCounter id="identity-text-sig-counter" value={formData.textSignature || ''} />
       </div>
@@ -289,7 +290,7 @@ export function IdentityForm({ identity, onSave, onCancel }: IdentityFormProps) 
         <label htmlFor="identity-html-sig" className="block text-sm font-medium mb-1">
           {t('html_signature_label')}
         </label>
-        <textarea
+        <Textarea
           id="identity-html-sig"
           value={formData.htmlSignature ?? ''}
           onChange={(e) => setFormData({ ...formData, htmlSignature: truncateToUtf8Bytes(e.target.value, SIGNATURE_MAX_BYTES) })}
@@ -297,7 +298,7 @@ export function IdentityForm({ identity, onSave, onCancel }: IdentityFormProps) 
           disabled={isSubmitting}
           aria-label={t('html_signature_label')}
           aria-describedby="identity-html-sig-counter"
-          className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground font-mono transition-all duration-200 placeholder:text-muted-foreground hover:border-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:border-ring disabled:cursor-not-allowed disabled:opacity-50"
+          className="min-h-[120px] font-mono"
         />
         <SignatureByteCounter id="identity-html-sig-counter" value={formData.htmlSignature || ''} />
         {formData.htmlSignature && (

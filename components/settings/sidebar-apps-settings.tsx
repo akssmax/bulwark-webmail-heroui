@@ -2,10 +2,12 @@
 
 import { useState, useCallback, useRef } from "react";
 import { useTranslations } from "next-intl";
-import { Plus, Pencil, Trash2, ExternalLink, PanelRight, GripVertical, Lock } from "lucide-react";
+import { Plus, Pencil, Trash2, GripVertical, Lock } from "lucide-react";
 import { icons as lucideIcons, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { SegmentedTabs } from "@/components/ui/segmented-tabs";
 import { SettingsSection, SettingItem, ToggleSwitch } from "./settings-section";
 import { IconPicker } from "@/components/layout/icon-picker";
 import { useSettingsStore, type SidebarApp } from "@/stores/settings-store";
@@ -117,56 +119,24 @@ function AppForm({
 
       <div>
         <label className="text-sm font-medium block mb-2">{t("open_mode_label")}</label>
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={() => setFormData({ ...formData, openMode: "tab" })}
-            className={cn(
-              "flex items-center gap-2 px-3 py-2 rounded-md text-sm border transition-colors",
-              formData.openMode === "tab"
-                ? "border-primary bg-primary/10 text-primary"
-                : "border-border hover:bg-muted"
-            )}
-          >
-            <ExternalLink className="w-4 h-4" />
-            {t("open_new_tab")}
-          </button>
-          <button
-            type="button"
-            onClick={() => setFormData({ ...formData, openMode: "inline" })}
-            className={cn(
-              "flex items-center gap-2 px-3 py-2 rounded-md text-sm border transition-colors",
-              formData.openMode === "inline"
-                ? "border-primary bg-primary/10 text-primary"
-                : "border-border hover:bg-muted"
-            )}
-          >
-            <PanelRight className="w-4 h-4" />
-            {t("open_inline")}
-          </button>
-        </div>
+        <SegmentedTabs
+          value={formData.openMode}
+          onChange={(value) => setFormData({ ...formData, openMode: value as "tab" | "inline" })}
+          options={[
+            { value: "tab", label: t("open_new_tab") },
+            { value: "inline", label: t("open_inline") },
+          ]}
+          aria-label={t("open_mode_label")}
+        />
       </div>
 
       <div className="flex items-center justify-between">
         <label className="text-sm font-medium">{t("show_on_mobile")}</label>
-        <button
-          type="button"
-          role="switch"
-          aria-checked={formData.showOnMobile}
+        <Switch
+          checked={formData.showOnMobile}
+          onChange={(checked) => setFormData({ ...formData, showOnMobile: checked })}
           aria-label={t("show_on_mobile")}
-          onClick={() => setFormData({ ...formData, showOnMobile: !formData.showOnMobile })}
-          className={cn(
-            "relative inline-flex h-5 w-9 items-center rounded-full transition-colors",
-            formData.showOnMobile ? "bg-primary" : "bg-muted-foreground/30"
-          )}
-        >
-          <span
-            className={cn(
-              "inline-block h-3.5 w-3.5 rounded-full bg-white transition-transform",
-              formData.showOnMobile ? "translate-x-4.5" : "translate-x-0.5"
-            )}
-          />
-        </button>
+        />
       </div>
 
       <div className="flex gap-2 justify-end">
@@ -207,12 +177,12 @@ function ManagedAppsSection() {
                 <div className="text-sm font-medium truncate">{app.name}</div>
                 <div className="text-xs text-muted-foreground truncate">{app.url}</div>
               </div>
-              <span className="text-[10px] px-1.5 py-0.5 rounded-full flex-shrink-0 bg-muted text-muted-foreground inline-flex items-center gap-1">
+              <span className="text-xs px-1.5 py-0.5 rounded-full flex-shrink-0 bg-muted text-muted-foreground inline-flex items-center gap-1">
                 <Lock className="w-2.5 h-2.5" />
                 {tApps("managed_badge")}
               </span>
               <span className={cn(
-                "text-[10px] px-1.5 py-0.5 rounded-full flex-shrink-0",
+                "text-xs px-1.5 py-0.5 rounded-full flex-shrink-0",
                 app.openMode === "inline"
                   ? "bg-blue-500/10 text-blue-600 dark:text-blue-400"
                   : "bg-muted text-muted-foreground"
@@ -345,25 +315,30 @@ export function SidebarAppsSettings() {
                   <div className="text-xs text-muted-foreground truncate">{app.url}</div>
                 </div>
                 <span className={cn(
-                  "text-[10px] px-1.5 py-0.5 rounded-full flex-shrink-0",
+                  "text-xs px-1.5 py-0.5 rounded-full flex-shrink-0",
                   app.openMode === "inline"
                     ? "bg-blue-500/10 text-blue-600 dark:text-blue-400"
                     : "bg-muted text-muted-foreground"
                 )}>
                   {app.openMode === "inline" ? tApps("inline_badge") : tApps("tab_badge")}
                 </span>
-                <button
+                <Button
+                  size="icon"
+                  variant="ghost"
                   onClick={() => setEditingApp(app.id)}
-                  className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                  title={tApps("edit")}
                 >
                   <Pencil className="w-3.5 h-3.5" />
-                </button>
-                <button
+                </Button>
+                <Button
+                  size="icon"
+                  variant="ghost"
                   onClick={() => handleDelete(app)}
-                  className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                  title={tApps("delete")}
+                  className="hover:bg-destructive/10 hover:text-destructive"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
-                </button>
+                </Button>
               </div>
             );
           })}

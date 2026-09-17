@@ -1,42 +1,89 @@
+"use client";
+
 import * as React from "react";
+import { Button as HeroButton } from "@heroui/react";
+import type { PressEvent } from "react-aria-components";
 import { cn } from "@/lib/utils";
+import { Tooltip } from "@/components/ui/tooltip";
 
 export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "default" | "ghost" | "outline" | "destructive";
+  extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "color"> {
+  variant?: "default" | "ghost" | "outline" | "destructive" | "secondary";
   size?: "sm" | "md" | "lg" | "icon";
+  /** Tooltip label. Icon buttons also inherit `title` or `aria-label` when omitted. Pass `false` to disable. */
+  tooltip?: React.ReactNode | false;
+  tooltipPlacement?: "top" | "bottom" | "left" | "right";
+}
+
+const VARIANT_MAP = {
+  default: "primary",
+  ghost: "ghost",
+  outline: "outline",
+  destructive: "danger",
+  secondary: "secondary",
+} as const;
+
+function bridgeOnClick(onClick?: React.MouseEventHandler<HTMLButtonElement>) {
+  if (!onClick) return undefined;
+  return (_event: PressEvent) => {
+    onClick({
+      preventDefault: () => {},
+      stopPropagation: () => {},
+    } as React.MouseEvent<HTMLButtonElement>);
+  };
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant = "default", size = "md", ...props }, ref) => {
-    return (
-      <button
-        className={cn(
-          "inline-flex items-center justify-center rounded-md font-medium transition-all duration-200",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-          "disabled:pointer-events-none disabled:opacity-50",
-          {
-            default:
-              "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm hover:shadow",
-            ghost: "hover:bg-accent hover:text-accent-foreground",
-            outline:
-              "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
-            destructive:
-              "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-sm",
-          }[variant],
-          {
-            sm: "h-9 px-3 text-sm",
-            md: "h-10 px-4 py-2",
-            lg: "h-11 px-8",
-            icon: "h-10 w-10",
-          }[size],
-          className
-        )}
+  (
+    {
+      className,
+      variant = "default",
+      size = "md",
+      disabled,
+      onClick,
+      children,
+      type = "button",
+      title,
+      tooltip,
+      tooltipPlacement = "bottom",
+      "aria-label": ariaLabel,
+      ...props
+    },
+    ref,
+  ) => {
+    const heroSize = size === "icon" ? "sm" : size;
+    const tooltipDisabled = tooltip === false;
+    const tooltipContent =
+      !tooltipDisabled && size === "icon"
+        ? (tooltip ?? title ?? ariaLabel)
+        : undefined;
+    const button = (
+      <HeroButton
         ref={ref}
-        {...props}
-      />
+        type={type}
+        variant={VARIANT_MAP[variant]}
+        size={heroSize}
+        isIconOnly={size === "icon"}
+        isDisabled={disabled}
+        className={cn(className)}
+        onPress={bridgeOnClick(onClick)}
+        aria-label={ariaLabel ?? (size === "icon" && typeof title === "string" ? title : undefined)}
+        {...(props as React.ComponentPropsWithoutRef<typeof HeroButton>)}
+      >
+        {children}
+      </HeroButton>
     );
-  }
+
+    if (tooltipContent) {
+      return (
+        <Tooltip content={tooltipContent} placement={tooltipPlacement}>
+          {button}
+        </Tooltip>
+      );
+    }
+
+    return button;
+  },
 );
 Button.displayName = "Button";
 

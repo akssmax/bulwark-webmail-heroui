@@ -66,6 +66,7 @@ const applyTheme = (theme: 'light' | 'dark') => {
     root.classList.remove('dark');
     root.classList.add('light');
   }
+  root.setAttribute('data-theme', theme);
 
   // Also update color-scheme for native elements (scrollbars, form controls)
   root.style.colorScheme = theme;

@@ -7,6 +7,8 @@ import { cn } from "@/lib/utils";
 import { Trash2, Star, Mail, MailOpen, Archive, Tag, ShieldAlert, ShieldCheck } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useIsMobile } from "@/hooks/use-media-query";
+import { Button } from "@/components/ui/button";
+import { Tooltip } from "@/components/ui/tooltip";
 
 interface EmailHoverActionsProps {
   email: Email;
@@ -142,22 +144,26 @@ export function EmailHoverActions({
       : config.className;
 
     return (
-      <button
-        key={actionId}
-        onClick={(e) => handleAction(e, actionId)}
-        title={title}
-        className={cn(
-          "p-1.5 rounded-md transition-colors duration-100 text-muted-foreground hover:bg-black/5 dark:hover:bg-white/10",
-          className,
-        )}
-      >
-        <DisplayIcon
+      <Tooltip key={actionId} content={title} placement="top">
+        <Button
+          variant="ghost"
+          size="icon"
+          tooltip={false}
+          onClick={(e) => handleAction(e, actionId)}
+          aria-label={title}
           className={cn(
-            "w-4 h-4",
-            actionId === "star" && isStarred && "fill-amber-400 text-amber-400",
+            "size-7 min-w-7 text-muted-foreground hover:bg-black/5 dark:hover:bg-white/10",
+            className,
           )}
-        />
-      </button>
+        >
+          <DisplayIcon
+            className={cn(
+              "w-4 h-4",
+              actionId === "star" && isStarred && "fill-amber-400 text-amber-400",
+            )}
+          />
+        </Button>
+      </Tooltip>
     );
   });
 

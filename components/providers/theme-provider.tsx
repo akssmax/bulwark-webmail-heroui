@@ -2,13 +2,16 @@
 
 import { useEffect } from 'react';
 import { useThemeStore } from '@/stores/theme-store';
+import { useCustomThemeStore } from '@/lib/theme/custom-theme-store';
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const initializeTheme = useThemeStore((state) => state.initializeTheme);
+  const initializeCustomTheme = useCustomThemeStore((state) => state.initialize);
 
   useEffect(() => {
     initializeTheme();
-  }, [initializeTheme]);
+    initializeCustomTheme();
+  }, [initializeTheme, initializeCustomTheme]);
 
   useEffect(() => {
     if (process.env.NODE_ENV === 'production') return;

@@ -1,10 +1,13 @@
 'use client';
+import { Loader } from "@/components/ui/loader";
 
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
-import { Search, Download, Check, Loader2, Store, Puzzle, SwatchBook, Star, Eye, AlertTriangle, ArrowUpCircle } from 'lucide-react';
+import { Search, Download, Check, Store, Puzzle, SwatchBook, Star, Eye, AlertTriangle, ArrowUpCircle } from "lucide-react";
 import { apiFetch } from '@/lib/browser-navigation';
 import { compareVersions, isVersionSatisfied } from '@/lib/version-compare';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 const CURRENT_APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION || '0.0.0';
 
@@ -166,27 +169,29 @@ export function MarketplaceTab() {
       <div className="flex flex-col sm:flex-row sm:items-center gap-3">
         <div className="relative flex-1 min-w-0">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <input
+          <Input
             type="text"
             placeholder="Search extensions..."
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            className="w-full h-9 ps-9 pe-3 rounded-md border border-input bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-ring"
+            className="w-full h-9 ps-9"
           />
         </div>
         <div className="flex items-center gap-1 rounded-md border border-input bg-background p-0.5 self-start sm:self-auto">
           {(['all', 'plugin', 'theme'] as const).map((t) => (
-            <button
+            <Button
               key={t}
+              variant={typeFilter === t ? 'secondary' : 'ghost'}
+              size="sm"
               onClick={() => { setTypeFilter(t); setPage(1); }}
-              className={`h-8 px-3 rounded text-sm font-medium transition-colors ${
+              className={`h-8 px-3 ${
                 typeFilter === t
                   ? 'bg-accent text-accent-foreground'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               {t === 'all' ? 'All' : t === 'plugin' ? 'Plugins' : 'Themes'}
-            </button>
+            </Button>
           ))}
         </div>
       </div>
@@ -198,18 +203,19 @@ export function MarketplaceTab() {
           <p className="text-xs text-muted-foreground mt-1">
             Start the extension directory server on the configured port
           </p>
-          <button
+          <Button
             onClick={fetchExtensions}
-            className="mt-4 inline-flex items-center gap-2 h-8 px-3 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90"
+            size="sm"
+            className="mt-4"
           >
             Retry
-          </button>
+          </Button>
         </div>
       )}
 
       {loading && !error && (
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+          <Loader size="md" color="current" />
           <span className="ms-2 text-sm text-muted-foreground">Searching extensions...</span>
         </div>
       )}
@@ -244,23 +250,25 @@ export function MarketplaceTab() {
 
           {totalPages > 1 && (
             <div className="flex items-center justify-center gap-2 pt-2">
-              <button
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page <= 1}
-                className="h-8 px-3 rounded-md border border-border text-sm text-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Previous
-              </button>
+              </Button>
               <span className="text-sm text-muted-foreground">
                 Page {page} of {totalPages}
               </span>
-              <button
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                 disabled={page >= totalPages}
-                className="h-8 px-3 rounded-md border border-border text-sm text-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Next
-              </button>
+              </Button>
             </div>
           )}
         </>
@@ -326,7 +334,7 @@ function ExtensionCard({
               )}
             </div>
             <div className="flex items-center gap-1.5 mt-0.5">
-              <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
+              <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${
                 isPlugin
                   ? 'bg-blue-100 text-blue-700 dark:bg-blue-950/30 dark:text-blue-400'
                   : 'bg-purple-100 text-purple-700 dark:bg-purple-950/30 dark:text-purple-400'
@@ -349,7 +357,7 @@ function ExtensionCard({
         {extension.tags && extension.tags.length > 0 && (
           <div className="flex flex-wrap gap-1 mt-3">
             {extension.tags.slice(0, 3).map(tag => (
-              <span key={tag} className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+              <span key={tag} className="text-xs px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
                 {tag}
               </span>
             ))}
@@ -377,19 +385,20 @@ function ExtensionCard({
 
       <div className="px-4 pb-4 -mt-1 flex items-center gap-2 flex-wrap">
         {extension.installed && updateAvailable ? (
-          <button
+          <Button
+            size="sm"
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); onInstall(); }}
             disabled={installing}
             title={`Update from v${extension.installedVersion} to v${extension.latestVersion}`}
-            className="inline-flex items-center gap-1.5 h-7 px-3 rounded-md bg-blue-600 text-white text-xs font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
+            className="h-7 gap-1.5 bg-blue-600 text-white hover:bg-blue-700 text-xs"
           >
             {installing ? (
-              <Loader2 className="w-3 h-3 animate-spin" />
+              <Loader size="sm" color="current" />
             ) : (
               <ArrowUpCircle className="w-3 h-3" />
             )}
             Update to v{extension.latestVersion}
-          </button>
+          </Button>
         ) : extension.installed ? (
           <span
             className="inline-flex items-center gap-1 h-7 px-2.5 rounded-md bg-emerald-100 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400 text-xs font-medium"
@@ -407,18 +416,19 @@ function ExtensionCard({
             Requires v{extension.minAppVersion}+
           </span>
         ) : (
-          <button
+          <Button
+            size="sm"
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); onInstall(); }}
             disabled={installing}
-            className="inline-flex items-center gap-1.5 h-7 px-3 rounded-md bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 disabled:opacity-50 transition-colors"
+            className="h-7 gap-1.5 text-xs"
           >
             {installing ? (
-              <Loader2 className="w-3 h-3 animate-spin" />
+              <Loader size="sm" color="current" />
             ) : (
               <Download className="w-3 h-3" />
             )}
             Quick install
-          </button>
+          </Button>
         )}
       </div>
     </div>

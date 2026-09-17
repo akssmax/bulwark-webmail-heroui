@@ -15,6 +15,11 @@ import {
 } from "lucide-react";
 import { useIsDesktop } from "@/hooks/use-media-query";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Dropdown } from "@/components/ui/dropdown";
+import { ContextMenu, ContextMenuItem, ContextMenuSeparator } from "@/components/ui/context-menu";
+import { useContextMenu } from "@/hooks/use-context-menu";
+import { Checkbox } from "@/components/ui/checkbox";
 import { cn, formatFileSize } from "@/lib/utils";
 import { NewFolderDialog } from "@/components/files/new-folder-dialog";
 import { RenameDialog } from "@/components/files/rename-dialog";
@@ -413,8 +418,24 @@ export function FileBrowser({
   const canShare = useCallback((r: FileResource | null | undefined): boolean =>
     !!(sharingEnabled && onShare && client && r && !r.isShared && (r.myRights?.mayShare ?? true)),
     [sharingEnabled, onShare, client]);
-  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; name: string } | null>(null);
-  const [emptyContextMenu, setEmptyContextMenu] = useState<{ x: number; y: number } | null>(null);
+  const {
+    contextMenu: resourceContextMenu,
+    openContextMenu: openResourceContextMenu,
+    closeContextMenu: closeResourceContextMenu,
+    menuRef: resourceMenuRef,
+  } = useContextMenu<string>();
+  const {
+    contextMenu: emptyContextMenu,
+    openContextMenu: openEmptyContextMenu,
+    closeContextMenu: closeEmptyContextMenu,
+    menuRef: emptyMenuRef,
+  } = useContextMenu<"empty">();
+  const {
+    contextMenu: breadcrumbContextMenu,
+    openContextMenu: openBreadcrumbContextMenu,
+    closeContextMenu: closeBreadcrumbContextMenu,
+    menuRef: breadcrumbMenuRef,
+  } = useContextMenu<{ path: string; folders: FileResource[] }>();
   const [showNewTextFile, setShowNewTextFile] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -465,12 +486,6 @@ export function FileBrowser({
       window.removeEventListener("files-settings-changed", reloadSettings);
     };
   }, []);
-  const [breadcrumbDropdown, setBreadcrumbDropdown] = useState<{
-    path: string;
-    folders: FileResource[];
-    x: number;
-    y: number;
-  } | null>(null);
   const [marquee, setMarquee] = useState<{
     startX: number;
     startY: number;
@@ -776,40 +791,14 @@ export function FileBrowser({
     }
   };
 
-  const contextMenuRef = useRef<HTMLDivElement>(null);
-
   const handleContextMenu = (e: React.MouseEvent, name: string) => {
-    e.preventDefault();
-    setContextMenu({ x: e.clientX, y: e.clientY, name });
+    openResourceContextMenu(e, name);
   };
 
-  // Adjust context menu position to stay within viewport
-  useEffect(() => {
-    if (contextMenu && contextMenuRef.current) {
-      const menu = contextMenuRef.current;
-      const rect = menu.getBoundingClientRect();
-      let { x, y } = contextMenu;
-      let adjusted = false;
-
-      if (x + rect.width > window.innerWidth) {
-        x = window.innerWidth - rect.width - 8;
-        adjusted = true;
-      }
-      if (y + rect.height > window.innerHeight) {
-        y = window.innerHeight - rect.height - 8;
-        adjusted = true;
-      }
-
-      if (adjusted) {
-        setContextMenu({ ...contextMenu, x, y });
-      }
-    }
-  }, [contextMenu]);
-
   const handleContainerClick = () => {
-    if (contextMenu) setContextMenu(null);
-    if (emptyContextMenu) setEmptyContextMenu(null);
-    if (breadcrumbDropdown) setBreadcrumbDropdown(null);
+    closeResourceContextMenu();
+    closeEmptyContextMenu();
+    closeBreadcrumbContextMenu();
   };
 
   const handleBreadcrumbRightClick = async (e: React.MouseEvent, crumbPath: string) => {
@@ -819,7 +808,7 @@ export function FileBrowser({
     try {
       const items = await listPath(parentPath === '/' ? '/' : parentPath);
       const folders = items.filter(r => r.isDirectory);
-      setBreadcrumbDropdown({ path: parentPath, folders, x: e.clientX, y: e.clientY });
+      openBreadcrumbContextMenu(e, { path: parentPath, folders });
     } catch {
       // ignore
     }
@@ -970,20 +959,22 @@ export function FileBrowser({
           {breadcrumbs.map((crumb, i) => (
             <span key={`${i}:${crumb.path}`} className="flex items-center gap-1 shrink-0">
               {i > 0 && <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />}
-              <button
-                onClick={() => crumb.isAccount
-                  ? onNavigate('/', '__account_root__')
-                  : onNavigate(crumb.path)}
-                onContextMenu={(e) => crumb.isAccount ? undefined : handleBreadcrumbRightClick(e, crumb.path)}
+              <Button
+                variant="ghost"
+                size="sm"
                 className={cn(
-                  "px-1.5 py-0.5 rounded hover:bg-muted transition-colors",
+                  "h-auto px-1.5 py-0.5",
                   i === breadcrumbs.length - 1
                     ? "font-medium text-foreground"
                     : "text-muted-foreground hover:text-foreground"
                 )}
+                onClick={() => crumb.isAccount
+                  ? onNavigate('/', '__account_root__')
+                  : onNavigate(crumb.path)}
+                onContextMenu={(e) => crumb.isAccount ? undefined : handleBreadcrumbRightClick(e, crumb.path)}
               >
                 {i === 0 ? <Home className="w-4 h-4" /> : crumb.name}
-              </button>
+              </Button>
             </span>
           ))}
         </nav>
@@ -1121,7 +1112,7 @@ export function FileBrowser({
       {showSearch && (
         <div className="flex items-center gap-2 px-4 py-2 border-b border-border bg-muted/30">
           <Search className="w-4 h-4 text-muted-foreground shrink-0" />
-          <input
+          <Input
             ref={searchInputRef}
             type="search"
             role="searchbox"
@@ -1129,7 +1120,7 @@ export function FileBrowser({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={t("search_placeholder")}
-            className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+            className="flex-1 border-0 bg-transparent shadow-none focus-visible:ring-0"
             onKeyDown={(e) => {
               if (e.key === 'Escape') {
                 setShowSearch(false);
@@ -1138,9 +1129,9 @@ export function FileBrowser({
             }}
           />
           {searchQuery && (
-            <button onClick={() => setSearchQuery("")} className="text-muted-foreground hover:text-foreground">
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSearchQuery("")} aria-label={t("cancel")}>
               <X className="w-4 h-4" />
-            </button>
+            </Button>
           )}
         </div>
       )}
@@ -1206,12 +1197,14 @@ export function FileBrowser({
               {uploadProgress.total > 0
                 ? `${Math.round((uploadProgress.loaded / uploadProgress.total) * 100)}%`
                 : "…"}
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-auto px-1 text-xs text-destructive hover:text-destructive/80 underline"
                 onClick={onCancelUpload}
-                className="text-xs text-destructive hover:text-destructive/80 underline"
               >
                 {t("cancel")}
-              </button>
+              </Button>
             </span>
           </div>
           <div className="h-1 bg-primary/20 rounded-full overflow-hidden">
@@ -1292,17 +1285,18 @@ export function FileBrowser({
                 </h4>
                 <div className="space-y-0.5">
                   {favorites.map((fav) => (
-                    <button
+                    <Button
                       key={fav}
+                      variant="ghost"
                       onClick={() => onNavigate(fav)}
                       className={cn(
-                        "w-full flex items-center gap-2 px-2 py-1.5 rounded text-sm hover:bg-muted transition-colors text-start",
+                        "w-full justify-start h-auto gap-2 px-2 py-1.5 text-sm",
                         currentPath === fav && "bg-muted font-medium"
                       )}
                     >
                       <Folder className="w-3.5 h-3.5 text-blue-500 shrink-0" />
                       <span className="truncate">{fav === '/' ? t("breadcrumb_root") : fav.split('/').pop()}</span>
-                    </button>
+                    </Button>
                   ))}
                 </div>
               </div>
@@ -1315,14 +1309,15 @@ export function FileBrowser({
                 </h4>
                 <div className="space-y-0.5">
                   {recentFiles.slice(0, 10).map((recent) => (
-                    <button
+                    <Button
                       key={recent.id}
-                      className="w-full flex items-center gap-2 px-2 py-1.5 rounded text-sm hover:bg-muted transition-colors text-start"
+                      variant="ghost"
+                      className="w-full justify-start h-auto gap-2 px-2 py-1.5 text-sm"
                       title={recent.name}
                     >
                       <File className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
                       <span className="truncate">{recent.name}</span>
-                    </button>
+                    </Button>
                   ))}
                 </div>
               </div>
@@ -1366,11 +1361,12 @@ export function FileBrowser({
               style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(11rem, 1fr))' }}
             >
               {accountFolders.map((acc) => (
-                <button
+                <Button
                   key={`__account__:${acc.accountId}`}
+                  variant="outline"
                   onClick={() => onSelectAccount(acc.accountId)}
                   title={acc.email}
-                  className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors text-start min-w-0"
+                  className="flex items-center gap-3 p-3 h-auto rounded-lg text-start min-w-0 justify-start"
                 >
                   <Avatar
                     name={acc.label}
@@ -1385,7 +1381,7 @@ export function FileBrowser({
                       <span className="truncate text-xs text-muted-foreground">{acc.email}</span>
                     )}
                   </div>
-                </button>
+                </Button>
               ))}
             </div>
           </div>
@@ -1453,7 +1449,7 @@ export function FileBrowser({
                 onContextMenu={(e) => {
                   if ((e.target as HTMLElement).closest('[data-resource]')) return;
                   e.preventDefault();
-                  setEmptyContextMenu({ x: e.clientX, y: e.clientY });
+                  openEmptyContextMenu(e, "empty");
                 }}
               >
                 {displayResources.map((resource) => (
@@ -1497,13 +1493,15 @@ export function FileBrowser({
                     onDoubleClick={() => handleResourceDoubleClick(resource)}
                     onContextMenu={(e) => handleContextMenu(e, resource.name)}
                   >
-                    <input
-                      type="checkbox"
-                      checked={selectedResources.has(resource.name)}
+                    <Checkbox
+                      isSelected={selectedResources.has(resource.name)}
+                      aria-label={resource.name}
+                      className={cn(
+                        "absolute top-2 left-2 opacity-0 group-hover:opacity-100",
+                        selectedResources.has(resource.name) && "opacity-100",
+                      )}
+                      contentClassName="p-0"
                       onChange={() => onToggleSelect(resource.name)}
-                      className="w-3.5 h-3.5 rounded border-border accent-primary cursor-pointer absolute top-2 left-2 opacity-0 group-hover:opacity-100 data-[checked=true]:opacity-100"
-                      data-checked={selectedResources.has(resource.name)}
-                      onClick={(e) => e.stopPropagation()}
                     />
                     {showThumbnails && isImageFile(resource.name)
                       ? <Thumbnail name={resource.name} getImageUrl={getImageUrl} size="lg" />
@@ -1525,38 +1523,37 @@ export function FileBrowser({
             onContextMenu={(e) => {
               if ((e.target as HTMLElement).closest('tr[data-resource]')) return;
               e.preventDefault();
-              setEmptyContextMenu({ x: e.clientX, y: e.clientY });
+              openEmptyContextMenu(e, "empty");
             }}
           >
             <thead className="bg-muted/50 sticky top-0 z-10">
               <tr className="border-b border-border">
                 <th className="text-start px-4 py-2 font-medium text-muted-foreground">
                   <div className="flex items-center gap-3">
-                    <input
-                      type="checkbox"
-                      checked={allSelected}
-                      ref={(el) => { if (el) el.indeterminate = someSelected; }}
+                    <Checkbox
+                      isSelected={allSelected}
+                      isIndeterminate={someSelected}
+                      aria-label={allSelected ? "Clear selection" : "Select all"}
+                      contentClassName="p-0"
                       onChange={() => allSelected ? onClearSelection() : onSelectAll()}
-                      className="w-4 h-4 rounded border-border accent-primary cursor-pointer"
-                      onClick={(e) => e.stopPropagation()}
                     />
-                    <button onClick={() => handleSortClick("name")} className="hover:text-foreground transition-colors">
+                    <Button variant="ghost" size="sm" className="h-auto p-0 font-medium text-muted-foreground hover:text-foreground" onClick={() => handleSortClick("name")}>
                       {t("name")}
                       <SortIndicator column="name" />
-                    </button>
+                    </Button>
                   </div>
                 </th>
                 <th className="text-start px-4 py-2 font-medium text-muted-foreground hidden md:table-cell w-24">
-                  <button onClick={() => handleSortClick("size")} className="hover:text-foreground transition-colors">
+                  <Button variant="ghost" size="sm" className="h-auto p-0 font-medium text-muted-foreground hover:text-foreground" onClick={() => handleSortClick("size")}>
                     {t("size")}
                     <SortIndicator column="size" />
-                  </button>
+                  </Button>
                 </th>
                 <th className="text-start px-4 py-2 font-medium text-muted-foreground hidden lg:table-cell w-44">
-                  <button onClick={() => handleSortClick("modified")} className="hover:text-foreground transition-colors">
+                  <Button variant="ghost" size="sm" className="h-auto p-0 font-medium text-muted-foreground hover:text-foreground" onClick={() => handleSortClick("modified")}>
                     {t("modified")}
                     <SortIndicator column="modified" />
-                  </button>
+                  </Button>
                 </th>
                 <th className="w-10 px-2 py-2" />
               </tr>
@@ -1648,12 +1645,11 @@ export function FileBrowser({
                 >
                   <td className="px-4 py-2.5">
                     <div className="flex items-center gap-3 min-w-0">
-                      <input
-                        type="checkbox"
-                        checked={selectedResources.has(resource.name)}
+                      <Checkbox
+                        isSelected={selectedResources.has(resource.name)}
+                        aria-label={resource.name}
+                        contentClassName="p-0"
                         onChange={() => onToggleSelect(resource.name)}
-                        className="w-4 h-4 rounded border-border accent-primary cursor-pointer shrink-0"
-                        onClick={(e) => e.stopPropagation()}
                       />
                       {showThumbnails && isImageFile(resource.name)
                         ? <Thumbnail name={resource.name} getImageUrl={getImageUrl} size="sm" />
@@ -1669,15 +1665,84 @@ export function FileBrowser({
                     {formatDate(resource.lastModified)}
                   </td>
                   <td className="px-2 py-2.5">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleContextMenu(e, resource.name);
-                      }}
-                      className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      <MoreVertical className="w-4 h-4" />
-                    </button>
+                    <Dropdown>
+                      <Dropdown.Trigger>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          aria-label={t("context_menu")}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <MoreVertical className="w-4 h-4" />
+                        </Button>
+                      </Dropdown.Trigger>
+                      <Dropdown.Popover placement="bottom end">
+                        <Dropdown.Menu aria-label={t("context_menu")}>
+                          {!resource.isDirectory && isPreviewable(resource.name) && (
+                            <Dropdown.Item
+                              onAction={() => {
+                                if (isImageFile(resource.name)) onPreviewImage(resource.name);
+                                else onPreviewFile(resource.name);
+                              }}
+                            >
+                              <ImageIcon className="w-4 h-4" />
+                              {t("preview")}
+                            </Dropdown.Item>
+                          )}
+                          {!resource.isDirectory && isOfficeEditable?.(resource.name) && onEditFile && (
+                            <Dropdown.Item onAction={() => onEditFile(resource.name)}>
+                              <SquarePen className="w-4 h-4" />
+                              {t("office_edit")}
+                            </Dropdown.Item>
+                          )}
+                          {!resource.isDirectory && (
+                            <Dropdown.Item onAction={() => onDownload(resource.name)}>
+                              <Download className="w-4 h-4" />
+                              {t("download")}
+                            </Dropdown.Item>
+                          )}
+                          <Dropdown.Item onAction={() => onCut([resource.name])}>
+                            <Scissors className="w-4 h-4" />
+                            {t("cut")}
+                          </Dropdown.Item>
+                          <Dropdown.Item onAction={() => onCopy([resource.name])}>
+                            <Copy className="w-4 h-4" />
+                            {t("copy")}
+                          </Dropdown.Item>
+                          {clipboard && (
+                            <Dropdown.Item onAction={onPaste}>
+                              <Clipboard className="w-4 h-4" />
+                              {t("paste")}
+                            </Dropdown.Item>
+                          )}
+                          {!resource.isDirectory && (
+                            <Dropdown.Item onAction={() => onDuplicate(resource.name)}>
+                              <CopyPlus className="w-4 h-4" />
+                              {t("duplicate")}
+                            </Dropdown.Item>
+                          )}
+                          {canShare(resource) && (
+                            <Dropdown.Item onAction={() => setShareTargetId(resource.id)}>
+                              <Share2 className="w-4 h-4" />
+                              {t("share")}
+                            </Dropdown.Item>
+                          )}
+                          <Dropdown.Item onAction={() => onShowDetails(resource.name)}>
+                            <Info className="w-4 h-4" />
+                            {t("details")}
+                          </Dropdown.Item>
+                          <Dropdown.Item onAction={() => setRenameTarget(resource.name)}>
+                            <Pencil className="w-4 h-4" />
+                            {t("rename")}
+                          </Dropdown.Item>
+                          <Dropdown.Item variant="danger" onAction={() => onDelete(resource.name)}>
+                            <Trash2 className="w-4 h-4" />
+                            {t("delete")}
+                          </Dropdown.Item>
+                        </Dropdown.Menu>
+                      </Dropdown.Popover>
+                    </Dropdown>
                   </td>
                 </tr>
               ))}
@@ -1685,257 +1750,220 @@ export function FileBrowser({
           </table>
         )}
 
-        {/* Context menu */}
-        {contextMenu && (
-          <div
-            ref={contextMenuRef}
-            role="menu"
-            aria-label={t("context_menu")}
-            className="fixed z-50 bg-background border border-border rounded-lg shadow-lg py-1 min-w-[160px]"
-            style={{ left: contextMenu.x, top: contextMenu.y }}
-            onClick={(e) => e.stopPropagation()}
+        {/* Resource context menu */}
+        {resourceContextMenu.data && (
+          <ContextMenu
+            ref={resourceMenuRef}
+            isOpen={resourceContextMenu.isOpen}
+            position={resourceContextMenu.position}
+            onClose={closeResourceContextMenu}
           >
-            {!resources.find(r => r.name === contextMenu.name)?.isDirectory && isPreviewable(contextMenu.name) && (
-              <button
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted transition-colors text-start"
-                onClick={() => {
-                  if (isImageFile(contextMenu.name)) {
-                    onPreviewImage(contextMenu.name);
-                  } else {
-                    onPreviewFile(contextMenu.name);
-                  }
-                  setContextMenu(null);
-                }}
-              >
-                <ImageIcon className="w-4 h-4" />
-                {t("preview")}
-              </button>
-            )}
-            {!resources.find(r => r.name === contextMenu.name)?.isDirectory && isOfficeEditable?.(contextMenu.name) && onEditFile && (
-              <button
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted transition-colors text-start"
-                onClick={() => {
-                  onEditFile(contextMenu.name);
-                  setContextMenu(null);
-                }}
-              >
-                <SquarePen className="w-4 h-4" />
-                {t("office_edit")}
-              </button>
-            )}
-            {!resources.find(r => r.name === contextMenu.name)?.isDirectory && (
-              <button
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted transition-colors text-start"
-                onClick={() => {
-                  onDownload(contextMenu.name);
-                  setContextMenu(null);
-                }}
-              >
-                <Download className="w-4 h-4" />
-                {t("download")}
-              </button>
-            )}
-            <button
-              className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted transition-colors text-start"
-              onClick={() => {
-                onCut([contextMenu.name]);
-                setContextMenu(null);
-              }}
-            >
-              <Scissors className="w-4 h-4" />
-              {t("cut")}
-            </button>
-            <button
-              className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted transition-colors text-start"
-              onClick={() => {
-                onCopy([contextMenu.name]);
-                setContextMenu(null);
-              }}
-            >
-              <Copy className="w-4 h-4" />
-              {t("copy")}
-            </button>
-            {clipboard && (
-              <button
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted transition-colors text-start"
-                onClick={() => {
-                  onPaste();
-                  setContextMenu(null);
-                }}
-              >
-                <Clipboard className="w-4 h-4" />
-                {t("paste")}
-              </button>
-            )}
-            {!resources.find(r => r.name === contextMenu.name)?.isDirectory && (
-              <button
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted transition-colors text-start"
-                onClick={() => {
-                  onDuplicate(contextMenu.name);
-                  setContextMenu(null);
-                }}
-              >
-                <CopyPlus className="w-4 h-4" />
-                {t("duplicate")}
-              </button>
-            )}
-            {canShare(resources.find(r => r.name === contextMenu.name)) && (
-              <button
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted transition-colors text-start"
-                onClick={() => {
-                  const r = resources.find(res => res.name === contextMenu.name);
-                  if (r) setShareTargetId(r.id);
-                  setContextMenu(null);
-                }}
-              >
-                <Share2 className="w-4 h-4" />
-                {t("share")}
-              </button>
-            )}
-            <div className="h-px bg-border my-1" />
-            <button
-              className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted transition-colors text-start"
-              onClick={() => {
-                onShowDetails(contextMenu.name);
-                setContextMenu(null);
-              }}
-            >
-              <Info className="w-4 h-4" />
-              {t("details")}
-            </button>
-            <button
-              className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted transition-colors text-start"
-              onClick={() => {
-                setRenameTarget(contextMenu.name);
-                setContextMenu(null);
-              }}
-            >
-              <Pencil className="w-4 h-4" />
-              {t("rename")}
-            </button>
-            <button
-              className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted text-destructive transition-colors text-start"
-              onClick={() => {
-                onDelete(contextMenu.name);
-                setContextMenu(null);
-              }}
-            >
-              <Trash2 className="w-4 h-4" />
-              {t("delete")}
-            </button>
-          </div>
+            {(() => {
+              const menuName = resourceContextMenu.data;
+              const menuResource = resources.find(r => r.name === menuName);
+              return (
+                <>
+                  {!menuResource?.isDirectory && isPreviewable(menuName) && (
+                    <ContextMenuItem
+                      icon={ImageIcon}
+                      label={t("preview")}
+                      onClick={() => {
+                        closeResourceContextMenu();
+                        if (isImageFile(menuName)) onPreviewImage(menuName);
+                        else onPreviewFile(menuName);
+                      }}
+                    />
+                  )}
+                  {!menuResource?.isDirectory && isOfficeEditable?.(menuName) && onEditFile && (
+                    <ContextMenuItem
+                      icon={SquarePen}
+                      label={t("office_edit")}
+                      onClick={() => {
+                        closeResourceContextMenu();
+                        onEditFile(menuName);
+                      }}
+                    />
+                  )}
+                  {!menuResource?.isDirectory && (
+                    <ContextMenuItem
+                      icon={Download}
+                      label={t("download")}
+                      onClick={() => {
+                        closeResourceContextMenu();
+                        onDownload(menuName);
+                      }}
+                    />
+                  )}
+                  <ContextMenuItem
+                    icon={Scissors}
+                    label={t("cut")}
+                    onClick={() => {
+                      closeResourceContextMenu();
+                      onCut([menuName]);
+                    }}
+                  />
+                  <ContextMenuItem
+                    icon={Copy}
+                    label={t("copy")}
+                    onClick={() => {
+                      closeResourceContextMenu();
+                      onCopy([menuName]);
+                    }}
+                  />
+                  {clipboard && (
+                    <ContextMenuItem
+                      icon={Clipboard}
+                      label={t("paste")}
+                      onClick={() => {
+                        closeResourceContextMenu();
+                        onPaste();
+                      }}
+                    />
+                  )}
+                  {!menuResource?.isDirectory && (
+                    <ContextMenuItem
+                      icon={CopyPlus}
+                      label={t("duplicate")}
+                      onClick={() => {
+                        closeResourceContextMenu();
+                        onDuplicate(menuName);
+                      }}
+                    />
+                  )}
+                  {canShare(menuResource) && (
+                    <ContextMenuItem
+                      icon={Share2}
+                      label={t("share")}
+                      onClick={() => {
+                        closeResourceContextMenu();
+                        if (menuResource) setShareTargetId(menuResource.id);
+                      }}
+                    />
+                  )}
+                  <ContextMenuSeparator />
+                  <ContextMenuItem
+                    icon={Info}
+                    label={t("details")}
+                    onClick={() => {
+                      closeResourceContextMenu();
+                      onShowDetails(menuName);
+                    }}
+                  />
+                  <ContextMenuItem
+                    icon={Pencil}
+                    label={t("rename")}
+                    onClick={() => {
+                      closeResourceContextMenu();
+                      setRenameTarget(menuName);
+                    }}
+                  />
+                  <ContextMenuItem
+                    icon={Trash2}
+                    label={t("delete")}
+                    destructive
+                    onClick={() => {
+                      closeResourceContextMenu();
+                      onDelete(menuName);
+                    }}
+                  />
+                </>
+              );
+            })()}
+          </ContextMenu>
         )}
 
         {/* Empty-area context menu */}
-        {emptyContextMenu && (
-          <div
-            role="menu"
-            aria-label={t("context_menu")}
-            className="fixed z-50 bg-background border border-border rounded-lg shadow-lg py-1 min-w-[160px]"
-            style={{ left: emptyContextMenu.x, top: emptyContextMenu.y }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted transition-colors text-start"
-              onClick={() => {
-                setShowNewFolder(true);
-                setEmptyContextMenu(null);
-              }}
-            >
-              <FolderPlus className="w-4 h-4" />
-              {t("new_folder")}
-            </button>
-            <button
-              className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted transition-colors text-start"
-              onClick={() => {
-                setShowNewTextFile(true);
-                setEmptyContextMenu(null);
-              }}
-            >
-              <FilePlus className="w-4 h-4" />
-              {t("new_text_file")}
-            </button>
-            <button
-              className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted transition-colors text-start"
-              onClick={() => {
-                fileInputRef.current?.click();
-                setEmptyContextMenu(null);
-              }}
-            >
-              <Upload className="w-4 h-4" />
-              {t("upload")}
-            </button>
-            <button
-              className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted transition-colors text-start"
-              onClick={() => {
-                folderInputRef.current?.click();
-                setEmptyContextMenu(null);
-              }}
-            >
-              <FolderUp className="w-4 h-4" />
-              {t("upload_folder")}
-            </button>
-            {clipboard && (
-              <>
-                <div className="h-px bg-border my-1" />
-                <button
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted transition-colors text-start"
-                  onClick={() => {
-                    onPaste();
-                    setEmptyContextMenu(null);
-                  }}
-                >
-                  <Clipboard className="w-4 h-4" />
-                  {t("paste")}
-                </button>
-              </>
-            )}
-            <div className="h-px bg-border my-1" />
-            <button
-              className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted transition-colors text-start"
-              onClick={() => {
-                onRefresh();
-                setEmptyContextMenu(null);
-              }}
-            >
-              <RefreshCw className="w-4 h-4" />
-              {t("refresh")}
-            </button>
-          </div>
-        )}
+        <ContextMenu
+          ref={emptyMenuRef}
+          isOpen={emptyContextMenu.isOpen}
+          position={emptyContextMenu.position}
+          onClose={closeEmptyContextMenu}
+        >
+          <ContextMenuItem
+            icon={FolderPlus}
+            label={t("new_folder")}
+            onClick={() => {
+              closeEmptyContextMenu();
+              setShowNewFolder(true);
+            }}
+          />
+          <ContextMenuItem
+            icon={FilePlus}
+            label={t("new_text_file")}
+            onClick={() => {
+              closeEmptyContextMenu();
+              setShowNewTextFile(true);
+            }}
+          />
+          <ContextMenuItem
+            icon={Upload}
+            label={t("upload")}
+            onClick={() => {
+              closeEmptyContextMenu();
+              fileInputRef.current?.click();
+            }}
+          />
+          <ContextMenuItem
+            icon={FolderUp}
+            label={t("upload_folder")}
+            onClick={() => {
+              closeEmptyContextMenu();
+              folderInputRef.current?.click();
+            }}
+          />
+          {clipboard && (
+            <>
+              <ContextMenuSeparator />
+              <ContextMenuItem
+                icon={Clipboard}
+                label={t("paste")}
+                onClick={() => {
+                  closeEmptyContextMenu();
+                  onPaste();
+                }}
+              />
+            </>
+          )}
+          <ContextMenuSeparator />
+          <ContextMenuItem
+            icon={RefreshCw}
+            label={t("refresh")}
+            onClick={() => {
+              closeEmptyContextMenu();
+              onRefresh();
+            }}
+          />
+        </ContextMenu>
 
-        {/* Breadcrumb dropdown */}
-        {breadcrumbDropdown && (
-          <div
-            role="menu"
-            aria-label={t("breadcrumb_root")}
-            className="fixed z-50 bg-background border border-border rounded-lg shadow-lg py-1 min-w-[180px] max-h-64 overflow-y-auto"
-            style={{ left: breadcrumbDropdown.x, top: breadcrumbDropdown.y }}
-            onClick={(e) => e.stopPropagation()}
+        {/* Breadcrumb context menu */}
+        {breadcrumbContextMenu.data && (
+          <ContextMenu
+            ref={breadcrumbMenuRef}
+            isOpen={breadcrumbContextMenu.isOpen}
+            position={breadcrumbContextMenu.position}
+            onClose={closeBreadcrumbContextMenu}
           >
-            {breadcrumbDropdown.folders.length === 0 ? (
+            {breadcrumbContextMenu.data.folders.length === 0 ? (
               <p className="px-3 py-2 text-sm text-muted-foreground">{t("no_results")}</p>
             ) : (
-              breadcrumbDropdown.folders.map((folder) => {
-                const folderPath = breadcrumbDropdown.path === '/'
+              breadcrumbContextMenu.data.folders.map((folder) => {
+                const folderPath = breadcrumbContextMenu.data!.path === '/'
                   ? `/${folder.name}`
-                  : `${breadcrumbDropdown.path}/${folder.name}`;
+                  : `${breadcrumbContextMenu.data!.path}/${folder.name}`;
                 return (
-                  <button
+                  <ContextMenuItem
                     key={folder.id}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted transition-colors text-start"
+                    icon={Folder}
+                    label={folder.name}
                     onClick={() => {
+                      closeBreadcrumbContextMenu();
                       onNavigate(folderPath, folder.id);
-                      setBreadcrumbDropdown(null);
                     }}
-                  >
-                    <Folder className="w-4 h-4 text-blue-500 shrink-0" />
-                    <span className="truncate">{folder.name}</span>
-                  </button>
+                  />
                 );
               })
             )}
-          </div>
+          </ContextMenu>
         )}
 
         {/* Marquee selection rectangle */}
@@ -1957,9 +1985,9 @@ export function FileBrowser({
           <div role="complementary" aria-label={t("details")} className="w-64 border-s border-border bg-background p-4 overflow-y-auto shrink-0 hidden md:block">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-medium">{t("details")}</h3>
-              <button onClick={onToggleDetails} className="text-muted-foreground hover:text-foreground">
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onToggleDetails} aria-label={t("cancel")}>
                 <X className="w-4 h-4" />
-              </button>
+              </Button>
             </div>
             <div className="flex flex-col items-center gap-3 mb-4">
               {detailResource.isDirectory

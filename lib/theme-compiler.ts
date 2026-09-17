@@ -9,7 +9,8 @@ import type {
   ThemeTokenSet,
   ThemeTypography,
 } from './plugin-types';
-import { getLuminance, parseColor } from './color-transform';
+import { getLuminance, parseColor, toOklchCss } from './color-transform';
+import { DARK_THEME_SELECTOR, LIGHT_THEME_SELECTOR, withHeroUIAliases } from './theme/heroui-bridge';
 
 export interface CompiledTheme {
   css: string;
@@ -38,8 +39,8 @@ const DERIVE_PAIRS: Array<[base: string, fg: string]> = [
 /** Pick a foreground colour (white or near-black) by background luminance. */
 function pickForeground(bg: string): string {
   const rgb = parseColor(bg);
-  if (!rgb) return '#ffffff';
-  return getLuminance(rgb.r, rgb.g, rgb.b) >= 0.55 ? '#0f172a' : '#ffffff';
+  if (!rgb) return toOklchCss('#ffffff');
+  return getLuminance(rgb.r, rgb.g, rgb.b) >= 0.55 ? toOklchCss('#0f172a') : toOklchCss('#ffffff');
 }
 
 /**
@@ -86,7 +87,14 @@ function emitTokens(
       warnings.push(`Token "${rawKey}" dropped - value contains unsafe characters`);
       continue;
     }
-    lines.push(`  ${tokenName(rawKey)}: ${value.trim()};`);
+    const name = tokenName(rawKey);
+    const trimmed = value.trim();
+    const emitted = name.startsWith('--color-') ? toOklchCss(trimmed) : trimmed;
+    if (!isSafeTokenValue(emitted)) {
+      warnings.push(`Token "${rawKey}" dropped - value contains unsafe characters`);
+      continue;
+    }
+    lines.push(`  ${name}: ${emitted};`);
   }
   return { lines, warnings };
 }
@@ -140,25 +148,34 @@ function emitTypography(typography: ThemeTypography): string[] {
 
 const DENSITY_VARS: Record<ThemeDensity, Record<string, string>> = {
   compact: {
-    '--density-row-height': '28px',
-    '--density-control-height': '28px',
-    '--density-spacing-1': '2px',
-    '--density-spacing-2': '4px',
-    '--density-spacing-3': '6px',
-  },
-  normal: {
     '--density-row-height': '36px',
     '--density-control-height': '32px',
     '--density-spacing-1': '4px',
-    '--density-spacing-2': '8px',
-    '--density-spacing-3': '12px',
+    '--density-spacing-2': '6px',
+    '--density-spacing-3': '8px',
+    '--density-sidebar-py': '4px',
+    '--density-sidebar-row': '36px',
+    '--density-touch-target': '36px',
   },
-  touch: {
+  normal: {
     '--density-row-height': '44px',
     '--density-control-height': '40px',
+    '--density-spacing-1': '4px',
+    '--density-spacing-2': '8px',
+    '--density-spacing-3': '12px',
+    '--density-sidebar-py': '6px',
+    '--density-sidebar-row': '36px',
+    '--density-touch-target': '44px',
+  },
+  touch: {
+    '--density-row-height': '48px',
+    '--density-control-height': '44px',
     '--density-spacing-1': '6px',
     '--density-spacing-2': '12px',
     '--density-spacing-3': '18px',
+    '--density-sidebar-py': '10px',
+    '--density-sidebar-row': '48px',
+    '--density-touch-target': '44px',
   },
 };
 
@@ -186,12 +203,12 @@ export interface CompileOptions {
  *
  * Output layout:
  *   1. parent (extends) CSS, if any
- *   2. `:root { common + light + radii + typography + density }`
- *   3. `.dark { common + dark }` (only when the theme declares a dark variant)
+ *   2. `:root, [data-theme="light"] { common + light + radii + typography + density + HeroUI aliases }`
+ *   3. `.dark, [data-theme="dark"] { common + dark + HeroUI aliases }` (only when the theme declares a dark variant)
  *   4. user-supplied `theme.css` content (sanitized upstream)
  *
- * The compiler never emits selectors other than `:root` and `.dark`, so the
- * existing CSS sanitizer/selector validator continues to apply.
+ * The compiler never emits selectors other than `:root`, `.dark`, and
+ * `[data-theme="…"]`, so the existing CSS sanitizer/selector validator continues to apply.
  */
 export function compileAdvancedTheme(
   manifest: ThemeManifest,
@@ -241,10 +258,10 @@ export function compileAdvancedTheme(
   if (manifest.density) rootLines.push(...emitDensity(manifest.density));
 
   if (rootLines.length > 0) {
-    sections.push(`:root {\n${rootLines.join('\n')}\n}`);
+    sections.push(`${LIGHT_THEME_SELECTOR} {\n${withHeroUIAliases(rootLines).join('\n')}\n}`);
   }
 
-  // 3. .dark block
+  // 3. .dark / data-theme=dark block
   if (wantsDark) {
     const darkLines: string[] = [];
     if (tokens.common) {
@@ -258,7 +275,7 @@ export function compileAdvancedTheme(
       warnings.push(...w);
     }
     if (darkLines.length > 0) {
-      sections.push(`.dark {\n${darkLines.join('\n')}\n}`);
+      sections.push(`${DARK_THEME_SELECTOR} {\n${withHeroUIAliases(darkLines).join('\n')}\n}`);
     }
   }
 

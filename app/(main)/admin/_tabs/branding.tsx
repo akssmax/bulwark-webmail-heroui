@@ -1,7 +1,8 @@
 'use client';
+import { Loader } from "@/components/ui/loader";
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Save, Loader2, RotateCcw, ImageIcon, Upload, Trash2, Globe, Plus, X } from 'lucide-react';
+import { Save, RotateCcw, ImageIcon, Upload, Trash2, Globe, Plus, X } from "lucide-react";
 import { apiFetch, withBasePath } from '@/lib/browser-navigation';
 import {
   BRANDING_OVERRIDE_KEYS,
@@ -9,6 +10,8 @@ import {
   type BrandingOverrideKey,
   type DomainBrandingEntry,
 } from '@/lib/admin/domain-branding';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 interface ConfigEntry {
   value?: unknown;
@@ -352,14 +355,10 @@ export function BrandingTab() {
           <p className="text-sm text-muted-foreground mt-1">Customize logos, favicon, and company information</p>
         </div>
         {hasEdits && (
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="inline-flex items-center gap-2 h-9 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 disabled:opacity-50 transition-all shadow-sm"
-          >
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+          <Button onClick={handleSave} disabled={saving} className="h-9 gap-2">
+            {saving ? <Loader size="sm" color="current" /> : <Save className="w-4 h-4" />}
             Save changes
-          </button>
+          </Button>
         )}
       </div>
 
@@ -371,67 +370,63 @@ export function BrandingTab() {
         </div>
         <div className="px-4 py-3 space-y-3">
           <div className="flex flex-wrap gap-2">
-            <button
+            <Button
               type="button"
+              variant={selectedHost === null ? 'default' : 'secondary'}
+              size="sm"
               onClick={() => handleScopeChange(null)}
-              className={`h-8 px-3 rounded-md text-sm font-medium transition-colors ${
-                selectedHost === null
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-muted text-foreground hover:bg-muted/70'
-              }`}
+              className="h-8"
             >
               Default
-            </button>
+            </Button>
             {domainEntries.map(entry => (
-              <button
+              <Button
                 key={entry.host}
                 type="button"
+                variant={selectedHost === entry.host ? 'default' : 'secondary'}
+                size="sm"
                 onClick={() => handleScopeChange(entry.host)}
-                className={`h-8 px-3 rounded-md text-sm font-medium transition-colors ${
-                  selectedHost === entry.host
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-muted text-foreground hover:bg-muted/70'
-                }`}
+                className="h-8"
               >
                 {entry.host}
-              </button>
+              </Button>
             ))}
             {!addingHost && (
-              <button
+              <Button
                 type="button"
+                variant="outline"
+                size="sm"
                 onClick={() => { setAddingHost(true); setNewHostError(null); }}
-                className="inline-flex items-center gap-1 h-8 px-3 rounded-md border border-dashed border-input text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                className="h-8 gap-1 border-dashed"
               >
                 <Plus className="w-3.5 h-3.5" />
                 Add domain
-              </button>
+              </Button>
             )}
           </div>
           {addingHost && (
             <div className="flex flex-wrap items-center gap-2">
-              <input
+              <Input
                 type="text"
                 autoFocus
                 value={newHostInput}
                 onChange={(e) => { setNewHostInput(e.target.value); setNewHostError(null); }}
                 onKeyDown={(e) => { if (e.key === 'Enter') void handleAddDomain(); }}
                 placeholder="mail.example.com or *.example.com"
-                className="h-8 w-64 rounded-md border border-input bg-background px-2.5 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="h-8 w-64"
               />
-              <button
-                type="button"
-                onClick={handleAddDomain}
-                className="h-8 px-3 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
-              >
+              <Button type="button" size="sm" onClick={handleAddDomain} className="h-8">
                 Add
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="ghost"
+                size="sm"
                 onClick={() => { setAddingHost(false); setNewHostInput(''); setNewHostError(null); }}
-                className="h-8 px-2.5 rounded-md text-sm text-muted-foreground hover:text-foreground transition-colors"
+                className="h-8"
               >
                 Cancel
-              </button>
+              </Button>
               {newHostError && <span className="text-xs text-destructive">{newHostError}</span>}
             </div>
           )}
@@ -442,14 +437,16 @@ export function BrandingTab() {
                 Unset fields fall back to the Default values.
                 {wildcardScope && ' Uploads are disabled for wildcard hosts; enter a URL instead.'}
               </p>
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="sm"
                 onClick={handleDeleteDomain}
-                className="inline-flex items-center gap-1 text-destructive hover:underline whitespace-nowrap"
+                className="h-8 gap-1 text-destructive whitespace-nowrap"
               >
                 <X className="w-3.5 h-3.5" />
                 Remove domain
-              </button>
+              </Button>
             </div>
           ) : (
             <p className="text-xs text-muted-foreground">
@@ -477,18 +474,18 @@ export function BrandingTab() {
                 <div className="flex items-center gap-2 min-w-0">
                   <label className="text-sm text-foreground">{field.label}</label>
                   {isOverriddenInScope(field.key) && (
-                    <span className="text-[10px] font-medium uppercase tracking-wider px-1.5 py-0.5 rounded bg-primary/10 text-primary">
+                    <span className="text-xs font-medium uppercase tracking-wider px-1.5 py-0.5 rounded bg-primary/10 text-primary">
                       {isUploadedFile(field.key) ? 'uploaded' : selectedHost ? 'domain' : 'admin'}
                     </span>
                   )}
                 </div>
                 <div className="flex items-center gap-2 w-full sm:w-auto">
-                  <input
+                  <Input
                     type="text"
                     value={currentValue(field.key)}
                     onChange={(e) => handleChange(field.key, e.target.value)}
                     placeholder={selectedHost ? 'Enter URL (uploads only for default scope)' : 'Enter URL or upload a file'}
-                    className="h-8 w-full sm:w-64 min-w-0 rounded-md border border-input bg-background px-2.5 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="h-8 w-full sm:w-64 min-w-0"
                   />
                   <input
                     ref={el => { fileInputRefs.current[field.key] = el; }}
@@ -501,27 +498,31 @@ export function BrandingTab() {
                       e.target.value = '';
                     }}
                   />
-                  <button
+                  <Button
+                    variant="outline"
+                    size="icon"
                     onClick={() => fileInputRefs.current[field.key]?.click()}
                     disabled={uploading === field.key || wildcardScope}
-                    className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-md border border-input bg-background text-sm text-foreground hover:bg-muted disabled:opacity-50 transition-colors"
-                    title={wildcardScope ? 'Uploads disabled for wildcard hosts' : 'Upload file'}
+                    className="h-8 w-8"
+                    aria-label={wildcardScope ? 'Uploads disabled for wildcard hosts' : 'Upload file'}
                   >
-                    {uploading === field.key ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
-                  </button>
+                    {uploading === field.key ? <Loader size="sm" color="current" /> : <Upload className="w-3.5 h-3.5" />}
+                  </Button>
                   {isUploadedFile(field.key) && (
-                    <button
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       onClick={() => handleDeleteUpload(field.key)}
-                      className="text-muted-foreground hover:text-destructive transition-colors"
-                      title="Remove uploaded file"
+                      className="h-8 w-8 hover:text-destructive"
+                      aria-label="Remove uploaded file"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                    </Button>
                   )}
                   {isOverriddenInScope(field.key) && !isUploadedFile(field.key) && (
-                    <button onClick={() => handleRevert(field.key)} className="text-muted-foreground hover:text-foreground" title="Revert to default">
+                    <Button variant="ghost" size="icon" onClick={() => handleRevert(field.key)} className="h-8 w-8" aria-label="Revert to default">
                       <RotateCcw className="w-3.5 h-3.5" />
-                    </button>
+                    </Button>
                   )}
                 </div>
               </div>
@@ -555,18 +556,18 @@ export function BrandingTab() {
                 <div className="flex items-center gap-2 min-w-0">
                   <label className="text-sm text-foreground">{field.label}</label>
                   {isOverriddenInScope(field.key) && (
-                    <span className="text-[10px] font-medium uppercase tracking-wider px-1.5 py-0.5 rounded bg-primary/10 text-primary">
+                    <span className="text-xs font-medium uppercase tracking-wider px-1.5 py-0.5 rounded bg-primary/10 text-primary">
                       {isUploadedFile(field.key) ? 'uploaded' : selectedHost ? 'domain' : 'admin'}
                     </span>
                   )}
                 </div>
                 <div className="flex items-center gap-2 w-full sm:w-auto">
-                  <input
+                  <Input
                     type="text"
                     value={currentValue(field.key)}
                     onChange={(e) => handleChange(field.key, e.target.value)}
                     placeholder={selectedHost ? 'Enter URL (uploads only for default scope)' : 'Enter URL or upload a file'}
-                    className="h-8 w-full sm:w-64 min-w-0 rounded-md border border-input bg-background px-2.5 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="h-8 w-full sm:w-64 min-w-0"
                   />
                   <input
                     ref={el => { fileInputRefs.current[field.key] = el; }}
@@ -579,27 +580,31 @@ export function BrandingTab() {
                       e.target.value = '';
                     }}
                   />
-                  <button
+                  <Button
+                    variant="outline"
+                    size="icon"
                     onClick={() => fileInputRefs.current[field.key]?.click()}
                     disabled={uploading === field.key || wildcardScope}
-                    className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-md border border-input bg-background text-sm text-foreground hover:bg-muted disabled:opacity-50 transition-colors"
-                    title={wildcardScope ? 'Uploads disabled for wildcard hosts' : 'Upload file'}
+                    className="h-8 w-8"
+                    aria-label={wildcardScope ? 'Uploads disabled for wildcard hosts' : 'Upload file'}
                   >
-                    {uploading === field.key ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
-                  </button>
+                    {uploading === field.key ? <Loader size="sm" color="current" /> : <Upload className="w-3.5 h-3.5" />}
+                  </Button>
                   {isUploadedFile(field.key) && (
-                    <button
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       onClick={() => handleDeleteUpload(field.key)}
-                      className="text-muted-foreground hover:text-destructive transition-colors"
-                      title="Remove uploaded file"
+                      className="h-8 w-8 hover:text-destructive"
+                      aria-label="Remove uploaded file"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                    </Button>
                   )}
                   {isOverriddenInScope(field.key) && !isUploadedFile(field.key) && (
-                    <button onClick={() => handleRevert(field.key)} className="text-muted-foreground hover:text-foreground" title="Revert to default">
+                    <Button variant="ghost" size="icon" onClick={() => handleRevert(field.key)} className="h-8 w-8" aria-label="Revert to default">
                       <RotateCcw className="w-3.5 h-3.5" />
-                    </button>
+                    </Button>
                   )}
                 </div>
               </div>
@@ -623,23 +628,23 @@ export function BrandingTab() {
               <div className="flex items-center gap-2 min-w-0">
                 <label className="text-sm text-foreground">{field.label}</label>
                 {isOverriddenInScope(field.key) && (
-                  <span className="text-[10px] font-medium uppercase tracking-wider px-1.5 py-0.5 rounded bg-primary/10 text-primary">
+                  <span className="text-xs font-medium uppercase tracking-wider px-1.5 py-0.5 rounded bg-primary/10 text-primary">
                     {selectedHost ? 'domain' : 'admin'}
                   </span>
                 )}
               </div>
               <div className="flex items-center gap-2 w-full sm:w-auto">
-                <input
+                <Input
                   type="text"
                   value={currentValue(field.key)}
                   onChange={(e) => handleChange(field.key, e.target.value)}
                   placeholder={field.placeholder}
-                  className="h-8 w-full sm:w-72 min-w-0 rounded-md border border-input bg-background px-2.5 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="h-8 w-full sm:w-72 min-w-0"
                 />
                 {isOverriddenInScope(field.key) && (
-                  <button onClick={() => handleRevert(field.key)} className="text-muted-foreground hover:text-foreground" title="Revert to default">
+                  <Button variant="ghost" size="icon" onClick={() => handleRevert(field.key)} className="h-8 w-8" aria-label="Revert to default">
                     <RotateCcw className="w-3.5 h-3.5" />
-                  </button>
+                  </Button>
                 )}
               </div>
             </div>
@@ -651,7 +656,7 @@ export function BrandingTab() {
                 <div className="flex items-center gap-2 min-w-0">
                   <label className="text-sm text-foreground">{field.label}</label>
                   {isOverriddenInScope(field.key) && (
-                    <span className="text-[10px] font-medium uppercase tracking-wider px-1.5 py-0.5 rounded bg-primary/10 text-primary">
+                    <span className="text-xs font-medium uppercase tracking-wider px-1.5 py-0.5 rounded bg-primary/10 text-primary">
                       {selectedHost ? 'domain' : 'admin'}
                     </span>
                   )}
@@ -664,17 +669,17 @@ export function BrandingTab() {
                     className="h-8 w-10 cursor-pointer rounded-md border border-input bg-background p-0.5"
                     title="Pick a color"
                   />
-                  <input
+                  <Input
                     type="text"
                     value={currentValue(field.key)}
                     onChange={(e) => handleChange(field.key, e.target.value)}
                     placeholder={field.defaultValue}
-                    className="h-8 w-full sm:w-32 min-w-0 rounded-md border border-input bg-background px-2.5 text-sm font-mono text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="h-8 w-full sm:w-32 min-w-0 font-mono"
                   />
                   {isOverriddenInScope(field.key) && (
-                    <button onClick={() => handleRevert(field.key)} className="text-muted-foreground hover:text-foreground" title="Revert to default">
+                    <Button variant="ghost" size="icon" onClick={() => handleRevert(field.key)} className="h-8 w-8" aria-label="Revert to default">
                       <RotateCcw className="w-3.5 h-3.5" />
-                    </button>
+                    </Button>
                   )}
                 </div>
               </div>
@@ -693,23 +698,23 @@ export function BrandingTab() {
               <div className="flex items-center gap-2 min-w-0">
                 <label className="text-sm text-foreground">{field.label}</label>
                 {isOverriddenInScope(field.key) && (
-                  <span className="text-[10px] font-medium uppercase tracking-wider px-1.5 py-0.5 rounded bg-primary/10 text-primary">
+                  <span className="text-xs font-medium uppercase tracking-wider px-1.5 py-0.5 rounded bg-primary/10 text-primary">
                     {selectedHost ? 'domain' : 'admin'}
                   </span>
                 )}
               </div>
               <div className="flex items-center gap-2 w-full sm:w-auto">
-                <input
+                <Input
                   type="text"
                   value={currentValue(field.key)}
                   onChange={(e) => handleChange(field.key, e.target.value)}
                   placeholder={field.key.includes('Url') ? 'https://...' : 'Enter value'}
-                  className="h-8 w-full sm:w-72 min-w-0 rounded-md border border-input bg-background px-2.5 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="h-8 w-full sm:w-72 min-w-0"
                 />
                 {isOverriddenInScope(field.key) && (
-                  <button onClick={() => handleRevert(field.key)} className="text-muted-foreground hover:text-foreground" title="Revert to default">
+                  <Button variant="ghost" size="icon" onClick={() => handleRevert(field.key)} className="h-8 w-8" aria-label="Revert to default">
                     <RotateCcw className="w-3.5 h-3.5" />
-                  </button>
+                  </Button>
                 )}
               </div>
             </div>

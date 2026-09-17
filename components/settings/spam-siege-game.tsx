@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Shield, Mail, X, AlertTriangle, MailCheck, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AppModal } from "@/components/ui/modal";
 import { cn } from "@/lib/utils";
 
 const GAME_WIDTH = 400;
@@ -165,29 +166,30 @@ export function SpamSiegeGame({ onClose }: { onClose: () => void }) {
   }, [gameState, spawnEnemy, endGame]);
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
-      onClick={onClose}
-    >
-      <div
-        className="relative rounded-lg border border-border bg-card shadow-xl overflow-hidden select-none"
-        style={{ width: GAME_WIDTH, maxWidth: "95vw" }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+    <AppModal
+      isOpen
+      onClose={onClose}
+      size="sm"
+      className="max-w-[95vw] p-0 overflow-hidden select-none"
+      bodyClassName="p-0"
+      header={(
+        <div className="flex items-center justify-between w-full">
           <div className="flex items-center gap-2">
             <Shield className="w-4 h-4 text-primary" />
             <span className="text-sm font-medium text-foreground">Spam Siege</span>
           </div>
-          <button
+          <Button
+            size="icon"
+            variant="ghost"
             onClick={onClose}
-            className="p-1 rounded hover:bg-muted transition-colors"
             aria-label="Close"
           >
             <X className="w-4 h-4 text-muted-foreground" />
-          </button>
+          </Button>
         </div>
-
+      )}
+    >
+      <div style={{ width: GAME_WIDTH, maxWidth: "100%" }}>
         <div className="flex items-center justify-between px-4 py-2 bg-muted/40 border-b border-border text-xs text-muted-foreground">
           <div className="flex items-center gap-4">
             <span>
@@ -219,7 +221,7 @@ export function SpamSiegeGame({ onClose }: { onClose: () => void }) {
             style={{ top: INBOX_Y }}
           >
             <div className="h-px flex-1 bg-border" />
-            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
+            <span className="text-xs uppercase tracking-wider text-muted-foreground">
               Inbox
             </span>
             <div className="h-px flex-1 bg-border" />
@@ -235,11 +237,13 @@ export function SpamSiegeGame({ onClose }: { onClose: () => void }) {
             const Icon =
               e.type === "phishing" ? AlertTriangle : e.type === "legit" ? MailCheck : Mail;
             return (
-              <button
+              <Button
                 key={e.id}
                 type="button"
+                size="icon"
+                variant="ghost"
                 className={cn(
-                  "absolute flex items-center justify-center w-8 h-8 rounded-md border cursor-pointer",
+                  "absolute flex items-center justify-center w-8 h-8 min-w-8 rounded-md border cursor-pointer p-0",
                   "active:scale-95 transition-transform",
                   variant
                 )}
@@ -248,7 +252,7 @@ export function SpamSiegeGame({ onClose }: { onClose: () => void }) {
                 onClick={(ev) => handleClick(ev, e)}
               >
                 <Icon className="w-4 h-4" />
-              </button>
+              </Button>
             );
           })}
 
@@ -262,7 +266,7 @@ export function SpamSiegeGame({ onClose }: { onClose: () => void }) {
                   mail. Three misses and it&apos;s over.
                 </p>
               </div>
-              <div className="flex items-center gap-4 text-[11px] text-muted-foreground">
+              <div className="flex items-center gap-4 text-xs text-muted-foreground">
                 <span className="inline-flex items-center gap-1.5">
                   <Mail className="w-3 h-3 text-destructive" />
                   Spam
@@ -312,6 +316,6 @@ export function SpamSiegeGame({ onClose }: { onClose: () => void }) {
           )}
         </div>
       </div>
-    </div>
+    </AppModal>
   );
 }

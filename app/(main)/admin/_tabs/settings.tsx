@@ -1,9 +1,14 @@
 'use client';
+import { Loader } from "@/components/ui/loader";
 
 import { useEffect, useState } from 'react';
-import { Save, RotateCcw, Loader2 } from 'lucide-react';
+import { Save, RotateCcw } from "lucide-react";
 import { apiFetch } from '@/lib/browser-navigation';
 import { JmapServersSection } from './_jmap-servers-section';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { AppSelect } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import type { JmapServerEntry } from '@/lib/admin/jmap-servers';
 
 interface ConfigEntry {
@@ -95,14 +100,10 @@ export function SettingsTab() {
           <p className="text-sm text-muted-foreground mt-1">General server configuration</p>
         </div>
         {hasEdits && (
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="inline-flex items-center gap-2 h-9 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 disabled:opacity-50 transition-all shadow-sm"
-          >
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+          <Button onClick={handleSave} disabled={saving} className="h-9 gap-2">
+            {saving ? <Loader size="sm" color="current" /> : <Save className="w-4 h-4" />}
             Save changes
-          </button>
+          </Button>
         )}
       </div>
 
@@ -119,7 +120,7 @@ export function SettingsTab() {
         {!!currentValue('allowCustomJmapEndpoint') && (
           <div className="px-4 py-2.5 bg-amber-50 dark:bg-amber-950/30 border-s-2 border-amber-400 dark:border-amber-600">
             <p className="text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
-              <strong>CORS warning:</strong> External JMAP servers must include this domain in their CORS <code className="text-[11px] bg-amber-100 dark:bg-amber-900/50 px-1 py-0.5 rounded">Access-Control-Allow-Origin</code> header, or requests from the browser will be blocked.
+              <strong>CORS warning:</strong> External JMAP servers must include this domain in their CORS <code className="text-xs bg-amber-100 dark:bg-amber-900/50 px-1 py-0.5 rounded">Access-Control-Allow-Origin</code> header, or requests from the browser will be blocked.
             </p>
           </div>
         )}
@@ -147,7 +148,7 @@ export function SettingsTab() {
         {Array.isArray(currentValue('jmapServers')) && (currentValue('jmapServers') as JmapServerEntry[]).length > 0 && (
           <div className="px-4 py-2.5 bg-amber-50 dark:bg-amber-950/30 border-s-2 border-amber-400 dark:border-amber-600">
             <p className="text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
-              <strong>CORS warning:</strong> Each JMAP server must allow this webmail's origin in its <code className="text-[11px] bg-amber-100 dark:bg-amber-900/50 px-1 py-0.5 rounded">Access-Control-Allow-Origin</code> header, or browser requests will be blocked.
+              <strong>CORS warning:</strong> Each JMAP server must allow this webmail's origin in its <code className="text-xs bg-amber-100 dark:bg-amber-900/50 px-1 py-0.5 rounded">Access-Control-Allow-Origin</code> header, or browser requests will be blocked.
             </p>
           </div>
         )}
@@ -191,7 +192,7 @@ function SettingsSection({ title, children }: { title: string; children: React.R
 function SourceBadge({ source }: { source?: string }) {
   if (!source || source === 'default') return null;
   return (
-    <span className={`text-[10px] font-medium uppercase tracking-wider px-1.5 py-0.5 rounded ${source === 'admin' ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
+    <span className={`text-xs font-medium uppercase tracking-wider px-1.5 py-0.5 rounded ${source === 'admin' ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
       {source}
     </span>
   );
@@ -208,17 +209,17 @@ function TextSetting({ label, configKey, value, source, onChange, onRevert, plac
         <SourceBadge source={source} />
       </div>
       <div className="flex items-center gap-2 w-full sm:w-auto">
-        <input
+        <Input
           type="text"
           value={value ?? ''}
           onChange={(e) => onChange(configKey, e.target.value)}
           placeholder={placeholder}
-          className="h-8 w-full sm:w-64 rounded-md border border-input bg-background px-2.5 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="h-8 w-full sm:w-64"
         />
         {source === 'admin' && (
-          <button onClick={() => onRevert(configKey)} className="shrink-0 text-muted-foreground hover:text-foreground" title="Revert to default">
+          <Button variant="ghost" size="icon" onClick={() => onRevert(configKey)} className="shrink-0 h-8 w-8" aria-label="Revert to default">
             <RotateCcw className="w-3.5 h-3.5" />
-          </button>
+          </Button>
         )}
       </div>
     </div>
@@ -239,20 +240,11 @@ function ToggleSetting({ label, description, configKey, value, source, onChange,
         {description && <p className="text-xs text-muted-foreground mt-0.5">{description}</p>}
       </div>
       <div className="flex items-center gap-2 shrink-0">
-        <button
-          type="button"
-          role="switch"
-          aria-checked={value}
-          aria-label={label}
-          onClick={() => onChange(configKey, !value)}
-          className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${value ? 'bg-primary' : 'bg-muted-foreground/25 dark:bg-muted-foreground/50'}`}
-        >
-          <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-background shadow transition-transform ${value ? 'translate-x-[18px]' : 'translate-x-[3px]'}`} />
-        </button>
+        <Switch checked={value} onChange={(checked) => onChange(configKey, checked)} aria-label={label} />
         {source === 'admin' && (
-          <button onClick={() => onRevert(configKey)} className="text-muted-foreground hover:text-foreground" title="Revert to default">
+          <Button variant="ghost" size="icon" onClick={() => onRevert(configKey)} className="h-8 w-8" aria-label="Revert to default">
             <RotateCcw className="w-3.5 h-3.5" />
-          </button>
+          </Button>
         )}
       </div>
     </div>
@@ -270,17 +262,17 @@ function SelectSetting({ label, configKey, value, source, options, onChange, onR
         <SourceBadge source={source} />
       </div>
       <div className="flex items-center gap-2 shrink-0">
-        <select
+        <AppSelect
           value={value ?? ''}
-          onChange={(e) => onChange(configKey, e.target.value)}
-          className="h-8 rounded-md border border-input bg-background px-2.5 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        >
-          {options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-        </select>
+          onChange={(next) => onChange(configKey, next)}
+          options={options.map((opt) => ({ value: opt, label: opt }))}
+          aria-label={label}
+          className="w-auto min-w-[10rem]"
+        />
         {source === 'admin' && (
-          <button onClick={() => onRevert(configKey)} className="text-muted-foreground hover:text-foreground" title="Revert to default">
+          <Button variant="ghost" size="icon" onClick={() => onRevert(configKey)} className="h-8 w-8" aria-label="Revert to default">
             <RotateCcw className="w-3.5 h-3.5" />
-          </button>
+          </Button>
         )}
       </div>
     </div>

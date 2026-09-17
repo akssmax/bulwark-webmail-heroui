@@ -2,7 +2,9 @@
 
 import { useTranslations } from "next-intl";
 import { X } from "lucide-react";
+import { Chip } from "@heroui/react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import { SearchFilters, sizeFilterBytes } from "@/lib/jmap/search-utils";
 
 interface SearchChipsProps {
@@ -73,34 +75,40 @@ export function SearchChips({
   return (
     <div className={cn("px-4 py-2 border-b border-border bg-muted/20 flex items-center gap-2 flex-wrap", className)}>
       {chips.map((chip) => (
-        <span
-          key={chip.key}
-          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-primary/10 text-primary border border-primary/20"
-        >
-          <span className="font-medium">{chip.label}</span>
-          {chip.value && (
-            <>
-              <span className="text-primary/60">:</span>
-              <span className="max-w-24 truncate">{chip.value}</span>
-            </>
-          )}
-          <button
+        <div key={chip.key} className="inline-flex items-center gap-0.5">
+          <Chip variant="soft" color="accent" size="sm">
+            <Chip.Label>
+              <span className="font-medium">{chip.label}</span>
+              {chip.value && (
+                <>
+                  <span className="opacity-60">:</span>
+                  <span className="max-w-24 truncate">{chip.value}</span>
+                </>
+              )}
+            </Chip.Label>
+          </Chip>
+          <Button
             type="button"
+            variant="ghost"
+            size="icon"
             onClick={() => onRemoveFilter(chip.key)}
-            className="ms-0.5 p-0.5 rounded-full hover:bg-primary/20 transition-colors"
+            className="size-5 min-w-5 text-primary"
+            aria-label={t("clear_all")}
           >
             <X className="w-3 h-3" />
-          </button>
-        </span>
+          </Button>
+        </div>
       ))}
       {chips.length > 1 && (
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          size="sm"
           onClick={onClearAll}
-          className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+          className="h-7 min-h-7 px-2 text-xs text-muted-foreground"
         >
           {t("clear_all")}
-        </button>
+        </Button>
       )}
     </div>
   );

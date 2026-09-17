@@ -2,12 +2,12 @@
 
 import { useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { X, Search, Star, FileText } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Search, Star, FileText } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { AppModal } from '@/components/ui/modal';
 import { useTemplateStore } from '@/stores/template-store';
 import { useAuthStore } from '@/stores/auth-store';
-import { useFocusTrap } from '@/hooks/use-focus-trap';
 import {
   getPlaceholdersFromTemplate,
   getAutoFilledPlaceholders,
@@ -32,12 +32,6 @@ export function TemplatePicker({ isOpen, onClose, onSelect }: TemplatePickerProp
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTemplate, setSelectedTemplate] = useState<EmailTemplate | null>(null);
   const [showFillModal, setShowFillModal] = useState(false);
-
-  const modalRef = useFocusTrap({
-    isActive: isOpen && !showFillModal,
-    onEscape: onClose,
-    restoreFocus: true,
-  });
 
   const favorites = getFavorites();
   const recent = getRecent();
@@ -64,39 +58,39 @@ export function TemplatePicker({ isOpen, onClose, onSelect }: TemplatePickerProp
     setSelectedTemplate(null);
   };
 
-  if (!isOpen) return null;
-
   const autoFilled = getAutoFilledPlaceholders({
     senderName: primaryIdentity?.name,
     locale,
   });
 
   const renderTemplateItem = (template: EmailTemplate) => (
-    <button
+    <Button
       key={template.id}
-      type="button"
+      variant="ghost"
+      className="w-full justify-start h-auto p-3 rounded-md hover:bg-muted"
       onClick={() => handleSelectTemplate(template)}
-      className="w-full text-start p-3 rounded-md hover:bg-muted transition-colors group"
     >
-      <div className="flex items-center gap-2">
-        {template.isFavorite && (
-          <Star className="w-3 h-3 fill-amber-400 text-amber-400 flex-shrink-0" />
-        )}
-        <span className="text-sm font-medium text-foreground truncate">
-          {template.name}
-        </span>
-        {template.category && (
-          <span className="text-xs px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium flex-shrink-0">
-            {template.category}
+      <div className="w-full text-start">
+        <div className="flex items-center gap-2">
+          {template.isFavorite && (
+            <Star className="w-3 h-3 fill-amber-400 text-amber-400 flex-shrink-0" />
+          )}
+          <span className="text-sm font-medium text-foreground truncate">
+            {template.name}
           </span>
+          {template.category && (
+            <span className="text-xs px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium flex-shrink-0">
+              {template.category}
+            </span>
+          )}
+        </div>
+        {template.subject && (
+          <p className="text-xs text-muted-foreground truncate mt-1">
+            {template.subject}
+          </p>
         )}
       </div>
-      {template.subject && (
-        <p className="text-xs text-muted-foreground truncate mt-1">
-          {template.subject}
-        </p>
-      )}
-    </button>
+    </Button>
   );
 
   const renderSection = (title: string, items: EmailTemplate[]) => {
@@ -126,75 +120,58 @@ export function TemplatePicker({ isOpen, onClose, onSelect }: TemplatePickerProp
 
   return (
     <>
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-in fade-in duration-150">
-        <div
-          ref={modalRef}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="template-picker-title"
-          className={cn(
-            'bg-background border border-border rounded-lg shadow-xl',
-            'w-full max-w-md max-h-[70vh] overflow-hidden',
-            'animate-in zoom-in-95 duration-200'
-          )}
-        >
-          <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-            <h2 id="template-picker-title" className="text-sm font-semibold text-foreground">{t('picker_title')}</h2>
-            <button
-              onClick={onClose}
-              className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-
-          <div className="px-4 py-2 border-b border-border">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={t('search_placeholder')}
-                className="ps-9 h-9"
-                autoFocus
-              />
-            </div>
-          </div>
-
-          <div className="overflow-y-auto max-h-[calc(70vh-120px)] p-2">
-            {templates.length === 0 && (
-              <div className="flex flex-col items-center py-8 text-muted-foreground">
-                <FileText className="w-8 h-8 mb-2 opacity-40" />
-                <p className="text-sm">{t('no_templates')}</p>
-              </div>
-            )}
-
-            {filtered ? (
-              filtered.length > 0 ? (
-                <div className="space-y-0.5">
-                  {filtered.map(renderTemplateItem)}
-                </div>
-              ) : (
-                <div className="py-6 text-center text-sm text-muted-foreground">
-                  {t('no_results')}
-                </div>
-              )
-            ) : (
-              <>
-                {renderSection(t('section_favorites'), favorites)}
-                {renderSection(t('section_recent'), recentFiltered)}
-                {categorizedEntries.map(([cat, items]) =>
-                  renderSection(
-                    cat,
-                    items.filter((i) => !shownIds.has(i.id))
-                  )
-                )}
-                {renderSection(t('section_uncategorized'), uncategorizedFiltered)}
-              </>
-            )}
+      <AppModal
+        isOpen={isOpen && !showFillModal}
+        onClose={onClose}
+        size="md"
+        className="max-w-md max-h-[70vh]"
+        title={t('picker_title')}
+        bodyClassName="overflow-y-auto max-h-[calc(70vh-120px)] p-2"
+      >
+        <div className="px-2 pb-2 border-b border-border mb-2">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={t('search_placeholder')}
+              className="ps-9 h-9"
+              autoFocus
+            />
           </div>
         </div>
-      </div>
+
+        {templates.length === 0 && (
+          <div className="flex flex-col items-center py-8 text-muted-foreground">
+            <FileText className="w-8 h-8 mb-2 opacity-40" />
+            <p className="text-sm">{t('no_templates')}</p>
+          </div>
+        )}
+
+        {filtered ? (
+          filtered.length > 0 ? (
+            <div className="space-y-0.5">
+              {filtered.map(renderTemplateItem)}
+            </div>
+          ) : (
+            <div className="py-6 text-center text-sm text-muted-foreground">
+              {t('no_results')}
+            </div>
+          )
+        ) : (
+          <>
+            {renderSection(t('section_favorites'), favorites)}
+            {renderSection(t('section_recent'), recentFiltered)}
+            {categorizedEntries.map(([cat, items]) =>
+              renderSection(
+                cat,
+                items.filter((i) => !shownIds.has(i.id))
+              )
+            )}
+            {renderSection(t('section_uncategorized'), uncategorizedFiltered)}
+          </>
+        )}
+      </AppModal>
 
       {showFillModal && selectedTemplate && (
         <PlaceholderFillModal

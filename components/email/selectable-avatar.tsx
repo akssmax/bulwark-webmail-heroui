@@ -3,6 +3,7 @@
 import type { ComponentProps, MouseEvent } from "react";
 import { Check } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
+import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 
 type SelectableAvatarProps = ComponentProps<typeof Avatar> & {
@@ -31,32 +32,28 @@ export function SelectableAvatar({
   ...avatarProps
 }: SelectableAvatarProps) {
   return (
-    <button
-      type="button"
-      role="checkbox"
-      aria-checked={checked}
-      aria-label={selectLabel}
-      onClick={(e) => {
-        e.stopPropagation();
-        onToggle(e);
-      }}
-      className={cn(
-        "group/select relative shrink-0 rounded-full outline-none",
-        "focus-visible:ring-2 focus-visible:ring-primary/60",
-        className,
-      )}
-    >
+    <div className={cn("group/select relative shrink-0 rounded-full", className)}>
       <Avatar {...avatarProps} />
       <span
         aria-hidden
         className={cn(
-          "absolute inset-0 flex items-center justify-center rounded-full",
+          "pointer-events-none absolute inset-0 flex items-center justify-center rounded-full",
           "bg-primary text-primary-foreground transition-opacity duration-150",
           checked ? "opacity-100" : "opacity-0 group-hover/select:opacity-100",
         )}
       >
         <Check className="h-4 w-4" />
       </span>
-    </button>
+      <Checkbox
+        isSelected={checked}
+        hideControl
+        aria-label={selectLabel}
+        className="absolute inset-0 z-10 rounded-full"
+        contentClassName="h-full w-full rounded-full"
+        onToggle={({ shiftKey }) => {
+          onToggle({ shiftKey, stopPropagation: () => {} } as MouseEvent<HTMLButtonElement>);
+        }}
+      />
+    </div>
   );
 }

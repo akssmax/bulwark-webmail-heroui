@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useLayoutEffect, useCallback } from "react";
-import { createPortal } from "react-dom";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { Mail, Calendar, BookUser, HardDrive, Settings, Keyboard, Plus, Shield, LogOut, Check, Search } from "lucide-react";
 import { AccountSwitcher } from "./account-switcher";
 import { icons as lucideIcons, type LucideIcon } from "lucide-react";
@@ -26,6 +25,10 @@ import { PluginSlot } from "@/components/plugins/plugin-slot";
 import { KeyboardShortcutsModal } from "@/components/keyboard-shortcuts-modal";
 import { apiFetch, getPathPrefix, withBasePath } from "@/lib/browser-navigation";
 import { Avatar } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { MenuButton } from "@/components/ui/menu-button";
+import { Popover } from "@/components/ui/popover";
+import { Tooltip } from "@/components/ui/tooltip";
 
 interface NavItem {
   id: string;
@@ -71,47 +74,6 @@ interface NavigationRailProps {
 function StorageQuotaCircle({ quota, usagePercent }: { quota: { used: number; total: number }; usagePercent: number }) {
   const t = useTranslations("sidebar");
   const [open, setOpen] = useState(false);
-  const buttonRef = useRef<HTMLButtonElement>(null);
-  const popoverRef = useRef<HTMLDivElement>(null);
-  const [popoverStyle, setPopoverStyle] = useState<React.CSSProperties>({});
-
-  const updatePosition = useCallback(() => {
-    if (!buttonRef.current) return;
-    const rect = buttonRef.current.getBoundingClientRect();
-    setPopoverStyle(
-      isDocumentRTL()
-        ? {
-            position: "fixed",
-            right: window.innerWidth - rect.left + 8,
-            bottom: window.innerHeight - rect.bottom,
-          }
-        : {
-            position: "fixed",
-            left: rect.right + 8,
-            bottom: window.innerHeight - rect.bottom,
-          }
-    );
-  }, []);
-
-  // Position before the first paint - the portalled popover would otherwise
-  // render one frame as an unpositioned block at the end of <body>, shifting
-  // the page layout for a split second.
-  useLayoutEffect(() => {
-    if (open) updatePosition();
-  }, [open, updatePosition]);
-
-  useEffect(() => {
-    if (!open) return;
-    const handleClick = (e: MouseEvent) => {
-      if (
-        buttonRef.current?.contains(e.target as Node) ||
-        popoverRef.current?.contains(e.target as Node)
-      ) return;
-      setOpen(false);
-    };
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, [open]);
 
   // Usage can legitimately exceed the quota (e.g. limit lowered after the fact)
   const free = Math.max(0, quota.total - quota.used);
@@ -120,32 +82,37 @@ function StorageQuotaCircle({ quota, usagePercent }: { quota: { used: number; to
     : usagePercent > 70
       ? "stroke-warning"
       : "stroke-success";
+  const popoverPlacement = isDocumentRTL() ? "left bottom" : "right bottom";
 
   return (
-    <div className="relative">
-      <button
-        ref={buttonRef}
-        onClick={() => setOpen(!open)}
-        className="relative w-8 h-8 flex items-center justify-center rounded-full hover:bg-muted transition-colors cursor-pointer"
-        aria-label={t("storage")}
-      >
-        <svg className="w-8 h-8 -rotate-90" viewBox="0 0 32 32">
-          <circle cx="16" cy="16" r="12" fill="none" className="stroke-muted" strokeWidth="3" />
-          <circle
-            cx="16" cy="16" r="12" fill="none"
-            className={cn(strokeColor)}
-            strokeWidth="3" strokeLinecap="round"
-            strokeDasharray={`${(usagePercent / 100) * 75.4} 75.4`}
-            style={{ transition: "stroke-dasharray 0.3s" }}
-          />
-        </svg>
-        <span className="absolute text-[7px] font-bold text-muted-foreground tabular-nums">
-          {Math.round(usagePercent)}%
-        </span>
-      </button>
+    <Popover isOpen={open} onOpenChange={setOpen}>
+      <Tooltip content={t("storage")} placement={isDocumentRTL() ? "left" : "right"} isDisabled={open}>
+        <Popover.Trigger>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="relative h-8 w-8 min-w-8 rounded-full"
+            aria-label={t("storage")}
+          >
+            <svg className="w-8 h-8 -rotate-90" viewBox="0 0 32 32">
+              <circle cx="16" cy="16" r="12" fill="none" className="stroke-muted" strokeWidth="3" />
+              <circle
+                cx="16" cy="16" r="12" fill="none"
+                className={cn(strokeColor)}
+                strokeWidth="3" strokeLinecap="round"
+                strokeDasharray={`${(usagePercent / 100) * 75.4} 75.4`}
+                style={{ transition: "stroke-dasharray 0.3s" }}
+              />
+            </svg>
+            <span className="absolute text-xs font-bold text-muted-foreground tabular-nums">
+              {Math.round(usagePercent)}%
+            </span>
+          </Button>
+        </Popover.Trigger>
+      </Tooltip>
 
-      {open && createPortal(
-        <div ref={popoverRef} style={popoverStyle} className="w-52 rounded-lg border border-border bg-background text-foreground shadow-lg p-3 z-50">
+      <Popover.Content placement={popoverPlacement} className="w-52 p-3" offset={8}>
+        <Popover.Dialog className="outline-none p-0">
           <p className="text-xs font-semibold mb-2">{t("storage")}</p>
           <div className="space-y-1.5 text-xs">
             <div className="flex justify-between">
@@ -174,13 +141,12 @@ function StorageQuotaCircle({ quota, usagePercent }: { quota: { used: number; to
               style={{ width: `${usagePercent}%` }}
             />
           </div>
-          <p className="text-[10px] text-muted-foreground mt-1 tabular-nums">
+          <p className="text-xs text-muted-foreground mt-1 tabular-nums">
             {Math.round(usagePercent)}% {t("storage_used").toLowerCase()}
           </p>
-        </div>,
-        document.body
-      )}
-    </div>
+        </Popover.Dialog>
+      </Popover.Content>
+    </Popover>
   );
 }
 
@@ -236,59 +202,17 @@ export function NavigationRail({
   const logoutAll = useAuthStore((s) => s.logoutAll);
   const [logoutMenuOpen, setLogoutMenuOpen] = useState(false);
   const logoutBtnRef = useRef<HTMLButtonElement>(null);
-  // Portalled to <body>, so without explicit focus handling the menu is
-  // unreachable for keyboard and screen reader users (#719).
   const closeLogoutMenu = useCallback(() => setLogoutMenuOpen(false), []);
   const { menuRef: logoutPopoverRef, onKeyDown: onLogoutMenuKeyDown } = useMenuNavigation<HTMLDivElement>({
     open: logoutMenuOpen,
     onClose: closeLogoutMenu,
     triggerRef: logoutBtnRef,
   });
-  const [logoutPopoverStyle, setLogoutPopoverStyle] = useState<React.CSSProperties>({});
   const [showShortcutsModal, setShowShortcutsModal] = useState(false);
-
-  const updateLogoutPosition = useCallback(() => {
-    if (!logoutBtnRef.current) return;
-    const rect = logoutBtnRef.current.getBoundingClientRect();
-    setLogoutPopoverStyle(
-      isDocumentRTL()
-        ? {
-            position: "fixed",
-            right: window.innerWidth - rect.left + 8,
-            bottom: Math.max(8, window.innerHeight - rect.bottom),
-          }
-        : {
-            position: "fixed",
-            left: rect.right + 8,
-            bottom: Math.max(8, window.innerHeight - rect.bottom),
-          }
-    );
-  }, []);
-
-  // Position before the first paint (same reasoning as the quota popover above).
-  useLayoutEffect(() => {
-    if (logoutMenuOpen) updateLogoutPosition();
-  }, [logoutMenuOpen, updateLogoutPosition]);
-
-  useEffect(() => {
-    if (!logoutMenuOpen) return;
-    const handleClickOutside = (e: MouseEvent) => {
-      if (
-        logoutBtnRef.current?.contains(e.target as Node) ||
-        logoutPopoverRef.current?.contains(e.target as Node)
-      ) return;
-      setLogoutMenuOpen(false);
-    };
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setLogoutMenuOpen(false);
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    document.addEventListener("keydown", handleEscape);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("keydown", handleEscape);
-    };
-  }, [logoutMenuOpen, logoutPopoverRef]);
+  const logoutPopoverPlacement = useMemo(
+    () => (isDocumentRTL() ? "left bottom" : "right bottom"),
+    [],
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -320,6 +244,7 @@ export function NavigationRail({
     { id: "contacts", icon: BookUser, labelKey: "contacts", href: "/contacts", hidden: !supportsContacts || !contactsEnabled },
     { id: "files", icon: HardDrive, labelKey: "files", href: "/files", hidden: !supportsFiles || !filesEnabled },
   ];
+  const tooltipPlacement = isDocumentRTL() ? "left" : "right";
 
   // When the host (e.g. the Pro shell) takes over navigation via `onNavigate`,
   // it tells us which item is active; otherwise we infer it from the URL.
@@ -381,7 +306,7 @@ export function NavigationRail({
               <div className="relative">
                 <Icon className="w-5 h-5" />
                 {item.badge != null && item.badge > 0 && (
-                  <span className="absolute -top-1.5 -right-2.5 flex items-center justify-center min-w-[16px] h-4 text-[10px] font-bold rounded-full bg-red-500 text-white px-1">
+                  <span className="absolute -top-1.5 -right-2.5 flex items-center justify-center min-w-[16px] h-4 text-xs font-bold rounded-full bg-red-500 text-white px-1">
                     {item.badge > 99 ? "99+" : item.badge}
                   </span>
                 )}
@@ -389,7 +314,7 @@ export function NavigationRail({
                   <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-0.5 rounded-full bg-primary" />
                 )}
               </div>
-              <span className="text-[10px] font-medium leading-tight truncate max-w-full">{t(item.labelKey)}</span>
+              <span className="text-xs font-medium leading-tight truncate max-w-full">{t(item.labelKey)}</span>
             </Link>
           );
         })}
@@ -399,8 +324,9 @@ export function NavigationRail({
           const AppIcon = lucideIcons[app.icon as keyof typeof lucideIcons] as LucideIcon | undefined;
           const isActive = activeAppId === app.id;
           return (
-            <button
+            <Button
               key={app.id}
+              variant="ghost"
               onClick={() => {
                 if (isActive) {
                   onCloseInlineApp?.();
@@ -411,8 +337,7 @@ export function NavigationRail({
                 }
               }}
               className={cn(
-                "flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px]",
-                "transition-colors duration-150",
+                "flex h-auto min-h-[44px] flex-col items-center justify-center gap-1 rounded-none py-2 px-1 grow shrink-0 basis-[64px] font-normal",
                 isActive
                   ? "text-primary"
                   : "text-muted-foreground hover:text-foreground"
@@ -424,8 +349,8 @@ export function NavigationRail({
                   <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-0.5 rounded-full bg-primary" />
                 )}
               </div>
-              <span className="text-[10px] font-medium leading-tight truncate max-w-full">{app.name}</span>
-            </button>
+              <span className="text-xs font-medium leading-tight truncate max-w-full">{app.name}</span>
+            </Button>
           );
         })}
 
@@ -451,7 +376,7 @@ export function NavigationRail({
                 />
               )}
             </span>
-            <span className="text-[10px] font-medium leading-tight truncate max-w-full">{t("admin") || "Admin"}</span>
+            <span className="text-xs font-medium leading-tight truncate max-w-full">{t("admin") || "Admin"}</span>
           </a>
         )}
 
@@ -474,7 +399,7 @@ export function NavigationRail({
               <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-0.5 rounded-full bg-primary" />
             )}
           </div>
-          <span className="text-[10px] font-medium leading-tight truncate max-w-full">{t("settings")}</span>
+          <span className="text-xs font-medium leading-tight truncate max-w-full">{t("settings")}</span>
         </Link>
       </nav>
     );
@@ -512,57 +437,61 @@ export function NavigationRail({
         aria-label={t("nav_label")}
       >
         {onOpenSearch && (
-          <button
-            type="button"
-            onClick={onOpenSearch}
-            data-tour="nav-search"
-            className={cn(
-              "relative flex items-center gap-2.5 rounded-md transition-colors duration-150 cursor-pointer",
-              collapsed ? "justify-center w-10 h-10" : "px-2.5 text-sm",
-              "max-lg:min-h-[44px]",
-              "text-muted-foreground hover:bg-muted hover:text-foreground"
-            )}
-            title={collapsed ? tGlobalSearch("title") : undefined}
-            style={collapsed ? undefined : { paddingBlock: 'var(--density-sidebar-py)' }}
-          >
-            <Search className="w-[18px] h-[18px] flex-shrink-0" />
-            {!collapsed && <span className="truncate">{tGlobalSearch("title")}</span>}
-          </button>
+          <Tooltip content={collapsed ? tGlobalSearch("title") : undefined} placement={tooltipPlacement}>
+            <Button
+              variant="ghost"
+              onClick={onOpenSearch}
+              data-tour="nav-search"
+              className={cn(
+                "relative h-auto min-h-0 items-center gap-2.5 font-normal",
+                collapsed ? "justify-center w-10 h-10" : "px-2.5 text-sm",
+                "max-lg:min-h-[44px]",
+                "text-muted-foreground hover:bg-muted hover:text-foreground"
+              )}
+              aria-label={collapsed ? tGlobalSearch("title") : undefined}
+              style={collapsed ? undefined : { paddingBlock: 'var(--density-sidebar-py)' }}
+            >
+              <Search className="w-[18px] h-[18px] flex-shrink-0" />
+              {!collapsed && <span className="truncate">{tGlobalSearch("title")}</span>}
+            </Button>
+          </Tooltip>
         )}
         {visibleItems.map((item) => {
           const isActive = getIsActive(item.href, item.id);
           const Icon = item.icon;
+          const label = t(item.labelKey);
           return (
-            <Link
-              key={item.id}
-              href={item.href}
-              onClick={handleNavClick(item.id as 'mail' | 'calendar' | 'contacts' | 'files' | 'settings')}
-              data-tour={`nav-${item.id}`}
-              className={cn(
-                "relative flex items-center gap-2.5 rounded-md transition-colors duration-150",
-                collapsed
-                  ? "justify-center w-10 h-10"
-                  : "px-2.5 text-sm",
-                "max-lg:min-h-[44px]",
-                isActive
-                  ? "bg-primary/10 text-primary font-medium"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
-              )}
-              aria-current={isActive ? "page" : undefined}
-              title={collapsed ? t(item.labelKey) : undefined}
-              style={collapsed ? undefined : { paddingBlock: 'var(--density-sidebar-py)' }}
-            >
-              <Icon className={cn("w-[18px] h-[18px] flex-shrink-0", isActive && "text-primary")} />
-              {!collapsed && <span className="truncate">{t(item.labelKey)}</span>}
-              {item.badge != null && item.badge > 0 && (
-                <span className={cn(
-                  "absolute flex items-center justify-center min-w-[16px] h-4 text-[10px] font-bold rounded-full bg-red-500 text-white px-1",
-                  collapsed ? "-top-0.5 -right-0.5" : "right-1.5"
-                )}>
-                  {item.badge > 99 ? "99+" : item.badge}
-                </span>
-              )}
-            </Link>
+            <Tooltip key={item.id} content={collapsed ? label : undefined} placement={tooltipPlacement}>
+              <Link
+                href={item.href}
+                onClick={handleNavClick(item.id as 'mail' | 'calendar' | 'contacts' | 'files' | 'settings')}
+                data-tour={`nav-${item.id}`}
+                className={cn(
+                  "relative flex items-center gap-2.5 rounded-md transition-colors duration-150",
+                  collapsed
+                    ? "justify-center w-10 h-10"
+                    : "px-2.5 text-sm",
+                  "max-lg:min-h-[44px]",
+                  isActive
+                    ? "bg-primary/10 text-primary font-medium"
+                    : "text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
+                )}
+                aria-current={isActive ? "page" : undefined}
+                aria-label={collapsed ? label : undefined}
+                style={collapsed ? undefined : { paddingBlock: 'var(--density-sidebar-py)' }}
+              >
+                <Icon className={cn("w-[18px] h-[18px] flex-shrink-0", isActive && "text-primary")} />
+                {!collapsed && <span className="truncate">{label}</span>}
+                {item.badge != null && item.badge > 0 && (
+                  <span className={cn(
+                    "absolute flex items-center justify-center min-w-[16px] h-4 text-xs font-bold rounded-full bg-red-500 text-white px-1",
+                    collapsed ? "-top-0.5 -right-0.5" : "right-1.5"
+                  )}>
+                    {item.badge > 99 ? "99+" : item.badge}
+                  </span>
+                )}
+              </Link>
+            </Tooltip>
           );
         })}
 
@@ -580,54 +509,59 @@ export function NavigationRail({
           const AppIcon = lucideIcons[app.icon as keyof typeof lucideIcons] as LucideIcon | undefined;
           const isActive = activeAppId === app.id;
           return (
-            <button
-              key={app.id}
-              onClick={() => {
-                if (isActive) {
-                  onCloseInlineApp?.();
-                } else if (app.openMode === 'tab') {
-                  window.open(app.url, '_blank', 'noopener,noreferrer');
-                } else {
-                  onInlineApp?.(app.id, app.url, app.name);
-                }
-              }}
-              className={cn(
-                "relative flex items-center gap-2.5 rounded-md transition-colors duration-150",
-                collapsed
-                  ? "justify-center w-10 h-10"
-                  : "px-2.5 text-sm",
-                "max-lg:min-h-[44px]",
-                isActive
-                  ? "bg-primary/10 text-primary font-medium"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
-              )}
-              title={collapsed ? app.name : undefined}
-              style={collapsed ? undefined : { paddingBlock: 'var(--density-sidebar-py)' }}
-            >
-              {AppIcon ? <AppIcon className={cn("w-[18px] h-[18px] flex-shrink-0", isActive && "text-primary")} /> : null}
-              {!collapsed && <span className="truncate">{app.name}</span>}
-            </button>
+            <Tooltip key={app.id} content={collapsed ? app.name : undefined} placement={tooltipPlacement}>
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  if (isActive) {
+                    onCloseInlineApp?.();
+                  } else if (app.openMode === 'tab') {
+                    window.open(app.url, '_blank', 'noopener,noreferrer');
+                  } else {
+                    onInlineApp?.(app.id, app.url, app.name);
+                  }
+                }}
+                className={cn(
+                  "relative h-auto min-h-0 items-center gap-2.5 font-normal",
+                  collapsed
+                    ? "justify-center w-10 h-10"
+                    : "px-2.5 text-sm",
+                  "max-lg:min-h-[44px]",
+                  isActive
+                    ? "bg-primary/10 text-primary font-medium"
+                    : "text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
+                )}
+                aria-label={collapsed ? app.name : undefined}
+                style={collapsed ? undefined : { paddingBlock: 'var(--density-sidebar-py)' }}
+              >
+                {AppIcon ? <AppIcon className={cn("w-[18px] h-[18px] flex-shrink-0", isActive && "text-primary")} /> : null}
+                {!collapsed && <span className="truncate">{app.name}</span>}
+              </Button>
+            </Tooltip>
           );
         })}
 
         {/* Manage apps button */}
         {sidebarAppsEnabled && onManageApps && (
-          <button
-            onClick={onManageApps}
-            className={cn(
-              "relative flex items-center gap-2.5 rounded-md transition-colors duration-150",
-              collapsed
-                ? "justify-center w-10 h-10"
-                : "px-2.5 text-sm",
-              "max-lg:min-h-[44px]",
-              "text-muted-foreground hover:bg-muted hover:text-foreground"
-            )}
-            title={collapsed ? t("add_app") : undefined}
-            style={collapsed ? undefined : { paddingBlock: 'var(--density-sidebar-py)' }}
-          >
-            <Plus className="w-[18px] h-[18px] flex-shrink-0" />
-            {!collapsed && <span className="truncate">{t("add_app")}</span>}
-          </button>
+          <Tooltip content={collapsed ? t("add_app") : undefined} placement={tooltipPlacement}>
+            <Button
+              variant="ghost"
+              onClick={onManageApps}
+              className={cn(
+                "relative h-auto min-h-0 items-center gap-2.5 font-normal",
+                collapsed
+                  ? "justify-center w-10 h-10"
+                  : "px-2.5 text-sm",
+                "max-lg:min-h-[44px]",
+                "text-muted-foreground hover:bg-muted hover:text-foreground"
+              )}
+              aria-label={collapsed ? t("add_app") : undefined}
+              style={collapsed ? undefined : { paddingBlock: 'var(--density-sidebar-py)' }}
+            >
+              <Plus className="w-[18px] h-[18px] flex-shrink-0" />
+              {!collapsed && <span className="truncate">{t("add_app")}</span>}
+            </Button>
+          </Tooltip>
         )}
       </nav>
 
@@ -636,62 +570,74 @@ export function NavigationRail({
       {/* Footer: Admin + Settings + Help + Storage Quota + Sign Out + Push Status */}
       <div className="mt-auto flex flex-col items-center gap-2 pb-3 px-1">
         {isStalwartAdmin && (
-          <a
-            href={`${getPathPrefix()}/admin`}
-            className="flex items-center justify-center w-10 h-10 rounded-md transition-colors text-muted-foreground hover:text-foreground hover:bg-muted relative"
-            title={t("admin") || "Admin"}
-          >
-            <Shield className="w-[18px] h-[18px]" />
-            {hasUpdate && (
-              <span
-                className={cn(
-                  "absolute top-2 right-2 w-2 h-2 rounded-full ring-2 ring-background",
-                  updateImportant ? "bg-red-500" : "bg-amber-500",
-                )}
-                aria-label={updateImportant ? "Important update available" : "Update available"}
-              />
-            )}
-          </a>
+          <Tooltip content={t("admin") || "Admin"} placement={tooltipPlacement}>
+            <a
+              href={`${getPathPrefix()}/admin`}
+              className="flex items-center justify-center w-10 h-10 rounded-md transition-colors text-muted-foreground hover:text-foreground hover:bg-muted relative"
+              aria-label={t("admin") || "Admin"}
+            >
+              <Shield className="w-[18px] h-[18px]" />
+              {hasUpdate && (
+                <span
+                  className={cn(
+                    "absolute top-2 right-2 w-2 h-2 rounded-full ring-2 ring-background",
+                    updateImportant ? "bg-red-500" : "bg-amber-500",
+                  )}
+                  aria-label={updateImportant ? "Important update available" : "Update available"}
+                />
+              )}
+            </a>
+          </Tooltip>
         )}
 
-        <Link
-          href="/settings"
-          onClick={handleNavClick('settings')}
-          data-tour="nav-settings"
-          className={cn(
-            "flex items-center justify-center w-10 h-10 rounded-md transition-colors",
-            isSettingsActive
-              ? "bg-primary/10 text-primary"
-              : "text-muted-foreground hover:text-foreground hover:bg-muted"
-          )}
-          title={t("settings")}
-          aria-current={isSettingsActive ? "page" : undefined}
-        >
-          <Settings className="w-[18px] h-[18px]" />
-        </Link>
+        <Tooltip content={t("settings")} placement={tooltipPlacement}>
+          <Link
+            href="/settings"
+            onClick={handleNavClick('settings')}
+            data-tour="nav-settings"
+            className={cn(
+              "flex items-center justify-center w-10 h-10 rounded-md transition-colors",
+              isSettingsActive
+                ? "bg-primary/10 text-primary"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted"
+            )}
+            aria-label={t("settings")}
+            aria-current={isSettingsActive ? "page" : undefined}
+          >
+            <Settings className="w-[18px] h-[18px]" />
+          </Link>
+        </Tooltip>
 
         <div className="w-8 border-t" style={{ borderColor: 'rgba(128, 128, 128, 0.3)' }} />
 
         {onShowShortcuts && (
-          <button
-            onClick={onShowShortcuts}
-            data-tour="nav-shortcuts"
-            className="flex items-center justify-center w-10 h-10 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-            title={t("keyboard_shortcuts")}
-          >
-            <Keyboard className="w-[18px] h-[18px]" />
-          </button>
+          <Tooltip content={t("keyboard_shortcuts")} placement={tooltipPlacement}>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onShowShortcuts}
+              data-tour="nav-shortcuts"
+              className="h-10 w-10 min-w-10 text-muted-foreground hover:text-foreground"
+              aria-label={t("keyboard_shortcuts")}
+            >
+              <Keyboard className="w-[18px] h-[18px]" />
+            </Button>
+          </Tooltip>
         )}
         {!onShowShortcuts && (
           <>
-            <button
-              onClick={() => setShowShortcutsModal(true)}
-              data-tour="nav-shortcuts"
-              className="flex items-center justify-center w-10 h-10 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-              title={t("keyboard_shortcuts")}
-            >
-              <Keyboard className="w-[18px] h-[18px]" />
-            </button>
+            <Tooltip content={t("keyboard_shortcuts")} placement={tooltipPlacement}>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowShortcutsModal(true)}
+                data-tour="nav-shortcuts"
+                className="h-10 w-10 min-w-10 text-muted-foreground hover:text-foreground"
+                aria-label={t("keyboard_shortcuts")}
+              >
+                <Keyboard className="w-[18px] h-[18px]" />
+              </Button>
+            </Tooltip>
             <KeyboardShortcutsModal
               isOpen={showShortcutsModal}
               onClose={() => setShowShortcutsModal(false)}
@@ -714,18 +660,24 @@ export function NavigationRail({
             {accounts.map((account) => {
               const isActive = account.id === activeAccountId;
               return (
-                <button
+                <Tooltip
                   key={account.id}
+                  content={`${account.displayName || account.label} (${account.email || account.username})`}
+                  placement={tooltipPlacement}
+                >
+                <Button
+                  variant="ghost"
+                  size="icon"
                   onClick={() => {
                     if (!isActive) switchAccount(account.id);
                   }}
                   className={cn(
-                    "relative w-8 h-8 rounded-full transition-all flex-shrink-0",
+                    "relative h-8 w-8 min-w-8 rounded-full p-0 flex-shrink-0",
                     isActive
                       ? "ring-2 ring-primary ring-offset-2 ring-offset-background"
                       : "opacity-70 hover:opacity-100"
                   )}
-                  title={`${account.displayName || account.label} (${account.email || account.username})`}
+                  aria-label={`${account.displayName || account.label} (${account.email || account.username})`}
                 >
                   <Avatar
                     name={account.displayName || account.label}
@@ -739,64 +691,71 @@ export function NavigationRail({
                       <Check className="w-2 h-2 text-primary-foreground" />
                     </span>
                   )}
-                </button>
+                </Button>
+                </Tooltip>
               );
             })}
             {accounts.length < getMaxAccounts() && (
-              <button
-                onClick={() => router.push(`/login?mode=add-account` as never)}
-                className="flex items-center justify-center w-8 h-8 rounded-full border border-dashed border-muted-foreground/50 text-muted-foreground hover:border-foreground hover:text-foreground hover:bg-muted transition-colors flex-shrink-0"
-                title={t("add_account")}
-                aria-label={t("add_account")}
-              >
-                <Plus className="w-3.5 h-3.5" />
-              </button>
+              <Tooltip content={t("add_account")} placement={tooltipPlacement}>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => router.push(`/login?mode=add-account` as never)}
+                  className="h-8 w-8 min-w-8 rounded-full border-dashed border-muted-foreground/50 text-muted-foreground hover:border-foreground hover:text-foreground flex-shrink-0"
+                  aria-label={t("add_account")}
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                </Button>
+              </Tooltip>
             )}
             </div>
 
             {/* Logout button with popover */}
-            <button
-              ref={logoutBtnRef}
-              onClick={() => setLogoutMenuOpen(!logoutMenuOpen)}
-              className="flex items-center justify-center w-9 h-9 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-              title={t("sign_out")}
-              aria-label={t("sign_out")}
-              aria-expanded={logoutMenuOpen}
-              aria-haspopup="menu"
-            >
-              <LogOut className="w-4 h-4" />
-            </button>
-
-            {logoutMenuOpen && createPortal(
-              <div
-                ref={logoutPopoverRef}
-                onKeyDown={onLogoutMenuKeyDown}
-                style={logoutPopoverStyle}
-                className="w-56 rounded-lg border border-border bg-background text-foreground shadow-lg z-50 overflow-hidden"
-                role="menu"
-                aria-label={t("sign_out")}
-              >
-                <button
-                  onClick={() => { setLogoutMenuOpen(false); logout(); }}
-                  className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
-                  role="menuitem"
-                >
-                  <LogOut className="w-4 h-4" />
-                  {t("sign_out")}
-                </button>
-                {accounts.length > 1 && (
-                  <button
-                    onClick={() => { setLogoutMenuOpen(false); logoutAll(); }}
-                    className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-destructive hover:bg-muted transition-colors"
-                    role="menuitem"
+            <Popover isOpen={logoutMenuOpen} onOpenChange={setLogoutMenuOpen}>
+              <Tooltip content={t("sign_out")} placement={tooltipPlacement} isDisabled={logoutMenuOpen}>
+                <Popover.Trigger>
+                  <Button
+                    ref={logoutBtnRef}
+                    variant="ghost"
+                    size="icon"
+                    className="h-9 w-9 min-w-9 text-muted-foreground hover:text-foreground"
+                    aria-label={t("sign_out")}
+                    aria-expanded={logoutMenuOpen}
+                    aria-haspopup="menu"
                   >
                     <LogOut className="w-4 h-4" />
-                    {t("sign_out_all")}
-                  </button>
-                )}
-              </div>,
-              document.body
-            )}
+                  </Button>
+                </Popover.Trigger>
+              </Tooltip>
+
+              <Popover.Content placement={logoutPopoverPlacement} className="w-56 overflow-hidden p-0" offset={8}>
+                <Popover.Dialog className="outline-none p-0">
+                  <div
+                    ref={logoutPopoverRef}
+                    onKeyDown={onLogoutMenuKeyDown}
+                    role="menu"
+                    aria-label={t("sign_out")}
+                  >
+                    <MenuButton
+                      onClick={() => { setLogoutMenuOpen(false); logout(); }}
+                      className="px-3 py-2.5"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      {t("sign_out")}
+                    </MenuButton>
+                    {accounts.length > 1 && (
+                      <MenuButton
+                        onClick={() => { setLogoutMenuOpen(false); logoutAll(); }}
+                        className="px-3 py-2.5 text-destructive hover:text-destructive"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        {t("sign_out_all")}
+                      </MenuButton>
+                    )}
+                  </div>
+                </Popover.Dialog>
+              </Popover.Content>
+            </Popover>
           </>
         )}
 

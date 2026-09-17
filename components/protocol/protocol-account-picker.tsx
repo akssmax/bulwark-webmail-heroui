@@ -1,12 +1,14 @@
 "use client";
+import { Loader } from "@/components/ui/loader";
 
-import { Loader2, X } from "lucide-react";
+import { X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { ParsedMailto } from "@/lib/protocol-handlers/mailto";
 import type { ParsedWebcal } from "@/lib/protocol-handlers/webcal";
 import type { AccountEntry } from "@/stores/account-store";
 import { cn } from "@/lib/utils";
 import { Avatar } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 
 type ProtocolAccountPickerProps = {
   accounts: AccountEntry[];
@@ -66,14 +68,16 @@ export function ProtocolAccountPicker({
               {kind === "mailto" ? t("select_mailto_account") : t("select_webcal_account")}
             </p>
           </div>
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon"
             onClick={onCancel}
-            className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            className="h-9 w-9"
             aria-label={tCommon("close")}
           >
             <X className="h-5 w-5" />
-          </button>
+          </Button>
         </div>
 
         {details.length > 0 && (
@@ -100,13 +104,14 @@ export function ProtocolAccountPicker({
             }
 
             return (
-              <button
+              <Button
                 key={account.id}
                 type="button"
+                variant="ghost"
                 disabled={isSwitching}
                 onClick={() => onSelect(account.id)}
                 className={cn(
-                  "flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-start transition-colors",
+                  "flex w-full items-center gap-3 justify-start h-auto min-h-0 rounded-md px-3 py-2.5 font-normal",
                   isActive ? "bg-accent/50" : "hover:bg-muted",
                   isSwitching && "cursor-wait opacity-70"
                 )}
@@ -126,15 +131,15 @@ export function ProtocolAccountPicker({
                       {account.displayName || account.label}
                     </span>
                     {isActive && (
-                      <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
+                      <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
                         {t("active_account")}
                       </span>
                     )}
                   </div>
                   <p className="truncate text-xs text-muted-foreground">{account.email || account.username}</p>
-                  <p className="truncate text-[10px] text-muted-foreground">{host}</p>
+                  <p className="truncate text-xs text-muted-foreground">{host}</p>
                 </div>
-              </button>
+              </Button>
             );
           })}
         </div>
@@ -142,20 +147,21 @@ export function ProtocolAccountPicker({
         <div className="flex items-center justify-between border-t border-border px-5 py-3">
           {isSwitching ? (
             <span className="inline-flex items-center gap-2 text-sm text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <Loader size="sm" color="current" />
               {t("switching_account")}
             </span>
           ) : (
             <span className="text-xs text-muted-foreground">{t("select_account_note")}</span>
           )}
-          <button
+          <Button
             type="button"
+            variant="ghost"
             onClick={onCancel}
             disabled={isSwitching}
-            className="rounded-md px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
+            className="text-sm"
           >
             {tCommon("cancel")}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

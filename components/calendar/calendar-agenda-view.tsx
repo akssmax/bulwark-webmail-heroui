@@ -6,6 +6,7 @@ import { useDisplayDateFormatter } from "@/hooks/use-display-date-formatter";
 import { format, isTomorrow, startOfDay } from "date-fns";
 import { MapPin, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import { getEventColor } from "./event-card";
 import { getEventDayBounds, getEventEndDate, getEventStartDate, getPrimaryCalendarId } from "@/lib/calendar-utils";
 import { displayNow, isDisplayToday } from "@/lib/timezone";
@@ -161,14 +162,16 @@ export function CalendarAgendaView({
     >
       <div className="px-4 py-2 text-center text-xs text-muted-foreground">
         {onExtendStart ? (
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="sm"
             onClick={requestStart}
             disabled={isLoading}
-            className="rounded-md px-2 py-1 hover:bg-muted hover:text-foreground disabled:opacity-60"
+            className="h-auto px-2 py-1"
           >
             {loadingPast ? t("events.agenda_loading") : t("events.agenda_show_earlier")}
-          </button>
+          </Button>
         ) : (
           <span>{t("events.agenda_range_start", { date: formatRangeDate(rangeStart) })}</span>
         )}
@@ -214,14 +217,15 @@ export function CalendarAgendaView({
                 : null;
 
               return (
-                <button
+                <Button
                   key={ev.id}
+                  variant="ghost"
                   onClick={(e) => onSelectEvent(ev, e.currentTarget.getBoundingClientRect())}
                   onMouseEnter={(e) => onHoverEvent?.(ev, e.currentTarget.getBoundingClientRect())}
                   onMouseLeave={() => onHoverLeave?.()}
                   onContextMenu={onContextMenuEvent ? (e) => onContextMenuEvent(e, ev) : undefined}
                   className={cn(
-                    "w-full flex items-start px-4 hover:bg-muted/50 transition-colors text-start",
+                    "w-full h-auto justify-start flex items-start px-4 hover:bg-muted/50 transition-colors text-start rounded-none",
                     isCancelled && "opacity-60"
                   )}
                   style={{ gap: 'var(--density-item-gap)', paddingBlock: 'var(--density-item-py)' }}
@@ -266,7 +270,7 @@ export function CalendarAgendaView({
                       </div>
                     )}
                   </div>
-                </button>
+                </Button>
               );
             })}
           </div>

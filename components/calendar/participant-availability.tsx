@@ -1,8 +1,9 @@
 "use client";
+import { Loader } from "@/components/ui/loader";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Loader2 } from "lucide-react";
+
 import { useAuthStore } from "@/stores/auth-store";
 import type { IJMAPClient } from "@/lib/jmap/client-interface";
 import type { BusyPeriod, Principal } from "@/lib/jmap/types";
@@ -130,7 +131,7 @@ export function ParticipantAvailability({ attendees, start, end }: ParticipantAv
             />
             <span className="min-w-0 truncate text-foreground/90">{a.name || a.email}</span>
             <span className="ms-auto flex shrink-0 items-center gap-1 text-muted-foreground">
-              {status === "checking" && <Loader2 className="h-3 w-3 animate-spin" />}
+              {status === "checking" && <Loader size="sm" color="current" />}
               {t(status)}
             </span>
           </li>

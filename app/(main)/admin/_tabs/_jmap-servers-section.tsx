@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { Plus, Trash2, RotateCcw, ChevronDown, ChevronRight } from 'lucide-react';
 import type { JmapServerEntry } from '@/lib/admin/jmap-servers';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 interface Props {
   value: JmapServerEntry[];
@@ -120,32 +122,36 @@ export function JmapServersSection({ value, source, onChange, onRevert }: Props)
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-foreground">Servers</span>
             {source && source !== 'default' && (
-              <span className={`text-[10px] font-medium uppercase tracking-wider px-1.5 py-0.5 rounded ${source === 'admin' ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
+              <span className={`text-xs font-medium uppercase tracking-wider px-1.5 py-0.5 rounded ${source === 'admin' ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
                 {source}
               </span>
             )}
           </div>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Each entry appears as an option on the login dropdown. Leave the list empty to fall back to the single <code className="text-[11px]">JMAP Server URL</code> above.
+            Each entry appears as an option on the login dropdown. Leave the list empty to fall back to the single <code className="text-xs">JMAP Server URL</code> above.
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
           {source === 'admin' && (
-            <button
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={onRevert}
-              className="text-muted-foreground hover:text-foreground"
-              title="Revert to default"
+              className="h-8 w-8"
+              aria-label="Revert to default"
             >
               <RotateCcw className="w-3.5 h-3.5" />
-            </button>
+            </Button>
           )}
-          <button
+          <Button
+            variant="outline"
+            size="sm"
             onClick={add}
-            className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-md border border-input bg-background text-xs text-foreground hover:bg-muted transition-colors"
+            className="h-8 gap-1.5 text-xs"
           >
             <Plus className="w-3.5 h-3.5" />
             Add server
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -159,94 +165,97 @@ export function JmapServersSection({ value, source, onChange, onRevert }: Props)
           <div key={i} className="rounded-md border border-border bg-muted/20 p-3 space-y-2">
             <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 items-start">
               <div className="sm:col-span-3">
-                <label className="block text-[11px] font-medium text-muted-foreground mb-1">ID</label>
-                <input
+                <label className="block text-xs font-medium text-muted-foreground mb-1">ID</label>
+                <Input
                   type="text"
                   value={d.id}
                   onChange={(e) => update(i, { id: e.target.value })}
                   placeholder="main"
-                  className={`h-8 w-full rounded-md border bg-background px-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${isDuplicate ? 'border-destructive' : 'border-input'}`}
+                  className={`h-8 ${isDuplicate ? 'border-destructive' : ''}`}
                 />
-                {isDuplicate && <p className="text-[10px] text-destructive mt-0.5">Duplicate id</p>}
+                {isDuplicate && <p className="text-xs text-destructive mt-0.5">Duplicate id</p>}
               </div>
               <div className="sm:col-span-4">
-                <label className="block text-[11px] font-medium text-muted-foreground mb-1">Label</label>
-                <input
+                <label className="block text-xs font-medium text-muted-foreground mb-1">Label</label>
+                <Input
                   type="text"
                   value={d.label}
                   onChange={(e) => update(i, { label: e.target.value })}
                   placeholder="Main server"
-                  className="h-8 w-full rounded-md border border-input bg-background px-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="h-8"
                 />
               </div>
               <div className="sm:col-span-5">
-                <label className="block text-[11px] font-medium text-muted-foreground mb-1">JMAP URL</label>
+                <label className="block text-xs font-medium text-muted-foreground mb-1">JMAP URL</label>
                 <div className="flex items-center gap-2">
-                  <input
+                  <Input
                     type="url"
                     value={d.url}
                     onChange={(e) => update(i, { url: e.target.value })}
                     placeholder="https://mail.example.com"
-                    className="h-8 w-full rounded-md border border-input bg-background px-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="h-8"
                   />
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="icon"
                     onClick={() => remove(i)}
-                    className="shrink-0 text-muted-foreground hover:text-destructive"
-                    title="Remove server"
+                    className="shrink-0 h-8 w-8 hover:text-destructive"
+                    aria-label="Remove server"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>
             <div>
-              <label className="block text-[11px] font-medium text-muted-foreground mb-1">
+              <label className="block text-xs font-medium text-muted-foreground mb-1">
                 Email domains (comma-separated, used for auto-pick)
               </label>
-              <input
+              <Input
                 type="text"
                 value={d.domains}
                 onChange={(e) => update(i, { domains: e.target.value })}
                 placeholder="example.com, example.org"
-                className="h-8 w-full rounded-md border border-input bg-background px-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="h-8"
               />
             </div>
-            <button
+            <Button
+              variant="ghost"
               onClick={() => update(i, { oauthExpanded: !d.oauthExpanded })}
-              className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+              className="h-auto px-0 gap-1 text-xs text-muted-foreground hover:text-foreground font-normal"
               type="button"
             >
               {d.oauthExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
               Per-server OAuth (optional, overrides global)
-            </button>
+            </Button>
             {d.oauthExpanded && (
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 ps-4 border-s border-border">
                 <div>
-                  <label className="block text-[11px] font-medium text-muted-foreground mb-1">OAuth Client ID</label>
-                  <input
+                  <label className="block text-xs font-medium text-muted-foreground mb-1">OAuth Client ID</label>
+                  <Input
                     type="text"
                     value={d.oauthClientId}
                     onChange={(e) => update(i, { oauthClientId: e.target.value })}
-                    className="h-8 w-full rounded-md border border-input bg-background px-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="h-8"
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-medium text-muted-foreground mb-1">OAuth Issuer URL</label>
-                  <input
+                  <label className="block text-xs font-medium text-muted-foreground mb-1">OAuth Issuer URL</label>
+                  <Input
                     type="url"
                     value={d.oauthIssuerUrl}
                     onChange={(e) => update(i, { oauthIssuerUrl: e.target.value })}
                     placeholder="https://auth.example.com"
-                    className="h-8 w-full rounded-md border border-input bg-background px-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="h-8"
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-medium text-muted-foreground mb-1">OAuth Client Secret</label>
-                  <input
+                  <label className="block text-xs font-medium text-muted-foreground mb-1">OAuth Client Secret</label>
+                  <Input
                     type="password"
                     value={d.oauthClientSecret}
                     onChange={(e) => update(i, { oauthClientSecret: e.target.value })}
-                    className="h-8 w-full rounded-md border border-input bg-background px-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="h-8"
                   />
                 </div>
               </div>

@@ -26,6 +26,7 @@ import {
   X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 import { useConfig } from '@/hooks/use-config';
 import { usePolicyStore } from '@/stores/policy-store';
 import { useThemeStore } from '@/stores/theme-store';
@@ -195,7 +196,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <div key={group.label}>
               {groupIndex > 0 && <div className="mx-1 my-2 border-t border-border" />}
               <div className="px-3 pt-2.5 pb-1">
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   {group.label}
                 </span>
               </div>
@@ -209,12 +210,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   if (pathname !== '/admin') router.push('/admin');
                 };
                 return (
-                  <button
+                  <Button
                     key={tab}
                     type="button"
+                    variant="ghost"
                     onClick={handleClick}
                     className={cn(
-                      'w-full text-start px-3 py-2 rounded-md text-sm transition-colors duration-150 flex items-center gap-2.5',
+                      'w-full justify-start h-auto px-3 py-2 text-sm font-normal gap-2.5',
                       active
                         ? 'bg-accent text-accent-foreground font-medium'
                         : 'hover:bg-muted text-foreground'
@@ -237,7 +239,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                       )}
                     </span>
                     {label}
-                  </button>
+                  </Button>
                 );
               })}
             </div>
@@ -263,13 +265,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             Change Password
           </Link>
         )}
-        <button
+        <Button
+          variant="ghost"
           onClick={handleLogout}
-          className="w-full text-start px-3 py-2 rounded-md text-sm transition-colors duration-150 flex items-center gap-2.5 hover:bg-muted text-foreground"
+          className="w-full justify-start h-auto px-3 py-2 text-sm font-normal gap-2.5 hover:bg-muted text-foreground"
         >
           <LogOut className="w-4 h-4 shrink-0 text-muted-foreground" />
           Sign out
-        </button>
+        </Button>
       </div>
     </>
   );
@@ -277,7 +280,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   return (
     <div className="min-h-screen flex bg-background">
       {/* Slim webmail nav rail (desktop only) */}
-      <nav className="hidden md:flex w-14 bg-secondary flex-col items-center py-3 gap-2 border-e border-border sticky top-0 h-screen shrink-0">
+      <nav className="hidden md:flex w-14 bg-sidebar flex-col items-center py-3 gap-2 border-e border-sidebar-border sticky top-0 h-screen shrink-0">
         {logoUrl ? (
           <img src={logoUrl} alt="" className="w-7 h-7 object-contain mb-2" />
         ) : (
@@ -367,14 +370,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             )}
             <span className="font-semibold text-sm text-foreground truncate">Admin Panel</span>
           </div>
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon"
             onClick={() => setMobileNavOpen(false)}
-            className="flex items-center justify-center w-9 h-9 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            className="h-9 w-9 text-muted-foreground hover:text-foreground"
             aria-label="Close navigation"
           >
             <X className="w-5 h-5" />
-          </button>
+          </Button>
         </div>
         {navContent}
       </aside>
@@ -383,14 +388,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <main className="flex-1 min-w-0 overflow-x-hidden">
         {/* Mobile header */}
         <div className="md:hidden sticky top-0 z-30 h-14 flex items-center gap-2 px-3 border-b border-border bg-background">
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon"
             onClick={() => setMobileNavOpen(true)}
-            className="flex items-center justify-center w-9 h-9 rounded-md text-foreground hover:bg-muted transition-colors"
+            className="h-9 w-9"
             aria-label="Open navigation"
           >
             <Menu className="w-5 h-5" />
-          </button>
+          </Button>
           <div className="flex items-center min-w-0">
             {logoUrl ? (
               <img src={logoUrl} alt="" className="w-5 h-5 object-contain me-2" />
@@ -428,7 +435,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           title="Mail"
         >
           <Mail className="w-5 h-5" />
-          <span className="text-[10px] font-medium leading-tight truncate max-w-full">Mail</span>
+          <span className="text-xs font-medium leading-tight truncate max-w-full">Mail</span>
         </a>
         <a
           href={`${prefix}/calendar`}
@@ -436,7 +443,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           title="Calendar"
         >
           <Calendar className="w-5 h-5" />
-          <span className="text-[10px] font-medium leading-tight truncate max-w-full">Calendar</span>
+          <span className="text-xs font-medium leading-tight truncate max-w-full">Calendar</span>
         </a>
         <a
           href={`${prefix}/contacts`}
@@ -444,7 +451,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           title="Contacts"
         >
           <BookUser className="w-5 h-5" />
-          <span className="text-[10px] font-medium leading-tight truncate max-w-full">Contacts</span>
+          <span className="text-xs font-medium leading-tight truncate max-w-full">Contacts</span>
         </a>
         {filesEnabled && (
           <a
@@ -453,7 +460,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             title="Files"
           >
             <HardDrive className="w-5 h-5" />
-            <span className="text-[10px] font-medium leading-tight truncate max-w-full">Files</span>
+            <span className="text-xs font-medium leading-tight truncate max-w-full">Files</span>
           </a>
         )}
         <div
@@ -465,7 +472,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <Shield className="w-5 h-5" />
             <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-0.5 rounded-full bg-primary" />
           </div>
-          <span className="text-[10px] font-medium leading-tight truncate max-w-full">Admin</span>
+          <span className="text-xs font-medium leading-tight truncate max-w-full">Admin</span>
         </div>
         <a
           href={`${prefix}/settings`}
@@ -473,7 +480,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           title="Settings"
         >
           <Settings className="w-5 h-5" />
-          <span className="text-[10px] font-medium leading-tight truncate max-w-full">Settings</span>
+          <span className="text-xs font-medium leading-tight truncate max-w-full">Settings</span>
         </a>
       </nav>
     </div>

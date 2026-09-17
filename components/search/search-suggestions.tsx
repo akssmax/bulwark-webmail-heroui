@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Clock, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import { splitHighlight, type ContactSuggestion, type SearchSuggestion } from "@/lib/search-suggestions";
 
 export function suggestionOptionId(listId: string, index: number): string {
@@ -84,14 +85,14 @@ export function SearchSuggestions({
 
         const heading =
           (i === 0 && hasRecent && suggestion.kind === "recent" && (
-            <div className="px-3 pt-1 pb-0.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+            <div className="px-3 pt-1 pb-0.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
               {t("suggestions_recent")}
             </div>
           )) ||
           (i === firstContactIndex && (
             <div
               className={cn(
-                "px-3 pt-1 pb-0.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground",
+                "px-3 pt-1 pb-0.5 text-xs font-medium uppercase tracking-wide text-muted-foreground",
                 hasRecent && "mt-1 border-t border-border pt-2",
               )}
             >
@@ -115,13 +116,15 @@ export function SearchSuggestions({
               >
                 <Clock className="w-4 h-4 shrink-0 text-muted-foreground" aria-hidden />
                 <HighlightedText text={suggestion.query} query={query} className="flex-1 truncate" />
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="icon"
                   tabIndex={-1}
                   aria-label={t("suggestions_remove_recent")}
                   title={t("suggestions_remove_recent")}
                   className={cn(
-                    "shrink-0 p-0.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted-foreground/15 transition-opacity",
+                    "size-6 min-w-6 shrink-0 text-muted-foreground transition-opacity",
                     selected ? "opacity-100" : "opacity-0 group-hover:opacity-100 focus:opacity-100",
                   )}
                   onMouseDown={(e) => {
@@ -131,7 +134,7 @@ export function SearchSuggestions({
                   }}
                 >
                   <X className="w-3.5 h-3.5" />
-                </button>
+                </Button>
               </div>
             </div>
           );
@@ -154,7 +157,7 @@ export function SearchSuggestions({
                 onSelect(suggestion);
               }}
             >
-              <Avatar name={suggestion.name} email={suggestion.email} size="sm" className="shrink-0 w-6 h-6 text-[10px]" />
+              <Avatar name={suggestion.name} email={suggestion.email} size="sm" className="shrink-0 w-6 h-6 text-xs" />
               <span className="flex-1 min-w-0 flex items-baseline gap-1.5 truncate">
                 {suggestion.name ? (
                   <>
@@ -165,15 +168,17 @@ export function SearchSuggestions({
                   <HighlightedText text={suggestion.email} query={query} className="truncate" />
                 )}
               </span>
-              <span className="shrink-0 flex items-center gap-1 text-[11px]">
+              <span className="shrink-0 flex items-center gap-1 text-xs">
                 <span className="px-1.5 py-0.5 rounded bg-primary/10 text-primary font-medium">{t("from")}</span>
-                <button
+                <Button
                   type="button"
+                  variant="outline"
+                  size="sm"
                   tabIndex={-1}
                   aria-label={t("suggestions_to", { address: suggestion.email })}
                   title={t("suggestions_to", { address: suggestion.email })}
                   className={cn(
-                    "px-1.5 py-0.5 rounded border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition-opacity",
+                    "h-6 min-h-6 px-1.5 text-xs transition-opacity",
                     selected ? "opacity-100" : "opacity-0 group-hover:opacity-100 focus:opacity-100",
                   )}
                   onMouseDown={(e) => {
@@ -183,7 +188,7 @@ export function SearchSuggestions({
                   }}
                 >
                   {t("to")}
-                </button>
+                </Button>
               </span>
             </div>
           </div>

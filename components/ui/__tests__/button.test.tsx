@@ -20,6 +20,15 @@ describe('Button', () => {
     expect(screen.getByText('Disabled')).toBeDisabled();
   });
 
+  it('wraps icon buttons with a tooltip from aria-label', () => {
+    render(
+      <Button size="icon" aria-label="Refresh">
+        <span aria-hidden>R</span>
+      </Button>,
+    );
+    expect(screen.getByRole('button', { name: 'Refresh' })).toBeInTheDocument();
+  });
+
   it('renders different variants without errors', () => {
     const { rerender } = render(<Button variant="default">Default</Button>);
     expect(screen.getByText('Default')).toBeInTheDocument();

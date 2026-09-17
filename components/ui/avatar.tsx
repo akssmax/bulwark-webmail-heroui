@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useMemo, useEffect } from "react";
+import { Avatar as HeroAvatar } from "@heroui/react";
 import { cn } from "@/lib/utils";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useContactStore, getContactPhotoUri } from "@/stores/contact-store";
@@ -224,9 +225,9 @@ export function Avatar({ name, email, contactPhotoUri, size = "md", className, d
   };
 
   const sizeClasses = {
-    sm: "w-8 h-8 text-xs",
-    md: "w-10 h-10 text-sm",
-    lg: "w-12 h-12 text-base",
+    sm: "text-xs",
+    md: "text-sm",
+    lg: "text-base",
   };
 
   const profilePic = email && domain ? getProfilePictureUrl(email, domain, devMode, name) : null;
@@ -254,25 +255,23 @@ export function Avatar({ name, email, contactPhotoUri, size = "md", className, d
     }
   }, [imgSrc, pluginAvatar, faviconDomain, resolvedContactPhoto, customAvatar, profilePic]);
 
+  const fallbackBg = imgSrc
+    ? (isFavicon ? "#ffffff" : "transparent")
+    : (fallbackColor ?? getBackgroundColor());
+
   return (
-    <div
-      className={cn(
-        "rounded-full flex items-center justify-center font-semibold text-white overflow-hidden",
-        sizeClasses[size],
-        className
-      )}
-      style={{ backgroundColor: imgSrc ? (isFavicon ? "#ffffff" : "transparent") : (fallbackColor ?? getBackgroundColor()) }}
+    <HeroAvatar
+      size={size}
+      className={cn("overflow-hidden font-semibold text-white", sizeClasses[size], className)}
+      style={{ backgroundColor: fallbackBg }}
       title={name || email}
     >
       {imgSrc ? (
-        <img
+        <HeroAvatar.Image
           src={imgSrc}
           alt=""
-          className="w-full h-full object-cover"
+          className={isFavicon ? "object-contain bg-white p-0.5" : "object-cover"}
           onError={handleImgError}
-          // /api/favicon returns a 1x1 transparent PNG (HTTP 200) when no real
-          // favicon exists, to avoid spamming the DevTools console with 404s.
-          // Detect that sentinel by naturalWidth and fall back to initials.
           onLoad={(e) => {
             const img = e.currentTarget;
             if (isFavicon && img.naturalWidth <= 1) {
@@ -280,9 +279,13 @@ export function Avatar({ name, email, contactPhotoUri, size = "md", className, d
             }
           }}
         />
-      ) : (
-        getInitials()
-      )}
-    </div>
+      ) : null}
+      <HeroAvatar.Fallback
+        className="font-semibold text-white"
+        style={{ backgroundColor: fallbackColor ?? getBackgroundColor() }}
+      >
+        {getInitials()}
+      </HeroAvatar.Fallback>
+    </HeroAvatar>
   );
 }

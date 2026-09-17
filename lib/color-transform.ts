@@ -103,7 +103,132 @@ export function parseColor(colorString: string): RGB | null {
     };
   }
 
+  const oklchMatch = color.match(
+    /^oklch\(\s*([0-9.]+%?)\s+([0-9.]+%?)\s+(-?[0-9.]+(?:deg)?|none)(?:\s*\/\s*([0-9.]+%?))?\s*\)$/i,
+  );
+  if (oklchMatch) {
+    const L = parseOklchChannel(oklchMatch[1], 1);
+    const C = parseOklchChannel(oklchMatch[2], 0.4);
+    const hueRaw = oklchMatch[3];
+    const H = hueRaw === 'none' ? 0 : parseFloat(hueRaw);
+    const a = oklchMatch[4] === undefined ? undefined : parseOklchChannel(oklchMatch[4], 1);
+    return oklchToRgb(L, C, H, a);
+  }
+
   return null;
+}
+
+function parseOklchChannel(raw: string, percentScale: number): number {
+  if (raw.endsWith('%')) return (parseFloat(raw) / 100) * percentScale;
+  return parseFloat(raw);
+}
+
+function srgbChannelToLinear(channel: number): number {
+  const c = channel / 255;
+  return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+}
+
+function linearToSrgbChannel(channel: number): number {
+  const c = channel <= 0.0031308 ? 12.92 * channel : 1.055 * channel ** (1 / 2.4) - 0.055;
+  return Math.round(Math.min(255, Math.max(0, c * 255)));
+}
+
+type Oklch = { L: number; C: number; H: number; a?: number };
+
+function rgbToOklch(rgb: RGB): Oklch {
+  const lr = srgbChannelToLinear(rgb.r);
+  const lg = srgbChannelToLinear(rgb.g);
+  const lb = srgbChannelToLinear(rgb.b);
+  const l = 0.4122214708 * lr + 0.5363325363 * lg + 0.0514459929 * lb;
+  const m = 0.2119034982 * lr + 0.6806995451 * lg + 0.1073969566 * lb;
+  const s = 0.0883024619 * lr + 0.2817188376 * lg + 0.6299787005 * lb;
+  const l_ = Math.cbrt(l);
+  const m_ = Math.cbrt(m);
+  const s_ = Math.cbrt(s);
+  const L = 0.2104542553 * l_ + 0.7936177850 * m_ - 0.0040720468 * s_;
+  const a = 1.9779984951 * l_ - 2.4285922050 * m_ + 0.4505937099 * s_;
+  const b = 0.0259040371 * l_ + 0.7827717662 * m_ - 0.8086757660 * s_;
+  const C = Math.hypot(a, b);
+  let H = Math.atan2(b, a) * (180 / Math.PI);
+  if (H < 0) H += 360;
+  return { L, C, H, a: rgb.a };
+}
+
+function oklchToRgb(L: number, C: number, H: number, a?: number): RGB {
+  const hue = (H * Math.PI) / 180;
+  const aLab = C * Math.cos(hue);
+  const bLab = C * Math.sin(hue);
+  const l_ = L + 0.3963377774 * aLab + 0.2158037573 * bLab;
+  const m_ = L - 0.1055613458 * aLab - 0.0638541728 * bLab;
+  const s_ = L - 0.0894841775 * aLab - 1.2914855480 * bLab;
+  const l = l_ ** 3;
+  const m = m_ ** 3;
+  const s = s_ ** 3;
+  const r = +4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s;
+  const g = -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s;
+  const b = -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s;
+  return {
+    r: linearToSrgbChannel(r),
+    g: linearToSrgbChannel(g),
+    b: linearToSrgbChannel(b),
+    a,
+  };
+}
+
+function formatOklchNumber(value: number, digits: number): string {
+  const rounded = Number(value.toFixed(digits));
+  return Object.is(rounded, -0) ? '0' : String(rounded);
+}
+
+function formatOklch(color: Oklch): string {
+  const L = formatOklchNumber(Math.min(1, Math.max(0, color.L)), 4);
+  const C = formatOklchNumber(Math.max(0, color.C), 4);
+  const H = color.C < 0.0005 ? '0' : formatOklchNumber(color.H, 2);
+  if (color.a !== undefined && color.a < 1) {
+    return `oklch(${L} ${C} ${H} / ${formatOklchNumber(color.a, 3)})`;
+  }
+  return `oklch(${L} ${C} ${H})`;
+}
+
+/** OKLCH channels for a parseable CSS color. */
+export function getOklchChannels(color: string): Oklch | null {
+  const trimmed = color.trim();
+  const oklchMatch = trimmed.match(
+    /^oklch\(\s*([0-9.]+%?)\s+([0-9.]+%?)\s+(-?[0-9.]+(?:deg)?|none)(?:\s*\/\s*([0-9.]+%?))?\s*\)$/i,
+  );
+  if (oklchMatch) {
+    const hueRaw = oklchMatch[3];
+    return {
+      L: parseOklchChannel(oklchMatch[1], 1),
+      C: parseOklchChannel(oklchMatch[2], 0.4),
+      H: hueRaw === 'none' ? 0 : parseFloat(hueRaw),
+      a: oklchMatch[4] === undefined ? undefined : parseOklchChannel(oklchMatch[4], 1),
+    };
+  }
+  const rgb = parseColor(trimmed);
+  if (!rgb) return null;
+  return rgbToOklch(rgb);
+}
+
+/** Convert any parseable color to Tailwind-friendly `oklch()` CSS. */
+export function toOklchCss(color: string): string {
+  const trimmed = color.trim();
+  if (/^oklch\(/i.test(trimmed)) return trimmed;
+  const rgb = parseColor(trimmed);
+  if (!rgb) return color;
+  return formatOklch(rgbToOklch(rgb));
+}
+
+/** Rewrite `--color-*` custom properties in a CSS string to `oklch()`. */
+export function rewriteColorCustomProperties(css: string): string {
+  return css.replace(
+    /(--color-[a-z0-9-]+\s*:\s*)([^;}{]+)/gi,
+    (full, prefix: string, value: string) => {
+      const trimmed = value.trim();
+      if (/^var\(/i.test(trimmed) || /^oklch\(/i.test(trimmed)) return full;
+      return `${prefix}${toOklchCss(trimmed)}`;
+    },
+  );
 }
 
 export function getLuminance(r: number, g: number, b: number): number {

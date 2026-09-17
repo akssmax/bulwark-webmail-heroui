@@ -2,6 +2,7 @@
 
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 import type { InlineAppState } from '@/hooks/use-sidebar-apps';
 
 interface InlineAppViewProps {
@@ -19,13 +20,15 @@ export function InlineAppView({ apps, activeAppId, onClose, className }: InlineA
       {/* Header bar */}
       <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-secondary/50 flex-shrink-0">
         <h3 className="text-sm font-medium truncate">{activeApp?.name}</h3>
-        <button
+        <Button
+          variant="ghost"
+          size="icon"
           onClick={onClose}
-          className="p-1 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+          className="h-8 w-8 text-muted-foreground hover:text-foreground"
           aria-label="Close"
         >
           <X className="w-4 h-4" />
-        </button>
+        </Button>
       </div>
       {/* Iframes - active one visible, rest hidden but alive */}
       <div className="flex-1 relative">

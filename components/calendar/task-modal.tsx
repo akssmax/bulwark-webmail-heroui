@@ -4,6 +4,10 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { AppSelect } from "@/components/ui/select";
+import { DatePickerField, TimePickerField } from "@/components/ui/date-picker";
+import { Checkbox } from "@/components/ui/checkbox";
 import { X, Trash2, CalendarDays, Bell, Flag } from "lucide-react";
 import { format, parseISO } from "date-fns";
 
@@ -183,12 +187,12 @@ export function TaskModal({
         />
 
         {/* Description */}
-        <textarea
+        <Textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder={t("tasks.description_placeholder")}
           rows={3}
-          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-none"
+          className="min-h-0 resize-none"
         />
 
         {/* Due Date */}
@@ -198,29 +202,25 @@ export function TaskModal({
             {t("tasks.due_date")}
           </label>
           <div className="flex items-center gap-2">
-            <input
-              type="date"
+            <DatePickerField
               value={dueDate}
               onChange={(e) => setDueDate(e.target.value)}
-              className="rounded-md border border-input bg-background px-3 py-1.5 text-sm"
+              aria-label={t("tasks.due_date")}
             />
             {dueDate && (
-              <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={showTime}
-                  onChange={(e) => setShowTime(e.target.checked)}
-                  className="rounded"
-                />
+              <Checkbox
+                isSelected={showTime}
+                onChange={setShowTime}
+                className="text-xs text-muted-foreground"
+              >
                 {t("tasks.include_time")}
-              </label>
+              </Checkbox>
             )}
             {showTime && (
-              <input
-                type="time"
+              <TimePickerField
                 value={dueTime}
                 onChange={(e) => setDueTime(e.target.value)}
-                className="rounded-md border border-input bg-background px-3 py-1.5 text-sm"
+                aria-label={t("tasks.due_date")}
               />
             )}
           </div>
@@ -232,16 +232,17 @@ export function TaskModal({
             <Flag className="h-3.5 w-3.5" />
             {t("tasks.priority")}
           </label>
-          <select
+          <AppSelect
             value={priority}
-            onChange={(e) => setPriority(e.target.value as PriorityLevel)}
-            className="rounded-md border border-input bg-background px-3 py-1.5 text-sm w-full"
-          >
-            <option value="none">{t("tasks.priority_none")}</option>
-            <option value="high">{t("tasks.priority_high")}</option>
-            <option value="medium">{t("tasks.priority_medium")}</option>
-            <option value="low">{t("tasks.priority_low")}</option>
-          </select>
+            onChange={(v) => setPriority(v as PriorityLevel)}
+            options={[
+              { value: "none", label: t("tasks.priority_none") },
+              { value: "high", label: t("tasks.priority_high") },
+              { value: "medium", label: t("tasks.priority_medium") },
+              { value: "low", label: t("tasks.priority_low") },
+            ]}
+            aria-label={t("tasks.priority")}
+          />
         </div>
 
         {/* Progress */}
@@ -249,16 +250,17 @@ export function TaskModal({
           <label className="text-xs font-medium text-muted-foreground">
             {t("tasks.progress")}
           </label>
-          <select
+          <AppSelect
             value={progress}
-            onChange={(e) => setProgress(e.target.value as CalendarTask["progress"])}
-            className="rounded-md border border-input bg-background px-3 py-1.5 text-sm w-full"
-          >
-            <option value="needs-action">{t("tasks.progress_needs_action")}</option>
-            <option value="in-process">{t("tasks.progress_in_process")}</option>
-            <option value="completed">{t("tasks.progress_completed")}</option>
-            <option value="cancelled">{t("tasks.progress_cancelled")}</option>
-          </select>
+            onChange={(v) => setProgress(v as CalendarTask["progress"])}
+            options={[
+              { value: "needs-action", label: t("tasks.progress_needs_action") },
+              { value: "in-process", label: t("tasks.progress_in_process") },
+              { value: "completed", label: t("tasks.progress_completed") },
+              { value: "cancelled", label: t("tasks.progress_cancelled") },
+            ]}
+            aria-label={t("tasks.progress")}
+          />
         </div>
 
         {/* Calendar */}
@@ -267,15 +269,12 @@ export function TaskModal({
             <label className="text-xs font-medium text-muted-foreground">
               {t("tasks.calendar")}
             </label>
-            <select
+            <AppSelect
               value={calendarId}
-              onChange={(e) => setCalendarId(e.target.value)}
-              className="rounded-md border border-input bg-background px-3 py-1.5 text-sm w-full"
-            >
-              {writableCalendars.map((cal) => (
-                <option key={cal.id} value={cal.id}>{cal.name}</option>
-              ))}
-            </select>
+              onChange={setCalendarId}
+              options={writableCalendars.map((cal) => ({ value: cal.id, label: cal.name }))}
+              aria-label={t("tasks.calendar")}
+            />
           </div>
         )}
 
@@ -285,22 +284,23 @@ export function TaskModal({
             <Bell className="h-3.5 w-3.5" />
             {t("tasks.alert")}
           </label>
-          <select
+          <AppSelect
             value={alertOption}
-            onChange={(e) => {
-              setAlertOption(e.target.value as AlertOption);
+            onChange={(v) => {
+              setAlertOption(v as AlertOption);
               setAlertTouched(true);
             }}
-            className="rounded-md border border-input bg-background px-3 py-1.5 text-sm w-full"
-          >
-            <option value="none">{t("tasks.alert_none")}</option>
-            <option value="at_time">{t("tasks.alert_at_time")}</option>
-            <option value="5">{t("tasks.alert_5min")}</option>
-            <option value="15">{t("tasks.alert_15min")}</option>
-            <option value="30">{t("tasks.alert_30min")}</option>
-            <option value="60">{t("tasks.alert_1hr")}</option>
-            <option value="1440">{t("tasks.alert_1day")}</option>
-          </select>
+            options={[
+              { value: "none", label: t("tasks.alert_none") },
+              { value: "at_time", label: t("tasks.alert_at_time") },
+              { value: "5", label: t("tasks.alert_5min") },
+              { value: "15", label: t("tasks.alert_15min") },
+              { value: "30", label: t("tasks.alert_30min") },
+              { value: "60", label: t("tasks.alert_1hr") },
+              { value: "1440", label: t("tasks.alert_1day") },
+            ]}
+            aria-label={t("tasks.alert")}
+          />
         </div>
       </div>
 

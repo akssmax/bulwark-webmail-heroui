@@ -589,22 +589,23 @@ function MoreActionsMenu({ items, label }: { items: MoreItem[]; label: string })
               return <div key={i} role="separator" className="my-1 h-px bg-border" />;
             }
             return (
-              <button
+              <Button
                 key={i}
                 type="button"
+                variant="ghost"
                 role="menuitem"
                 onClick={() => {
                   item.onClick();
                   setOpen(false);
                 }}
                 className={cn(
-                  "w-full flex items-center gap-2 px-3 py-1.5 text-sm text-start hover:bg-muted focus:bg-muted focus:outline-none transition-colors",
-                  item.destructive && "text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950 focus:bg-red-50 dark:focus:bg-red-950",
+                  "w-full flex items-center gap-2 justify-start px-3 py-1.5 h-auto min-h-0 text-sm font-normal",
+                  item.destructive && "text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950",
                 )}
               >
                 <item.icon className={cn("w-4 h-4 flex-shrink-0", item.destructive ? "text-red-600 dark:text-red-400" : "text-muted-foreground")} />
                 <span className="flex-1">{item.label}</span>
-              </button>
+              </Button>
             );
           })}
         </div>
@@ -615,7 +616,9 @@ function MoreActionsMenu({ items, label }: { items: MoreItem[]; label: string })
 
 function CopyButton({ value, label, successMsg, failMsg, className }: { value: string; label: string; successMsg: string; failMsg: string; className?: string }) {
   return (
-    <button
+    <Button
+      variant="ghost"
+      size="icon"
       onClick={async () => {
         try {
           await navigator.clipboard.writeText(value);
@@ -624,11 +627,11 @@ function CopyButton({ value, label, successMsg, failMsg, className }: { value: s
           toast.error(failMsg);
         }
       }}
-      className={cn("p-1.5 rounded hover:bg-muted transition-colors touch-manipulation", className)}
+      className={cn("h-8 w-8 touch-manipulation", className)}
       title={label}
       aria-label={label}
     >
       <Copy className="w-3.5 h-3.5 text-muted-foreground" />
-    </button>
+    </Button>
   );
 }

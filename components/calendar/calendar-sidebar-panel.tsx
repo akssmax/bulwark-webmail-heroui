@@ -13,6 +13,7 @@ import { useAccountStore } from "@/stores/account-store";
 import { BIRTHDAY_CALENDAR_ID } from "@/lib/birthday-calendar";
 import { sharedCalendarColorKey } from "@/lib/shared-calendar-colors";
 import { toast } from "@/stores/toast-store";
+import { Button } from "@/components/ui/button";
 import { ContextMenu, ContextMenuItem, ContextMenuSeparator, ContextMenuSubMenu } from "@/components/ui/context-menu";
 import { useContextMenu } from "@/hooks/use-context-menu";
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
@@ -244,7 +245,8 @@ export function CalendarSidebarPanel({
 
     return (
       <div key={cal.id} className="relative">
-        <button
+        <Button
+          variant="ghost"
           onClick={() => onToggleVisibility(cal.id)}
           onContextMenu={hasMenu ? (e) => openContextMenu(e, cal) : undefined}
           data-testid="calendar-item"
@@ -252,7 +254,7 @@ export function CalendarSidebarPanel({
           data-account={cal.accountName ?? ''}
           data-visible={isVisible}
           className={cn(
-            "flex items-center gap-2 w-full px-1.5 py-1 rounded-md text-sm transition-colors duration-150",
+            "flex items-center gap-2 w-full justify-start px-1.5 py-1 h-auto min-h-0 rounded-md text-sm font-normal",
             "hover:bg-muted"
           )}
         >
@@ -283,7 +285,7 @@ export function CalendarSidebarPanel({
               aria-label={tMgmt('share')}
             />
           )}
-        </button>
+        </Button>
       </div>
     );
   };
@@ -399,9 +401,10 @@ export function CalendarSidebarPanel({
   return (
     <div className="mt-4">
       {enableCalendarTasks && (
-        <button
+        <Button
+          variant="ghost"
           onClick={() => setViewMode('tasks')}
-          className="flex items-center gap-2 w-full px-1.5 py-1.5 mb-3 rounded-md text-sm hover:bg-muted transition-colors"
+          className="flex items-center gap-2 w-full justify-start px-1.5 py-1.5 mb-3 h-auto min-h-0 rounded-md text-sm font-normal hover:bg-muted"
         >
           <ListTodo className="w-4 h-4 text-muted-foreground" />
           <span>{t('tasks.label')}</span>
@@ -411,7 +414,7 @@ export function CalendarSidebarPanel({
           {overdueTaskCount > 0 && (
             <span className="text-xs text-destructive font-medium">{overdueTaskCount} {t('tasks.filter_overdue').toLowerCase()}</span>
           )}
-        </button>
+        </Button>
       )}
       {multiAccountMode && localAccountGroups.length > 0 ? (
         <>
@@ -421,9 +424,10 @@ export function CalendarSidebarPanel({
             const { owned, sharedGroups } = group.split;
             return (
               <div key={group.key} className={cn(idx === 0 ? "" : "mt-3")}>
-                <button
+                <Button
+                  variant="ghost"
                   onClick={() => toggleAccountGroup(group.key)}
-                  className="group w-full flex items-center gap-1.5 px-1 py-1 rounded-sm hover:bg-muted/40 transition-colors"
+                  className="group w-full flex items-center gap-1.5 justify-start px-1 py-1 h-auto min-h-0 rounded-sm font-normal hover:bg-muted/40"
                 >
                   {expanded ? (
                     <ChevronDown className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
@@ -435,29 +439,23 @@ export function CalendarSidebarPanel({
                     {group.label}
                   </span>
                   {isActive && onCreateCalendar && (
-                    <span
-                      role="button"
-                      tabIndex={0}
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       onClick={(e) => { e.stopPropagation(); onCreateCalendar(); }}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          onCreateCalendar();
-                        }
-                      }}
-                      className="ms-auto p-0.5 rounded text-muted-foreground/70 opacity-0 group-hover:opacity-100 hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+                      className="ms-auto h-6 w-6 min-h-0 opacity-0 group-hover:opacity-100 text-muted-foreground/70 hover:text-foreground"
                       title={tMgmt('add_calendar')}
+                      aria-label={tMgmt('add_calendar')}
                     >
                       <Plus className="w-3 h-3" />
-                    </span>
+                    </Button>
                   )}
-                </button>
+                </Button>
                 {expanded && (
                   <div className="mt-1 ps-3">
                     {owned.length > 0 && (
                       <div>
-                        <div className="px-1 mb-1 text-[10px] font-medium text-muted-foreground/80 uppercase tracking-wider">
+                        <div className="px-1 mb-1 text-xs font-medium text-muted-foreground/80 uppercase tracking-wider">
                           {t('my_calendars')}
                         </div>
                         <div className="space-y-0.5">
@@ -467,7 +465,7 @@ export function CalendarSidebarPanel({
                     )}
                     {sharedGroups.map((sg) => (
                       <div key={`${group.key}-shared-${sg.label}`} className="mt-2">
-                        <div className="px-1 mb-1 text-[10px] font-medium text-muted-foreground/80 uppercase tracking-wider flex items-center gap-1">
+                        <div className="px-1 mb-1 text-xs font-medium text-muted-foreground/80 uppercase tracking-wider flex items-center gap-1">
                           <Share2 className="w-3 h-3" />
                           {sg.label}
                         </div>
@@ -486,14 +484,15 @@ export function CalendarSidebarPanel({
         <>
           <div className="flex items-center justify-between mb-2 px-1 group">
             {onCreateCalendar ? (
-              <button
+              <Button
+                variant="ghost"
                 onClick={onCreateCalendar}
-                className="text-xs font-medium text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors flex items-center gap-1.5"
+                className="text-xs font-medium text-muted-foreground uppercase tracking-wider hover:text-foreground h-auto min-h-0 px-0 py-0 flex items-center gap-1.5"
                 title={tMgmt('add_calendar')}
               >
                 {t('my_calendars')}
                 <Plus className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-              </button>
+              </Button>
             ) : (
               <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 {t('my_calendars')}

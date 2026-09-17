@@ -65,11 +65,12 @@ export function ContactGroupList({
                 ? Object.values(group.members).filter(Boolean).length
                 : 0;
               return (
-                <button
+                <Button
                   key={group.id}
+                  variant="ghost"
                   onClick={() => onSelectGroup(group.id)}
                   className={cn(
-                    "w-full flex items-center px-4 text-start transition-colors",
+                    "w-full flex items-center justify-start px-4 h-auto min-h-0 font-normal",
                     "hover:bg-muted",
                     group.id === selectedGroupId && "bg-accent text-accent-foreground"
                   )}
@@ -86,7 +87,7 @@ export function ContactGroupList({
                       {t("groups.member_count", { count: memberCount })}
                     </div>
                   </div>
-                </button>
+                </Button>
               );
             })}
           </div>

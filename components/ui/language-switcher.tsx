@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useLocaleStore } from '@/stores/locale-store';
 import { ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 import { useMenuNavigation } from '@/hooks/use-menu-navigation';
 import { flagComponents } from './flag-icons';
 
@@ -83,18 +84,19 @@ export function LanguageSwitcher({ className }: { className?: string }) {
 
   return (
     <div ref={containerRef} className={cn("relative", className)}>
-      <button
+      <Button
         type="button"
         ref={buttonRef}
+        variant="outline"
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-md bg-muted border border-border text-foreground hover:border-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-colors duration-150 cursor-pointer w-full"
+        className="flex items-center gap-2 px-3 py-1.5 text-sm w-full justify-start h-auto min-h-0 bg-muted font-normal"
         aria-haspopup="menu"
         aria-expanded={open}
       >
         <FlagIcon locale={current.value} />
         <span className="flex-1 text-start">{current.label}</span>
         <ChevronDown className={cn("h-3.5 w-3.5 text-muted-foreground transition-transform duration-150", open && "rotate-180")} />
-      </button>
+      </Button>
 
       {open && (
         <ul
@@ -105,7 +107,7 @@ export function LanguageSwitcher({ className }: { className?: string }) {
         >
           {languages.map((lang) => (
             <li key={lang.value} role="none">
-              <button
+              <Button
                 type="button"
                 id={`lang-${lang.value}`}
                 role="menuitemradio"
@@ -114,8 +116,9 @@ export function LanguageSwitcher({ className }: { className?: string }) {
                   setLocale(lang.value);
                   setOpen(false);
                 }}
+                variant="ghost"
                 className={cn(
-                  "w-full flex items-center gap-2 px-3 py-1.5 text-sm text-start cursor-pointer whitespace-nowrap transition-colors duration-100",
+                  "w-full flex items-center gap-2 justify-start px-3 py-1.5 h-auto min-h-0 text-sm whitespace-nowrap font-normal",
                   lang.value === choice
                     ? "bg-accent text-accent-foreground font-medium"
                     : "text-foreground hover:bg-accent/50"
@@ -123,7 +126,7 @@ export function LanguageSwitcher({ className }: { className?: string }) {
               >
                 <FlagIcon locale={lang.value} />
                 <span>{lang.label}</span>
-              </button>
+              </Button>
             </li>
           ))}
         </ul>

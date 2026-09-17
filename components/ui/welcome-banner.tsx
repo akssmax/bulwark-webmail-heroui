@@ -96,13 +96,15 @@ export function WelcomeBanner() {
               </ul>
             </div>
           </div>
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={dismiss}
-            className="flex-shrink-0 p-1.5 rounded-md hover:bg-muted transition-colors duration-150 text-muted-foreground hover:text-foreground"
+            className="flex-shrink-0 h-8 w-8"
             aria-label={t("dismiss")}
           >
             <X className="w-4 h-4" />
-          </button>
+          </Button>
         </div>
         <div className="mt-2.5 flex justify-end gap-2">
           <Button

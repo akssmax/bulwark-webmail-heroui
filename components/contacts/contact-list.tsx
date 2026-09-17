@@ -2,9 +2,11 @@
 
 import { useMemo, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { Search, BookUser, Trash2, Users, Download, X, UserPlus, CheckSquare, Square, Filter, Mail, Phone, Image as ImageIcon, RotateCcw, Menu, ArrowDownAZ } from "lucide-react";
+import { Search, BookUser, Trash2, Users, Download, X, UserPlus, Filter, Mail, Phone, Image as ImageIcon, RotateCcw, Menu, ArrowDownAZ } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { AppSelect } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { ContactListItem } from "./contact-list-item";
 import { ContactContextMenu } from "./contact-context-menu";
 import { useContextMenu } from "@/hooks/use-context-menu";
@@ -77,11 +79,12 @@ function getAnniversaryMonth(date: AnniversaryDate): number | null {
 
 function ToggleChip({ icon, label, value, onClick }: { icon: React.ReactNode; label: string; value: TriState; onClick: () => void }) {
   return (
-    <button
+    <Button
       type="button"
+      variant="outline"
       onClick={onClick}
       className={cn(
-        "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs transition-colors border",
+        "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs h-auto min-h-0 font-normal border",
         value === true && "bg-primary/10 border-primary/30 text-primary",
         value === false && "bg-muted border-border text-muted-foreground line-through",
         value === null && "bg-background border-border text-muted-foreground hover:text-foreground hover:border-muted-foreground",
@@ -89,7 +92,7 @@ function ToggleChip({ icon, label, value, onClick }: { icon: React.ReactNode; la
     >
       {icon}
       {label}
-    </button>
+    </Button>
   );
 }
 
@@ -152,6 +155,11 @@ export function ContactList({
     const fmt = new Intl.DateTimeFormat(locale, { month: "long" });
     return Array.from({ length: 12 }, (_, i) => fmt.format(new Date(2000, i, 1)));
   }, [locale]);
+
+  const birthdayMonthOptions = useMemo(() => [
+    { value: "", label: t("filters.any_month") },
+    ...monthNames.map((name, i) => ({ value: String(i + 1), label: name })),
+  ], [monthNames, t]);
 
   const filtered = useMemo(() => {
     const lower = searchQuery.trim().toLowerCase();
@@ -266,6 +274,7 @@ export function ContactList({
 
   const hasSelection = selectedContactIds.size > 0;
   const allSelected = sorted.length > 0 && sorted.every(c => selectedContactIds.has(c.id));
+  const someSelected = hasSelection && !allSelected;
 
   return (
     <div className={cn("flex flex-col h-full", className)}>
@@ -274,18 +283,29 @@ export function ContactList({
         <div className="px-3 py-3">
           <div className="flex items-center gap-1.5">
             {onMenuClick && (
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon"
                 onClick={onMenuClick}
-                className="flex-shrink-0 p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                className="flex-shrink-0"
                 aria-label={t("open_categories")}
               >
                 <Menu className="w-4 h-4" />
-              </button>
+              </Button>
             )}
-            <button
-              type="button"
-              onClick={() => {
+            <Checkbox
+              isSelected={hasSelection && allSelected}
+              isIndeterminate={someSelected}
+              aria-label={hasSelection ? (allSelected ? t("bulk.clear") : t("bulk.select_all")) : t("filters.select")}
+              className={cn(
+                "flex-shrink-0 rounded-md transition-colors",
+                hasSelection
+                  ? "bg-primary/10 text-primary"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted",
+              )}
+              contentClassName="p-2"
+              onChange={() => {
                 if (hasSelection) {
                   if (allSelected) onClearSelection();
                   else onSelectAll(sortedIds);
@@ -296,16 +316,7 @@ export function ContactList({
                   onToggleSelection(target);
                 }
               }}
-              className={cn(
-                "flex-shrink-0 p-2 rounded-md transition-colors",
-                hasSelection
-                  ? "bg-primary/10 text-primary"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted",
-              )}
-              title={hasSelection ? (allSelected ? t("bulk.clear") : t("bulk.select_all")) : t("filters.select")}
-            >
-              {hasSelection ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4" />}
-            </button>
+            />
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
@@ -316,35 +327,39 @@ export function ContactList({
                 className={cn("ps-9 h-9", searchQuery && "pe-8")}
               />
               {searchQuery && (
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="icon"
                   onClick={() => onSearchChange("")}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
                   aria-label={t("clear_search")}
                 >
                   <X className="w-4 h-4" />
-                </button>
+                </Button>
               )}
             </div>
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="icon"
               onClick={() => setFiltersOpen((v) => !v)}
               className={cn(
-                "relative flex-shrink-0 p-2 rounded-md transition-colors",
+                "relative flex-shrink-0",
                 filtersOpen || activeFilters > 0
                   ? "bg-primary/10 text-primary"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted",
+                  : "text-muted-foreground hover:text-foreground",
               )}
               title={t("filters.toggle")}
               aria-label={t("filters.toggle")}
             >
               <Filter className="w-4 h-4" />
               {!filtersOpen && activeFilters > 0 && (
-                <span className="absolute -top-1 -right-1 flex items-center justify-center w-4 h-4 text-[10px] font-bold rounded-full bg-primary text-primary-foreground">
+                <span className="absolute -top-1 -right-1 flex items-center justify-center w-4 h-4 text-xs font-bold rounded-full bg-primary text-primary-foreground">
                   {activeFilters}
                 </span>
               )}
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -421,17 +436,12 @@ export function ContactList({
 
             <div>
               <label className="text-xs text-muted-foreground mb-1 block">{t("filters.birthday_month")}</label>
-              <select
-                value={filters.birthdayMonth ?? ""}
-                onChange={(e) => setFilters((f) => ({ ...f, birthdayMonth: e.target.value === "" ? null : Number(e.target.value) }))}
-                className="h-8 w-full text-sm rounded-md border border-input bg-background px-2"
+              <AppSelect
+                value={filters.birthdayMonth == null ? "" : String(filters.birthdayMonth)}
+                onChange={(value) => setFilters((f) => ({ ...f, birthdayMonth: value === "" ? null : Number(value) }))}
+                options={birthdayMonthOptions}
                 aria-label={t("filters.birthday_month")}
-              >
-                <option value="">{t("filters.any_month")}</option>
-                {monthNames.map((name, i) => (
-                  <option key={i} value={i + 1}>{name}</option>
-                ))}
-              </select>
+              />
             </div>
 
             <div className="flex items-center gap-2 flex-wrap">
@@ -481,22 +491,16 @@ export function ContactList({
       {/* Bulk action bar */}
       {hasSelection && (
         <div className="px-3 py-1.5 border-b border-border bg-accent/30 flex items-center gap-2 flex-wrap">
-          <button
-            onClick={() => {
-              if (allSelected) {
-                onClearSelection();
-              } else {
-                onSelectAll(sortedIds);
-              }
+          <Checkbox
+            isSelected={allSelected}
+            isIndeterminate={someSelected}
+            aria-label={allSelected ? t("bulk.clear") : t("bulk.select_all")}
+            contentClassName="p-1"
+            onChange={() => {
+              if (allSelected) onClearSelection();
+              else onSelectAll(sortedIds);
             }}
-            className="p-1 rounded hover:bg-muted/50 transition-colors"
-          >
-            {allSelected ? (
-              <CheckSquare className="w-4 h-4 text-primary" />
-            ) : (
-              <Square className="w-4 h-4 text-muted-foreground" />
-            )}
-          </button>
+          />
           <span className="text-xs font-medium text-foreground">
             {t("bulk.selected", { count: selectedContactIds.size })}
           </span>
@@ -601,7 +605,7 @@ export function ContactList({
               <div>
                 {groupedSections.map(({ letter, items }) => (
                   <section key={letter}>
-                    <div className="sticky top-0 z-10 px-4 py-0.5 bg-background/90 backdrop-blur-sm text-[11px] font-medium text-muted-foreground/70 uppercase tracking-wide">
+                    <div className="sticky top-0 z-10 px-4 py-0.5 bg-background/90 backdrop-blur-sm text-xs font-medium text-muted-foreground/70 uppercase tracking-wide">
                       {letter}
                     </div>
                     {items.map(renderItem)}

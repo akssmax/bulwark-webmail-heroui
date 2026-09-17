@@ -8,6 +8,7 @@ import { useAuthStore } from "@/stores/auth-store";
 import { useManagedAccountStore } from "@/stores/managed-account-store";
 import { toast } from "@/stores/toast-store";
 import { SettingsSection } from "./settings-section";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { AddressBook, AddressBookRights } from "@/lib/jmap/types";
 import { ShareCollectionDialog } from "./share-collection-dialog";
@@ -49,20 +50,23 @@ function AddressBookEditRow({
         />
       </div>
       <div className="flex items-center gap-2 pt-1">
-        <button
+        <Button
           onClick={() => isValid && onSave(name.trim())}
           disabled={isLoading || !isValid}
-          className="px-3 py-1.5 text-xs font-medium bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50"
+          size="sm"
+          className="text-xs h-7"
         >
           {tCal("save")}
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="secondary"
           onClick={onCancel}
           disabled={isLoading}
-          className="px-3 py-1.5 text-xs bg-muted text-foreground rounded-md hover:bg-accent"
+          size="sm"
+          className="text-xs h-7"
         >
           {tCal("cancel")}
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -189,35 +193,41 @@ export function AddressBookManagementSettings() {
         })()}
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
           {canRename && (
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="icon"
               onClick={() => setEditingId(book.id)}
-              className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+              className="h-7 w-7"
               title={t("rename")}
             >
               <Pencil className="w-3.5 h-3.5" />
-            </button>
+            </Button>
           )}
           {canSetDefault && (
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="icon"
               onClick={() => handleSetDefault(book)}
               disabled={isLoading}
-              className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+              className="h-7 w-7"
               title={t("set_default")}
             >
               <Star className="w-3.5 h-3.5" />
-            </button>
+            </Button>
           )}
           {!book.isShared && book.myRights?.mayShare && (
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="icon"
               onClick={() => setSharingId(book.id)}
-              className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+              className="h-7 w-7"
               title={t("share")}
             >
               <Users className="w-3.5 h-3.5" />
-            </button>
+            </Button>
           )}
         </div>
       </div>
@@ -274,14 +284,15 @@ export function AddressBookManagementSettings() {
         {/* Creating targets the user's own account, so hide it while scoped to a
             managed (shared) account. */}
         {!managedAccountId && client && (
-          <button
+          <Button
             type="button"
+            variant="outline"
             onClick={() => setCreating(true)}
-            className="flex items-center gap-2 py-2.5 px-3 w-full rounded-md border border-dashed border-border text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            className="flex items-center gap-2 py-2.5 px-3 w-full h-auto min-h-0 justify-start text-sm text-muted-foreground hover:text-foreground font-normal border-dashed"
           >
             <BookPlus className="w-4 h-4 flex-shrink-0" />
             {t("create")}
-          </button>
+          </Button>
         )}
       </div>
     </SettingsSection>
@@ -315,14 +326,16 @@ export function AddressBookManagementSettings() {
                 </div>
                 <span className="text-xs text-muted-foreground tabular-nums">{count}</span>
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
+                    size="icon"
                     onClick={() => setEditingKeyword(keyword)}
-                    className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                    className="h-7 w-7"
                     title={tContacts("rename_category")}
                   >
                     <Pencil className="w-3.5 h-3.5" />
-                  </button>
+                  </Button>
                 </div>
               </div>
             );

@@ -1498,6 +1498,35 @@ const calendarEvents = [
   }),
 ];
 
+interface MockCalendarEventNotification {
+  id: string;
+  created: string;
+  changedBy: {
+    name: string;
+    email: string;
+    principalId: string | null;
+    scheduleId: string | null;
+  };
+  comment: string | null;
+  type: 'created' | 'updated' | 'destroyed';
+  calendarEventId: string;
+  isDraft: boolean;
+}
+
+// Pending invitations/updates from other participants (draft-ietf-jmap-calendars §7).
+// Acknowledged notifications are destroyed server-side and removed from this list.
+const calendarEventNotifications: MockCalendarEventNotification[] = [
+  {
+    id: 'cen-001',
+    created: '2026-09-17T09:00:00.000Z',
+    changedBy: { name: 'Chiara Rossi', email: 'chiara@rossi.example', principalId: null, scheduleId: null },
+    comment: 'Hope you can make it!',
+    type: 'created',
+    calendarEventId: 'evt-016',
+    isDraft: false,
+  },
+];
+
 // ---------------------------------------------------------------------------
 // Threads
 // ---------------------------------------------------------------------------
@@ -2019,6 +2048,82 @@ function handleCalendarEventQuery(args: MethodArgs, callId: string): MethodResul
   return ['CalendarEvent/query', { accountId: ACCOUNT_ID, queryState: nextState(), ids, total: ids.length, position: 0, canCalculateChanges: false }, callId];
 }
 
+function calendarEventForNotification(calendarEventId: string): (typeof calendarEvents)[number] | undefined {
+  return calendarEvents.find((e) => e.id === calendarEventId);
+}
+
+function handleCalendarEventNotificationGet(args: MethodArgs, callId: string): MethodResult {
+  const ids = args.ids as string[] | undefined;
+  const properties = args.properties as string[] | undefined;
+  const selected = ids
+    ? calendarEventNotifications.filter((n) => ids.includes(n.id))
+    : calendarEventNotifications;
+
+  const list = selected.map((n) => {
+    if (!properties) {
+      const full: Record<string, unknown> = { ...n };
+      const event = calendarEventForNotification(n.calendarEventId);
+      if (event) full.event = event;
+      return full;
+    }
+    const filtered: Record<string, unknown> = { id: n.id };
+    for (const prop of properties) {
+      if (prop === 'event') {
+        const event = calendarEventForNotification(n.calendarEventId);
+        if (event) filtered.event = event;
+      } else if (prop in n) {
+        filtered[prop] = n[prop as keyof MockCalendarEventNotification];
+      }
+    }
+    return filtered;
+  });
+
+  const notFound = ids?.filter((id) => !calendarEventNotifications.some((n) => n.id === id)) ?? [];
+  return ['CalendarEventNotification/get', { accountId: ACCOUNT_ID, state: nextState(), list, notFound }, callId];
+}
+
+function handleCalendarEventNotificationQuery(_args: MethodArgs, callId: string): MethodResult {
+  const sort = _args.sort as Array<{ property: string; isAscending: boolean }> | undefined;
+  let ordered = [...calendarEventNotifications];
+  if (sort?.length) {
+    const { property, isAscending } = sort[0];
+    ordered = [...calendarEventNotifications].sort((a, b) => {
+      const av = String((a as unknown as Record<string, unknown>)[property] ?? '');
+      const bv = String((b as unknown as Record<string, unknown>)[property] ?? '');
+      return isAscending ? av.localeCompare(bv) : bv.localeCompare(av);
+    });
+  }
+  const ids = ordered.map((n) => n.id);
+  return ['CalendarEventNotification/query', { accountId: ACCOUNT_ID, queryState: nextState(), ids, total: ids.length, position: 0, canCalculateChanges: false }, callId];
+}
+
+function handleCalendarEventNotificationSet(args: MethodArgs, callId: string): MethodResult {
+  const destroyed: string[] = [];
+  const notDestroyed: Record<string, { type: string }> = {};
+
+  if (Array.isArray(args.destroy)) {
+    for (const id of args.destroy as string[]) {
+      const index = calendarEventNotifications.findIndex((n) => n.id === id);
+      if (index === -1) {
+        notDestroyed[id] = { type: 'notFound' };
+        continue;
+      }
+      calendarEventNotifications.splice(index, 1);
+      destroyed.push(id);
+    }
+  }
+
+  return ['CalendarEventNotification/set', {
+    accountId: ACCOUNT_ID,
+    oldState: nextState(),
+    newState: nextState(),
+    created: null,
+    updated: null,
+    destroyed: destroyed.length > 0 ? destroyed : null,
+    notDestroyed: Object.keys(notDestroyed).length > 0 ? notDestroyed : null,
+  }, callId];
+}
+
 function handleSieveScriptGet(_args: MethodArgs, callId: string): MethodResult {
   return ['SieveScript/get', { accountId: ACCOUNT_ID, state: nextState(), list: [], notFound: [] }, callId];
 }
@@ -2397,6 +2502,9 @@ const METHOD_HANDLERS: Record<string, MethodHandler> = {
   'CalendarEvent/get': handleCalendarEventGet,
   'CalendarEvent/query': handleCalendarEventQuery,
   'CalendarEvent/set': (_args, callId) => ['CalendarEvent/set', { accountId: ACCOUNT_ID, oldState: nextState(), newState: nextState(), created: null, updated: null, destroyed: null }, callId],
+  'CalendarEventNotification/get': handleCalendarEventNotificationGet,
+  'CalendarEventNotification/query': handleCalendarEventNotificationQuery,
+  'CalendarEventNotification/set': handleCalendarEventNotificationSet,
   'SieveScript/get': handleSieveScriptGet,
   'SieveScript/set': (_args, callId) => ['SieveScript/set', { accountId: ACCOUNT_ID, oldState: nextState(), newState: nextState(), created: null, updated: null, destroyed: null }, callId],
   'PushSubscription/get': handlePushSubscriptionGet,

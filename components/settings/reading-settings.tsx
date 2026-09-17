@@ -1,4 +1,5 @@
 "use client";
+import { Loader } from "@/components/ui/loader";
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
@@ -9,8 +10,10 @@ import { useAuthStore } from '@/stores/auth-store';
 import { useEmailStore } from '@/stores/email-store';
 import { cn } from '@/lib/utils';
 import { SettingsSection, SettingItem, Select, ToggleSwitch } from './settings-section';
-import { AlertTriangle, FolderSync, Loader2 } from 'lucide-react';
+import { SegmentedTabs } from '@/components/ui/segmented-tabs';
+import { AlertTriangle, FolderSync } from "lucide-react";
 import { usePolicyStore } from '@/stores/policy-store';
+import { Button } from '@/components/ui/button';
 
 export function ReadingSettings() {
   const t = useTranslations('settings.email_behavior');
@@ -182,18 +185,19 @@ export function ReadingSettings() {
           />
           {archiveMode !== 'single' && (
             <div className="flex flex-col gap-2">
-              <button
+              <Button
+                variant="secondary"
                 onClick={handleReorganizeArchive}
                 disabled={isReorganizing}
-                className="flex items-center gap-2 px-3 py-1.5 bg-muted hover:bg-accent rounded-md transition-colors text-sm disabled:opacity-50"
+                className="flex items-center gap-2 text-sm"
               >
                 {isReorganizing ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <Loader size="sm" color="current" />
                 ) : (
                   <FolderSync className="w-4 h-4" />
                 )}
                 <span>{t('archive_mode.reorganize')}</span>
-              </button>
+              </Button>
               {reorganizeResult && (
                 <p className="text-xs text-muted-foreground">{reorganizeResult}</p>
               )}
@@ -294,9 +298,10 @@ export function ReadingSettings() {
           {ALL_HOVER_ACTIONS.map((action) => {
             const isEnabled = hoverActions.includes(action.id);
             return (
-              <button
+              <Button
                 key={action.id}
                 type="button"
+                variant={isEnabled ? 'default' : 'secondary'}
                 onClick={() => {
                   const newActions = isEnabled
                     ? hoverActions.filter((a: HoverAction) => a !== action.id)
@@ -304,37 +309,28 @@ export function ReadingSettings() {
                   updateSetting('hoverActions', newActions);
                 }}
                 className={cn(
-                  'px-3 py-1.5 text-xs rounded-md transition-colors duration-150',
-                  isEnabled
-                    ? 'bg-primary text-primary-foreground font-medium'
-                    : 'bg-muted hover:bg-accent text-foreground'
+                  'px-3 py-1.5 text-xs h-auto min-h-0',
+                  isEnabled && 'font-medium'
                 )}
               >
                 {t(`hover_actions.${action.labelKey}`)}
-              </button>
+              </Button>
             );
           })}
         </div>
 
         <div className="pt-2 space-y-2">
           <label className="text-xs font-medium text-foreground">{t('hover_actions.mode_label')}</label>
-          <div className="flex gap-2">
-            {(['inline', 'floating'] as const).map((mode) => (
-              <button
-                key={mode}
-                type="button"
-                onClick={() => updateSetting('hoverActionsMode', mode)}
-                className={cn(
-                  'px-3 py-1.5 text-xs rounded-md transition-colors duration-150',
-                  hoverActionsMode === mode
-                    ? 'bg-primary text-primary-foreground font-medium'
-                    : 'bg-muted hover:bg-accent text-foreground'
-                )}
-              >
-                {t(`hover_actions.mode_${mode}`)}
-              </button>
-            ))}
-          </div>
+          <SegmentedTabs
+            aria-label={t('hover_actions.mode_label')}
+            value={hoverActionsMode}
+            onChange={(mode) => updateSetting('hoverActionsMode', mode as 'inline' | 'floating')}
+            className="w-full sm:w-fit"
+            options={[
+              { value: 'inline', label: t('hover_actions.mode_inline') },
+              { value: 'floating', label: t('hover_actions.mode_floating') },
+            ]}
+          />
         </div>
 
         {hoverActionsMode === 'floating' && (
@@ -342,19 +338,18 @@ export function ReadingSettings() {
             <label className="text-xs font-medium text-foreground">{t('hover_actions.corner_label')}</label>
             <div className="grid grid-cols-2 gap-2 w-48">
               {(['top-left', 'top-right', 'bottom-left', 'bottom-right'] as const).map((corner) => (
-                <button
+                <Button
                   key={corner}
                   type="button"
+                  variant={hoverActionsCorner === corner ? 'default' : 'secondary'}
                   onClick={() => updateSetting('hoverActionsCorner', corner)}
                   className={cn(
-                    'px-2 py-1.5 text-xs rounded-md transition-colors duration-150 text-center',
-                    hoverActionsCorner === corner
-                      ? 'bg-primary text-primary-foreground font-medium'
-                      : 'bg-muted hover:bg-accent text-foreground'
+                    'px-2 py-1.5 text-xs h-auto min-h-0 text-center',
+                    hoverActionsCorner === corner && 'font-medium'
                   )}
                 >
                   {t(`hover_actions.corner_${corner}`)}
-                </button>
+                </Button>
               ))}
             </div>
           </div>

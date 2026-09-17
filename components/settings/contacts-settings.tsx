@@ -42,19 +42,14 @@ export function ContactsSettings() {
     }
   };
 
-  if (showImport) {
-    return (
-      <div className="border border-border rounded-lg overflow-hidden" style={{ minHeight: 400 }}>
-        <ContactImportDialog
-          existingContacts={contacts}
-          onImport={handleImport}
-          onClose={() => setShowImport(false)}
-        />
-      </div>
-    );
-  }
-
   return (
+    <>
+    <ContactImportDialog
+      isOpen={showImport}
+      existingContacts={contacts}
+      onImport={handleImport}
+      onClose={() => setShowImport(false)}
+    />
     <SettingsSection
       title={tSettings("title")}
       description={tSettings("description")}
@@ -104,5 +99,6 @@ export function ContactsSettings() {
         </Button>
       </SettingItem>
     </SettingsSection>
+    </>
   );
 }

@@ -28,12 +28,19 @@ describe('SelectableAvatar', () => {
     expect(onRowClick).not.toHaveBeenCalled();
   });
 
-  it('reflects the checked state via aria-checked', () => {
+  it('reflects the checked selection state', () => {
     const { rerender } = render(
       <SelectableAvatar name="Marta" checked={false} onToggle={() => {}} selectLabel="Select" />,
     );
-    expect(screen.getByRole('checkbox')).toHaveAttribute('aria-checked', 'false');
+    expect(screen.getByRole('checkbox')).not.toBeChecked();
     rerender(<SelectableAvatar name="Marta" checked onToggle={() => {}} selectLabel="Select" />);
-    expect(screen.getByRole('checkbox')).toHaveAttribute('aria-checked', 'true');
+    expect(screen.getByRole('checkbox')).toBeChecked();
+  });
+
+  it('does not render a visual checkbox box on the avatar', () => {
+    const { container } = render(
+      <SelectableAvatar name="Marta" checked onToggle={() => {}} selectLabel="Select" />,
+    );
+    expect(container.querySelector('[data-slot="checkbox-control"]')).toBeNull();
   });
 });

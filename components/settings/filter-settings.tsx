@@ -1,4 +1,5 @@
 "use client";
+import { Loader } from "@/components/ui/loader";
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useTranslations } from "next-intl";
@@ -15,18 +16,7 @@ import type { FilterRule } from "@/lib/jmap/sieve-types";
 import type { Mailbox } from "@/lib/jmap/types";
 import { useVacationStore } from "@/stores/vacation-store";
 import { useManagedAccountStore } from "@/stores/managed-account-store";
-import {
-  Plus,
-  GripVertical,
-  X,
-  Code,
-  AlertTriangle,
-  Loader2,
-  Filter,
-  RotateCcw,
-  PalmtreeIcon,
-  Lock,
-} from "lucide-react";
+import { Plus, GripVertical, X, Code, AlertTriangle, Filter, RotateCcw, PalmtreeIcon, Lock } from "lucide-react";
 
 function isReadonlyRule(r: FilterRule): boolean {
   return r.origin === "external" || r.origin === "opaque";
@@ -95,7 +85,7 @@ function VisualRuleSummary({ rule }: { rule: FilterRule }) {
   return (
     <div className="mt-1.5 space-y-1 text-xs">
       <div className="flex items-baseline gap-1.5 flex-wrap">
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-blue-500 dark:text-blue-400">
+        <span className="text-xs font-semibold uppercase tracking-wider text-blue-500 dark:text-blue-400">
           {t("if")}
         </span>
         {rule.conditions.map((c, i) => {
@@ -104,7 +94,7 @@ function VisualRuleSummary({ rule }: { rule: FilterRule }) {
           return (
             <span key={i} className="contents">
               {i > 0 && (
-                <span className="text-[10px] text-muted-foreground/70 italic">{joiner}</span>
+                <span className="text-xs text-muted-foreground/70 italic">{joiner}</span>
               )}
               <span className="inline-flex items-baseline gap-1 px-1.5 py-px rounded-sm bg-muted/60 text-foreground">
                 <span className="font-medium text-blue-600 dark:text-blue-400">{field}</span>
@@ -129,11 +119,11 @@ function VisualRuleSummary({ rule }: { rule: FilterRule }) {
             </span>
           );
         })}
-        <span className="text-[10px] text-muted-foreground/60 italic">({matchLabel})</span>
+        <span className="text-xs text-muted-foreground/60 italic">({matchLabel})</span>
       </div>
 
       <div className="flex items-baseline gap-1.5 flex-wrap">
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-emerald-500 dark:text-emerald-400">
+        <span className="text-xs font-semibold uppercase tracking-wider text-emerald-500 dark:text-emerald-400">
           {t("then")}
         </span>
         {rule.actions.map((a, i) => {
@@ -414,7 +404,7 @@ export function FilterSettings() {
     return (
       <SettingsSection title={t("title")} description={t("description")}>
         <div className="flex items-center gap-2 py-4 text-sm text-muted-foreground">
-          <Loader2 className="w-4 h-4 animate-spin" />
+          <Loader size="sm" color="current" />
           {t("loading")}
         </div>
       </SettingsSection>
@@ -439,41 +429,49 @@ export function FilterSettings() {
             <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
             <div className="flex-1">
               <p>{t("opaque_warning")}</p>
-              <div className="flex gap-3 mt-2">
-                <button
+              <div className="flex gap-3 mt-2 flex-wrap items-center">
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="sm"
                   onClick={() => setShowSieveEditor(true)}
-                  className="text-primary hover:underline font-medium"
+                  className="text-primary h-auto px-0 hover:bg-transparent"
                 >
                   {t("open_sieve_editor")}
-                </button>
+                </Button>
                 {showResetConfirm ? (
-                  <span className="flex items-center gap-2">
+                  <span className="flex items-center gap-2 flex-wrap">
                     <span className="text-red-600 dark:text-red-400">{t("reset_warning")}</span>
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
+                      size="sm"
                       onClick={handleResetToVisual}
-                      className="text-red-600 dark:text-red-400 hover:underline font-medium"
+                      className="text-red-600 dark:text-red-400 h-auto px-0 hover:bg-transparent"
                     >
                       {t("confirm_reset")}
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       type="button"
+                      variant="ghost"
+                      size="sm"
                       onClick={() => setShowResetConfirm(false)}
-                      className="text-muted-foreground hover:underline"
+                      className="h-auto px-0 hover:bg-transparent"
                     >
                       {t("cancel")}
-                    </button>
+                    </Button>
                   </span>
                 ) : (
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
+                    size="sm"
                     onClick={handleResetToVisual}
-                    className="text-red-600 dark:text-red-400 hover:underline font-medium flex items-center gap-1"
+                    className="text-red-600 dark:text-red-400 h-auto px-0 hover:bg-transparent"
                   >
-                    <RotateCcw className="w-3.5 h-3.5" />
+                    <RotateCcw className="w-3.5 h-3.5 me-1" />
                     {t("reset_to_visual")}
-                  </button>
+                  </Button>
                 )}
               </div>
             </div>
@@ -481,13 +479,14 @@ export function FilterSettings() {
         )}
 
         {!isOpaque && vacationEnabled && (
-          <button
+          <Button
             type="button"
+            variant="ghost"
             onClick={() => {
               try { localStorage.setItem('settings-active-tab', 'vacation'); } catch { /* ignore */ }
               window.dispatchEvent(new CustomEvent('settings-tab-change', { detail: 'vacation' }));
             }}
-            className="flex items-center gap-3 w-full p-3 rounded-md border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors text-start"
+            className="flex items-center gap-3 w-full h-auto p-3 rounded-md border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30 text-start justify-start"
           >
             <div className="flex items-center justify-center w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/40">
               <PalmtreeIcon className="w-4 h-4 text-green-600 dark:text-green-400" />
@@ -503,7 +502,7 @@ export function FilterSettings() {
             <span className="text-xs text-green-600 dark:text-green-400 font-medium">
               {t("vacation_configure")} &rarr;
             </span>
-          </button>
+          </Button>
         )}
 
         {!isOpaque && rules.length === 0 && !vacationEnabled && (
@@ -541,7 +540,7 @@ export function FilterSettings() {
                         <p className="text-sm font-medium text-foreground truncate">
                           {rule.name}
                         </p>
-                        <span className="inline-flex items-baseline px-1.5 py-px rounded-sm bg-muted/60 text-muted-foreground text-[10px]">
+                        <span className="inline-flex items-baseline px-1.5 py-px rounded-sm bg-muted/60 text-muted-foreground text-xs">
                           {label}
                         </span>
                       </div>
@@ -634,14 +633,16 @@ export function FilterSettings() {
                       </Button>
                     </div>
                   ) : (
-                    <button
+                    <Button
                       type="button"
+                      size="icon"
+                      variant="ghost"
                       onClick={() => setDeleteConfirmId(rule.id)}
-                      className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-red-600 dark:hover:text-red-400 transition-colors"
                       aria-label={t("delete_rule")}
+                      className="hover:text-red-600 dark:hover:text-red-400"
                     >
                       <X className="w-4 h-4" />
-                    </button>
+                    </Button>
                   )}
                 </div>
               );
@@ -678,7 +679,7 @@ export function FilterSettings() {
         <div className="flex items-center gap-3">
           {isSaving && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <Loader size="sm" color="current" />
               {t("saving")}
             </div>
           )}

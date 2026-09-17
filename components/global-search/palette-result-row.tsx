@@ -3,6 +3,7 @@
 import { CalendarDays, FileText, Folder, Repeat } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Avatar } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import { parseSearchSnippet, type SnippetSegment } from "@/lib/search-snippet";
 import type { GlobalSearchHit } from "@/lib/global-search/types";
 import { getContactDisplayName, getContactPhotoUri, getContactPrimaryEmail } from "@/stores/contact-store";
@@ -75,15 +76,15 @@ export function PaletteResultRow({ hit, onOpen, className }: PaletteResultRowPro
   const subtitle = [hit.accountLabel, hit.subtitle].filter(Boolean).join(' · ');
   const snippet = hit.kind === 'mail' && hit.snippet?.preview ? hit.snippet.preview : null;
   return (
-    <button
-      type="button"
+    <Button
+      variant="ghost"
       role="option"
       aria-selected={false}
       onClick={() => onOpen(hit)}
       data-hit-kind={hit.kind}
       className={cn(
-        "w-full flex items-start gap-3 px-3 py-2 text-left rounded-md transition-colors duration-150",
-        "hover:bg-muted/50 focus:bg-muted focus:outline-none",
+        "h-auto min-h-0 w-full items-start justify-start gap-3 rounded-md px-3 py-2 text-start font-normal transition-colors duration-150",
+        "hover:bg-muted/50 focus:bg-muted",
         className,
       )}
     >
@@ -107,6 +108,6 @@ export function PaletteResultRow({ hit, onOpen, className }: PaletteResultRowPro
           <span className="block truncate text-xs text-muted-foreground mt-0.5"><Snippet value={snippet} /></span>
         )}
       </span>
-    </button>
+    </Button>
   );
 }

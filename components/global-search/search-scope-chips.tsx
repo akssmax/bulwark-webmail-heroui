@@ -2,7 +2,8 @@
 
 import { useTranslations } from "next-intl";
 import type { SearchScope } from "@/lib/global-search/query-parser";
-import { cn } from "@/lib/utils";
+import { SegmentedTabs } from "@/components/ui/segmented-tabs";
+import { AppSelect } from "@/components/ui/select";
 
 export interface ScopeAccountOption {
   localAccountId: string;
@@ -27,37 +28,29 @@ export function SearchScopeChips({ scope, onScopeChange, accounts, accountId, on
   const t = useTranslations('global_search');
   return (
     <div className="flex items-center gap-1.5 flex-wrap">
-      <div role="radiogroup" aria-label={t('scope_label')} className="flex items-center gap-1">
-        {SCOPES.map((option) => (
-          <button
-            key={option}
-            type="button"
-            role="radio"
-            aria-checked={scope === option}
-            onClick={() => onScopeChange(option)}
-            className={cn(
-              "px-2 py-0.5 rounded-full text-xs border transition-colors cursor-pointer",
-              scope === option
-                ? "bg-primary/10 border-primary/40 text-primary font-medium"
-                : "border-border text-muted-foreground hover:bg-muted hover:text-foreground",
-            )}
-          >
-            {t(`scope_${option}`)}
-          </button>
-        ))}
-      </div>
+      <SegmentedTabs
+        value={scope}
+        onChange={(value) => onScopeChange(value as SearchScope)}
+        options={SCOPES.map((option) => ({
+          value: option,
+          label: t(`scope_${option}`),
+        }))}
+        aria-label={t('scope_label')}
+      />
       {accounts.length > 1 && (
-        <select
-          aria-label={t('account_label')}
+        <AppSelect
           value={accountId ?? ''}
-          onChange={(e) => onAccountChange(e.target.value || null)}
-          className="ml-auto max-w-[14rem] truncate text-xs bg-transparent border border-border rounded-full px-2 py-0.5 text-muted-foreground cursor-pointer focus:outline-none focus:border-primary/40"
-        >
-          <option value="">{t('all_accounts')}</option>
-          {accounts.map((account) => (
-            <option key={account.localAccountId} value={account.localAccountId}>{account.label}</option>
-          ))}
-        </select>
+          onChange={(value) => onAccountChange(value || null)}
+          options={[
+            { value: '', label: t('all_accounts') },
+            ...accounts.map((account) => ({
+              value: account.localAccountId,
+              label: account.label,
+            })),
+          ]}
+          aria-label={t('account_label')}
+          className="ml-auto max-w-[14rem] text-xs"
+        />
       )}
     </div>
   );

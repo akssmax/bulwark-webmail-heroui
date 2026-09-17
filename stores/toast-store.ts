@@ -1,44 +1,34 @@
-import { create } from "zustand";
-import { Toast, ToastAction } from "@/components/ui/toast";
-import { generateUUID } from "@/lib/utils";
+import { toastQueue } from "@heroui/react";
+import type { AppToastContent, AppToastInput, ToastAction, ToastType } from "@/components/ui/toast";
 
-interface ToastStore {
-  toasts: Toast[];
-  addToast: (toast: Omit<Toast, "id">) => void;
-  removeToast: (id: string) => void;
-  clearToasts: () => void;
+function mapType(type: ToastType): AppToastContent["variant"] {
+  switch (type) {
+    case "success":
+      return "success";
+    case "error":
+      return "danger";
+    case "warning":
+      return "warning";
+    case "info":
+      return "accent";
+  }
 }
 
-export const useToastStore = create<ToastStore>((set) => ({
-  toasts: [],
+export function addToast(input: AppToastInput): string {
+  const content: AppToastContent = {
+    title: input.title,
+    description: input.message,
+    variant: mapType(input.type),
+    appAction: input.action,
+    appSecondaryAction: input.secondaryAction,
+    onClick: input.onClick,
+    ...(input.icon !== undefined ? { indicator: input.icon } : {}),
+  };
 
-  addToast: (toast) => {
-    // FTM fix (2026-08-22): crypto.randomUUID() only exists in SECURE contexts
-    // (https/localhost). On a plain-http LAN origin it is undefined, so EVERY
-    // toast crashed -- and took the caller's post-success path down with it
-    // (calendar save: the success toast threw before the dialog-close ran).
-    const id = generateUUID();
-    const newToast: Toast = {
-      ...toast,
-      id,
-      duration: toast.duration ?? 5000,
-    };
-
-    set((state) => ({
-      toasts: [...state.toasts, newToast],
-    }));
-  },
-
-  removeToast: (id) => {
-    set((state) => ({
-      toasts: state.toasts.filter((toast) => toast.id !== id),
-    }));
-  },
-
-  clearToasts: () => {
-    set({ toasts: [] });
-  },
-}));
+  return toastQueue.add(content, {
+    timeout: input.duration ?? 5000,
+  });
+}
 
 interface ToastOptions {
   message?: string;
@@ -47,9 +37,14 @@ interface ToastOptions {
   duration?: number;
 }
 
-function showToast(type: Toast["type"], title: string, options?: string | ToastOptions, defaultDuration?: number): void {
+function showToast(
+  type: ToastType,
+  title: string,
+  options?: string | ToastOptions,
+  defaultDuration?: number,
+): void {
   const opts = typeof options === "string" ? { message: options } : options;
-  useToastStore.getState().addToast({
+  addToast({
     type,
     title,
     message: opts?.message,
@@ -65,3 +60,5 @@ export const toast = {
   info: (title: string, options?: string | ToastOptions) => showToast("info", title, options),
   warning: (title: string, options?: string | ToastOptions) => showToast("warning", title, options),
 };
+
+export type { ToastAction, ToastType };

@@ -1,8 +1,9 @@
 "use client";
+import { Loader } from "@/components/ui/loader";
 
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Loader2, ExternalLink } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 // Real inline PDF preview for mobile browsers. Android Chrome / iOS WebKit have
@@ -209,7 +210,7 @@ export function PdfMobileViewer({ url, blob }: { url: string; blob: Blob }) {
     >
       {status === "loading" && (
         <div className="flex justify-center py-10">
-          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+          <Loader size="md" color="current" />
         </div>
       )}
       {status === "error" && (

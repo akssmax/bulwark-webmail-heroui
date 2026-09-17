@@ -240,14 +240,15 @@ export function AccountSettings() {
             {sharedAccounts.map((acc) => {
               const editable = firstScopedTab(acc.capabilities) !== null;
               return (
-                <button
+                <Button
                   key={acc.id}
                   type="button"
+                  variant="outline"
                   onClick={() => handleManageShared(acc)}
                   disabled={!editable}
                   className={cn(
-                    'flex items-center gap-3 w-full p-3 border border-border rounded-lg text-start transition-colors',
-                    editable ? 'hover:bg-muted/50 cursor-pointer' : 'opacity-60 cursor-not-allowed',
+                    'flex items-center gap-3 w-full p-3 h-auto min-h-0 justify-start font-normal',
+                    editable ? 'hover:bg-muted/50' : 'opacity-60',
                   )}
                 >
                   <Avatar
@@ -263,7 +264,7 @@ export function AccountSettings() {
                     </p>
                   </div>
                   <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                </button>
+                </Button>
               );
             })}
           </div>
@@ -355,14 +356,12 @@ function AccountRow({
         )}
       </div>
 
-      <button
+      <Button
         type="button"
+        variant="ghost"
         onClick={onSwitch}
         disabled={isActive}
-        className={cn(
-          'min-w-0 flex-1 text-start',
-          !isActive && 'cursor-pointer'
-        )}
+        className="min-w-0 flex-1 justify-start h-auto min-h-0 px-0 py-0 font-normal"
         title={isActive ? labels.active : labels.switchTo}
       >
         <div className="flex items-center gap-1.5">
@@ -385,48 +384,54 @@ function AccountRow({
               account.isConnected ? 'bg-green-500' : 'bg-muted-foreground/40'
             )} />
           )}
-          <span className="text-[10px] text-muted-foreground truncate">
+          <span className="text-xs text-muted-foreground truncate">
             {hostnameOf(account.serverUrl)}
           </span>
         </div>
-      </button>
+      </Button>
 
       <div className="flex items-center gap-0.5 flex-shrink-0">
         {!account.isDefault && (
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon"
             onClick={onSetDefault}
-            className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-amber-500 transition-colors"
+            className="h-7 w-7 text-muted-foreground hover:text-amber-500"
             title={labels.setDefault}
             aria-label={labels.setDefault}
           >
             <Star className="w-3.5 h-3.5" />
-          </button>
+          </Button>
         )}
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          size="icon"
           onClick={onMoveUp}
           disabled={isFirst}
-          className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed"
+          className="h-7 w-7"
           title={labels.moveUp}
           aria-label={labels.moveUp}
         >
           <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M4 10l4-4 4 4" />
           </svg>
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
+          variant="ghost"
+          size="icon"
           onClick={onMoveDown}
           disabled={isLast}
-          className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed"
+          className="h-7 w-7"
           title={labels.moveDown}
           aria-label={labels.moveDown}
         >
           <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M4 6l4 4 4-4" />
           </svg>
-        </button>
+        </Button>
       </div>
     </div>
   );

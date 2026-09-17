@@ -1,4 +1,5 @@
 "use client";
+import { Loader } from "@/components/ui/loader";
 
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
@@ -7,7 +8,7 @@ import { SettingsSection, SettingItem, ToggleSwitch, Select } from './settings-s
 import { playNotificationSound, NOTIFICATION_SOUNDS } from '@/lib/notification-sound';
 import type { NotificationSoundChoice } from '@/lib/notification-sound';
 import { Button } from '@/components/ui/button';
-import { Loader2, RefreshCw, Volume2, XCircle } from 'lucide-react';
+import { RefreshCw, Volume2, XCircle } from "lucide-react";
 import { usePolicyStore } from '@/stores/policy-store';
 import { useAuthStore } from '@/stores/auth-store';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
@@ -292,7 +293,7 @@ export function NotificationSettings() {
                     onClick={() => void handleRevokeDevice(device)}
                     disabled={revokingId !== null}
                   >
-                    {revokingId === device.id && <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />}
+                    {revokingId === device.id && <Loader size="sm" color="current" className="mr-1.5" />}
                     {t('push.revoke')}
                   </Button>
                 </li>

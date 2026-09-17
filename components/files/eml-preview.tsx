@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { Paperclip, Download } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { sanitizeEmailHtmlForIframe } from "@/lib/email-sanitization";
 import { getEffectiveTimeZone } from "@/lib/timezone";
 
@@ -95,17 +96,18 @@ export function EmlPreview({ message }: { message: ParsedEml }) {
           <div className="text-xs font-medium text-muted-foreground mb-2">{t("attachments")}</div>
           <div className="flex flex-wrap gap-2">
             {message.attachments.map((att, i) => (
-              <button
+              <Button
                 key={i}
-                type="button"
+                variant="secondary"
+                size="sm"
                 onClick={() => downloadAttachment(att)}
                 title={t("download")}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm bg-muted text-foreground hover:bg-muted/70"
+                className="h-auto gap-2 px-3 py-1.5"
               >
                 <Paperclip className="w-3 h-3 flex-shrink-0" />
                 <span className="max-w-[200px] truncate">{att.filename || "attachment"}</span>
                 <Download className="w-3 h-3 flex-shrink-0 text-muted-foreground" />
-              </button>
+              </Button>
             ))}
           </div>
         </div>

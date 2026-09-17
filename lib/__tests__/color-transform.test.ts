@@ -6,6 +6,8 @@ import {
   transformColorForDarkMode,
   transformBgColorForDarkMode,
   transformInlineStyles,
+  toOklchCss,
+  rewriteColorCustomProperties,
 } from '../color-transform';
 
 describe('parseColor', () => {
@@ -79,6 +81,17 @@ describe('parseColor', () => {
 
     it('should handle transparent', () => {
       expect(parseColor('transparent')).toEqual({ r: 0, g: 0, b: 0, a: 0 });
+    });
+  });
+
+  describe('oklch colors', () => {
+    it('parses achromatic oklch', () => {
+      expect(parseColor('oklch(1 0 0)')).toEqual({ r: 255, g: 255, b: 255 });
+      expect(parseColor('oklch(0 0 0)')).toEqual({ r: 0, g: 0, b: 0 });
+    });
+
+    it('parses oklch with alpha', () => {
+      expect(parseColor('oklch(0.5 0 0 / 0.3)')).toMatchObject({ a: 0.3 });
     });
   });
 
@@ -401,5 +414,37 @@ describe('transformInlineStyles', () => {
       const contrast = (Math.max(textLum, bgLum) + 0.05) / (Math.min(textLum, bgLum) + 0.05);
       expect(contrast).toBeGreaterThan(4.5);
     }
+  });
+});
+
+describe('toOklchCss', () => {
+  it('converts hex to oklch', () => {
+    expect(toOklchCss('#ffffff')).toBe('oklch(1 0 0)');
+    expect(toOklchCss('#000000')).toBe('oklch(0 0 0)');
+    expect(toOklchCss('#3b82f6')).toMatch(/^oklch\(/);
+  });
+
+  it('preserves alpha', () => {
+    expect(toOklchCss('rgba(128, 128, 128, 0.3)')).toMatch(/\/ 0\.3\)$/);
+  });
+
+  it('leaves existing oklch values unchanged', () => {
+    expect(toOklchCss('oklch(0.623 0.188 259.81)')).toBe('oklch(0.623 0.188 259.81)');
+  });
+
+  it('round-trips sRGB within a channel', () => {
+    const rgb = parseColor(toOklchCss('#3b82f6'));
+    expect(rgb).not.toBeNull();
+    expect(rgb!.r).toBeCloseTo(59, 0);
+    expect(rgb!.g).toBeCloseTo(130, 0);
+    expect(rgb!.b).toBeCloseTo(246, 0);
+  });
+});
+
+describe('rewriteColorCustomProperties', () => {
+  it('converts --color-* hex tokens to oklch', () => {
+    const css = rewriteColorCustomProperties(':root { --color-primary: #3b82f6; --radius-md: 8px; }');
+    expect(css).toContain('--color-primary: oklch(');
+    expect(css).toContain('--radius-md: 8px');
   });
 });

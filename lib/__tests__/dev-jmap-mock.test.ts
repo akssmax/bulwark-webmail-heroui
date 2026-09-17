@@ -274,6 +274,45 @@ describe('dev-jmap mock server', () => {
     });
   });
 
+  describe('POST /api - CalendarEventNotification', () => {
+    it('should query, get, and destroy calendar event notifications', async () => {
+      const queryReq = makeRequest('http://localhost:3000/api/dev-jmap/api', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', host: 'localhost:3000' },
+        body: JSON.stringify({
+          methodCalls: [
+            ['CalendarEventNotification/query', { accountId: 'dev-account-001', sort: [{ property: 'created', isAscending: true }] }, 'q0'],
+            ['CalendarEventNotification/get', {
+              accountId: 'dev-account-001',
+              '#ids': { resultOf: 'q0', name: 'CalendarEventNotification/query', path: '/ids' },
+              properties: ['id', 'created', 'type', 'changedBy', 'calendarEventId', 'isDraft', 'event'],
+            }, 'g0'],
+          ],
+        }),
+      });
+      const queryRes = await POST(queryReq, { params: Promise.resolve({ path: ['api'] }) });
+      const queryData = await queryRes.json();
+      expect(queryData.methodResponses[0][0]).toBe('CalendarEventNotification/query');
+      expect(queryData.methodResponses[0][1].ids.length).toBeGreaterThan(0);
+      expect(queryData.methodResponses[1][0]).toBe('CalendarEventNotification/get');
+      const notification = queryData.methodResponses[1][1].list[0];
+      expect(notification.type).toBe('created');
+      expect(notification.event?.title).toBe('Pasta course');
+
+      const destroyReq = makeRequest('http://localhost:3000/api/dev-jmap/api', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', host: 'localhost:3000' },
+        body: JSON.stringify({
+          methodCalls: [['CalendarEventNotification/set', { accountId: 'dev-account-001', destroy: [notification.id] }, 'd0']],
+        }),
+      });
+      const destroyRes = await POST(destroyReq, { params: Promise.resolve({ path: ['api'] }) });
+      const destroyData = await destroyRes.json();
+      expect(destroyData.methodResponses[0][0]).toBe('CalendarEventNotification/set');
+      expect(destroyData.methodResponses[0][1].destroyed).toContain(notification.id);
+    });
+  });
+
   describe('POST /api - back-references', () => {
     it('should resolve #ids from Email/query result', async () => {
       const req = makeRequest('http://localhost:3000/api/dev-jmap/api', {

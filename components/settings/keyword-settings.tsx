@@ -1,4 +1,5 @@
 "use client";
+import { Loader } from "@/components/ui/loader";
 
 import React, { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
@@ -12,8 +13,10 @@ import {
 } from "@/stores/settings-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { useEmailStore } from "@/stores/email-store";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { SettingsSection, SettingItem, ToggleSwitch, Select } from "./settings-section";
-import { Plus, Pencil, Trash2, GripVertical, Check, X, Loader2, Search } from "lucide-react";
+import { Plus, Pencil, Trash2, GripVertical, Check, X, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { KEYWORD_PREFIX } from "@/lib/thread-utils";
 import { findUnrecognizedKeywords, type UnrecognizedKeyword } from "@/lib/keyword-discovery";
@@ -44,12 +47,14 @@ function KeywordColorPicker({
       {KEYWORD_PALETTE_ROWS.map((row, index) => (
         <div key={index} className="flex flex-wrap gap-1.5">
           {row.map((colorKey) => (
-            <button
+            <Button
               key={colorKey}
               type="button"
+              size="icon"
+              variant="ghost"
               onClick={() => onChange(colorKey)}
               className={cn(
-                "w-6 h-6 rounded-full transition-transform hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                "w-6 h-6 min-w-6 rounded-full p-0 transition-transform hover:scale-110",
                 KEYWORD_PALETTE[colorKey].dot,
                 value === colorKey && "ring-2 ring-offset-2 ring-offset-background ring-foreground"
               )}
@@ -133,23 +138,26 @@ function KeywordRow({
         className="text-xs py-1"
       />
       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-        <button
+        <Button
           type="button"
+          size="icon"
+          variant="ghost"
           onClick={onEdit}
-          className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
           title={t("edit")}
         >
           <Pencil className="w-3.5 h-3.5" />
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
+          size="icon"
+          variant="ghost"
           onClick={onDelete}
           disabled={hasChildren}
-          className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-muted-foreground"
           title={hasChildren ? t("has_children_delete") : t("delete")}
+          className="hover:bg-destructive/10 hover:text-destructive disabled:hover:bg-transparent disabled:hover:text-muted-foreground"
         >
           <Trash2 className="w-3.5 h-3.5" />
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -229,12 +237,11 @@ function KeywordEditForm({
         <label className="text-xs font-medium text-muted-foreground mb-1 block">
           {t("label_field")}
         </label>
-        <input
+        <Input
           type="text"
           value={label}
           onChange={(e) => setLabel(e.target.value)}
           disabled={isLocked}
-          className="w-full px-2.5 py-1.5 text-sm rounded-md border border-border bg-background focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-60"
           placeholder={t("label_placeholder")}
           autoFocus
           maxLength={30}
@@ -264,23 +271,24 @@ function KeywordEditForm({
         <KeywordColorPicker value={color} onChange={setColor} />
       </div>
       <div className="flex items-center gap-2 justify-end">
-        <button
+        <Button
           type="button"
+          size="sm"
+          variant="outline"
           onClick={onCancel}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md border border-border hover:bg-muted transition-colors"
         >
-          <X className="w-3.5 h-3.5" />
+          <X className="w-3.5 h-3.5 me-1.5" />
           {t("cancel")}
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
+          size="sm"
           onClick={handleSave}
           disabled={!isValid}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
         >
-          <Check className="w-3.5 h-3.5" />
+          <Check className="w-3.5 h-3.5 me-1.5" />
           {isEditing ? t("save") : t("add")}
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -311,35 +319,38 @@ function UnrecognizedKeywordRow({
   return (
     <div className="space-y-2 py-2.5 px-3 rounded-md border border-border bg-background">
       <div className="flex items-center gap-2">
-        <button
+        <Button
           type="button"
+          size="icon"
+          variant="ghost"
           onClick={() => setPickingColor((open) => !open)}
           className={cn(
-            "w-5 h-5 shrink-0 rounded-full transition-transform hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+            "w-5 h-5 min-w-5 shrink-0 rounded-full p-0 transition-transform hover:scale-110",
             KEYWORD_PALETTE[draft.color]?.dot ?? KEYWORD_PALETTE.gray.dot,
           )}
           aria-label={t("color_field")}
           aria-expanded={pickingColor}
         />
-        <input
+        <Input
           type="text"
           value={draft.label}
           onChange={(e) => onChange({ ...draft, label: e.target.value })}
-          className="min-w-0 flex-1 px-2.5 py-1.5 text-sm rounded-md border border-border bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          className="min-w-0 flex-1"
           placeholder={t("label_placeholder")}
           maxLength={30}
           aria-label={t("label_field")}
           onKeyDown={(e) => e.key === "Enter" && canAdd && onAdd()}
         />
-        <button
+        <Button
           type="button"
+          size="sm"
           onClick={onAdd}
           disabled={!canAdd}
-          className="flex shrink-0 items-center gap-1.5 px-3 py-1.5 text-xs rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+          className="shrink-0"
         >
-          <Plus className="w-3.5 h-3.5" />
+          <Plus className="w-3.5 h-3.5 me-1.5" />
           {t("add")}
-        </button>
+        </Button>
       </div>
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
         <span className="min-w-0 truncate font-mono" title={entry.keyword}>
@@ -447,43 +458,45 @@ function UnrecognizedKeywords() {
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        <button
+        <Button
           type="button"
+          size="sm"
+          variant="outline"
           onClick={handleScan}
           disabled={isScanning || !client}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md border border-border hover:bg-muted transition-colors disabled:opacity-50"
         >
-          {isScanning ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Search className="w-3.5 h-3.5" />}
+          {isScanning ? <Loader size="sm" color="current" className="me-1.5" /> : <Search className="w-3.5 h-3.5 me-1.5" />}
           {scan && !isScanning ? t("unrecognized.rescan") : t("unrecognized.scan")}
-        </button>
+        </Button>
         {isScanning && (
           <span className="text-xs text-muted-foreground" role="status">
             {t("unrecognized.scanning", { scanned: progress.scanned, total: progress.total })}
           </span>
         )}
         {isScanning && (
-          <button
+          <Button
             type="button"
+            size="sm"
+            variant="outline"
             onClick={() => {
               abortRef.current?.abort();
               setIsScanning(false);
             }}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md border border-border hover:bg-muted transition-colors"
           >
-            <X className="w-3.5 h-3.5" />
+            <X className="w-3.5 h-3.5 me-1.5" />
             {t("cancel")}
-          </button>
+          </Button>
         )}
         {pending.length > 1 && !isScanning && (
-          <button
+          <Button
             type="button"
+            size="sm"
             onClick={() => handleAdd(addable)}
             disabled={addable.length === 0}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
           >
-            <Plus className="w-3.5 h-3.5" />
+            <Plus className="w-3.5 h-3.5 me-1.5" />
             {t("unrecognized.add_all", { count: addable.length })}
-          </button>
+          </Button>
         )}
       </div>
 
@@ -618,7 +631,7 @@ export function KeywordSettings() {
       <div className="space-y-2">
         {isMigrating && (
           <div className="flex items-center gap-2 p-2 text-xs text-muted-foreground bg-accent/50 rounded-md">
-            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            <Loader size="sm" color="current" />
             {t("migrating")}
           </div>
         )}
@@ -665,17 +678,19 @@ export function KeywordSettings() {
           />
         ) : (
           <div className="flex items-center gap-2 pt-1">
-            <button
+            <Button
               type="button"
+              size="sm"
+              variant="outline"
               onClick={() => {
                 setIsAdding(true);
                 setEditingId(null);
               }}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md border border-dashed border-border hover:border-primary hover:bg-accent transition-colors text-muted-foreground hover:text-foreground"
+              className="border-dashed"
             >
-              <Plus className="w-3.5 h-3.5" />
+              <Plus className="w-3.5 h-3.5 me-1.5" />
               {t("add_keyword")}
-            </button>
+            </Button>
           </div>
         )}
       </div>

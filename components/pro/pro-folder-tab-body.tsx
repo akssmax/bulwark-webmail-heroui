@@ -1,8 +1,9 @@
 "use client";
+import { Loader } from "@/components/ui/loader";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Folder, Loader2, Paperclip, RefreshCw, Star } from "lucide-react";
+import { Folder, Paperclip, RefreshCw, Star } from "lucide-react";
 import { cn, formatDate } from "@/lib/utils";
 import { localizeMailboxName } from "@/lib/mailbox-label";
 import { EmailViewer } from "@/components/email/email-viewer";
@@ -14,6 +15,7 @@ import { useProTabStore, type ProFolderTabData } from "@/stores/pro-tab-store";
 import { useDeviceDetection } from "@/hooks/use-media-query";
 import { usePaneId } from "@/hooks/use-pane-context";
 import type { Email, Mailbox } from "@/lib/jmap/types";
+import { Button } from "@/components/ui/button";
 
 interface ProFolderTabBodyProps {
   tabId: string;
@@ -165,20 +167,22 @@ export function ProFolderTabBody({ tabId, data }: ProFolderTabBodyProps) {
         {total > 0 && (
           <span className="text-xs tabular-nums text-muted-foreground">{total}</span>
         )}
-        <button
+        <Button
+          variant="ghost"
+          size="icon"
           onClick={() => void loadPage(0)}
-          className="ms-auto flex h-7 w-7 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          className="ms-auto h-7 w-7"
           title={t('common.refresh')}
           aria-label={t('common.refresh')}
         >
           <RefreshCw className={cn("h-3.5 w-3.5", isLoading && "animate-spin")} />
-        </button>
+        </Button>
       </div>
 
       <div className="flex-1 overflow-y-auto" onScroll={handleScroll}>
         {isLoading && emails.length === 0 ? (
           <div className="flex items-center justify-center py-10">
-            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            <Loader size="md" color="current" />
           </div>
         ) : emails.length === 0 ? (
           <div className="px-4 py-10 text-center text-sm text-muted-foreground">
@@ -243,7 +247,7 @@ export function ProFolderTabBody({ tabId, data }: ProFolderTabBodyProps) {
             })}
             {isLoadingMore && (
               <div className="flex items-center justify-center gap-2 py-3 text-xs text-muted-foreground">
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                <Loader size="sm" color="current" />
                 {tList('loading_more')}
               </div>
             )}

@@ -69,13 +69,13 @@ describe('ContactListItem', () => {
   });
 
   it('does not show checkbox when hasSelection is false', () => {
-    const { container } = render(<ContactListItem contact={contact} {...baseProps} hasSelection={false} />);
-    expect(container.querySelector('button')).not.toBeInTheDocument();
+    render(<ContactListItem contact={contact} {...baseProps} hasSelection={false} />);
+    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
   });
 
   it('shows checkbox when hasSelection is true', () => {
-    const { container } = render(<ContactListItem contact={contact} {...baseProps} hasSelection={true} />);
-    expect(container.querySelector('button')).toBeInTheDocument();
+    render(<ContactListItem contact={contact} {...baseProps} hasSelection={true} />);
+    expect(screen.getByRole('checkbox')).toBeInTheDocument();
   });
 
   it('hides avatar in extra-compact density', () => {

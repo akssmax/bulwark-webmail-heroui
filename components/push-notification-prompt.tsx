@@ -3,7 +3,14 @@
 import { useCallback, useEffect, useLayoutEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { Bell, Loader2, X } from "lucide-react";
+import {
+  Alert,
+  Button,
+  Card,
+  CloseButton,
+} from "@heroui/react";
+import { Loader } from "@/components/ui/loader";
+import { Bell } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
 import { usePolicyStore } from "@/stores/policy-store";
 import { useSettingsStore } from "@/stores/settings-store";
@@ -210,63 +217,63 @@ export function PushNotificationPrompt() {
   if (!showPrompt) return null;
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 bg-white dark:bg-neutral-900 rounded-lg shadow-lg border border-neutral-200 dark:border-neutral-800 p-4 max-w-sm animate-in slide-in-from-bottom-4">
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex items-start gap-3">
-          <Bell className="w-5 h-5 mt-0.5 text-blue-600 dark:text-blue-400 shrink-0" />
-          <div>
-            <h3 className="font-semibold text-sm text-neutral-900 dark:text-white">
-              {tPush("title")}
-            </h3>
-            <p className="text-xs text-neutral-600 dark:text-neutral-400 mt-1">
-              {tPush("description")}
-            </p>
+    <Card className="fixed bottom-4 right-4 z-50 max-w-sm animate-in slide-in-from-bottom-4">
+      <Card.Header className="flex flex-row items-start justify-between gap-2">
+        <div className="flex min-w-0 items-start gap-3">
+          <Bell className="mt-0.5 size-5 shrink-0 text-primary" />
+          <div className="min-w-0">
+            <Card.Title>{tPush("title")}</Card.Title>
+            <Card.Description>{tPush("description")}</Card.Description>
           </div>
         </div>
-        <button
-          type="button"
-          onClick={handleDismiss}
-          disabled={isEnabling}
-          className="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors disabled:opacity-50"
+        <CloseButton
           aria-label={tPush("dismiss_aria")}
-        >
-          <X className="w-4 h-4" />
-        </button>
-      </div>
-      <div className="flex flex-col gap-2">
+          isDisabled={isEnabling}
+          onPress={handleDismiss}
+          className="shrink-0"
+        />
+      </Card.Header>
+      <Card.Content className="flex flex-col gap-2">
         {error ? (
-          <p className="text-xs text-red-600 dark:text-red-400" role="alert">
-            {error}
-          </p>
+          <Alert status="danger">
+            <Alert.Content>
+              <Alert.Description>{error}</Alert.Description>
+            </Alert.Content>
+          </Alert>
         ) : null}
         <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={handleDismiss}
-            disabled={isEnabling}
-            className="flex-1 px-3 py-2 text-sm font-medium text-neutral-700 dark:text-neutral-300 bg-neutral-100 dark:bg-neutral-800 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors disabled:opacity-50"
+          <Button
+            variant="secondary"
+            className="flex-1"
+            isDisabled={isEnabling}
+            onPress={handleDismiss}
           >
             {tInstall("not_now")}
-          </button>
-          <button
-            type="button"
-            onClick={() => void handleEnable()}
-            disabled={isEnabling}
-            className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded hover:bg-blue-700 transition-colors disabled:opacity-50"
+          </Button>
+          <Button
+            variant="primary"
+            className="flex-1"
+            isDisabled={isEnabling}
+            onPress={() => void handleEnable()}
           >
-            {isEnabling ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-            {tPush("enable")}
-          </button>
+            <span className="inline-flex items-center justify-center gap-2">
+              {isEnabling ? <Loader size="sm" color="current" /> : null}
+              {tPush("enable")}
+            </span>
+          </Button>
         </div>
-        <button
-          type="button"
-          onClick={handleDismissForever}
-          disabled={isEnabling}
-          className="w-full text-xs text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors text-center disabled:opacity-50"
+      </Card.Content>
+      <Card.Footer className="pt-0">
+        <Button
+          variant="tertiary"
+          fullWidth
+          size="sm"
+          isDisabled={isEnabling}
+          onPress={handleDismissForever}
         >
           {tInstall("dont_remind")}
-        </button>
-      </div>
-    </div>
+        </Button>
+      </Card.Footer>
+    </Card>
   );
 }

@@ -2,7 +2,8 @@
 
 import { useMemo } from 'react';
 import { useTranslations } from 'next-intl';
-import { Check, Folder } from 'lucide-react';
+import { Folder } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useSettingsStore, type ToolbarPosition, type MailLayout } from '@/stores/settings-store';
 import { SettingsSection, SettingItem, RadioGroup, ToggleSwitch } from './settings-section';
 import { cn } from '@/lib/utils';
@@ -47,7 +48,7 @@ function MailLayoutPreview({
                   <div
                     key={row.subject}
                     className={cn(
-                      'border-b border-border px-2 py-1.5 text-[10px] last:border-b-0',
+                      'border-b border-border px-2 py-1.5 text-xs last:border-b-0',
                       row.selected && 'bg-primary/10'
                     )}
                   >
@@ -71,7 +72,7 @@ function MailLayoutPreview({
                 <div
                   key={row.subject}
                   className={cn(
-                    'border-b border-border px-2 py-1 text-[10px] last:border-b-0',
+                    'border-b border-border px-2 py-1 text-xs last:border-b-0',
                     row.selected && 'bg-primary/10'
                   )}
                 >
@@ -91,7 +92,7 @@ function MailLayoutPreview({
                   <div
                     key={row.subject}
                     className={cn(
-                      'border-b border-border px-2 py-1 text-[10px] last:border-b-0',
+                      'border-b border-border px-2 py-1 text-xs last:border-b-0',
                       row.selected && 'bg-primary/10'
                     )}
                   >
@@ -169,8 +170,8 @@ export function LayoutSettings() {
   return (
     <SettingsSection title={t('title')} description={t('description')}>
       {!isSettingHidden('mailLayout') && (
-      <SettingItem label={tEmail('mail_layout.label')} description={tEmail('mail_layout.description')} locked={isSettingLocked('mailLayout')}>
-        <div className="w-[22rem] max-w-full">
+      <SettingItem label={tEmail('mail_layout.label')} description={tEmail('mail_layout.description')} locked={isSettingLocked('mailLayout')} stacked>
+        <div className="w-full max-w-xl">
           <RadioGroup
             value={mailLayout}
             onChange={(value) => updateSetting('mailLayout', value as MailLayout)}
@@ -326,23 +327,19 @@ export function LayoutSettings() {
               {ownMailboxes.map((mb) => {
                 const checked = allMailSelected.has(mb.id);
                 return (
-                  <button
+                  <div
                     key={mb.id}
-                    type="button"
-                    onClick={() => toggleAllMailFolder(mb.id)}
-                    className="w-full flex items-center gap-2.5 py-1.5 px-2 rounded-md hover:bg-muted/50 text-start"
-                    role="checkbox"
-                    aria-checked={checked}
+                    className="w-full flex items-center gap-2.5 py-1.5 px-2 rounded-md hover:bg-muted/50"
                   >
-                    <span className={cn(
-                      "flex items-center justify-center w-4 h-4 rounded border flex-shrink-0 transition-colors",
-                      checked ? "bg-primary border-primary text-primary-foreground" : "border-border"
-                    )}>
-                      {checked && <Check className="w-3 h-3" />}
-                    </span>
-                    <Folder className={cn("w-4 h-4 flex-shrink-0", mb.role ? "text-primary" : "text-muted-foreground")} />
-                    <span className="text-sm text-foreground truncate">{mb.name}</span>
-                  </button>
+                    <Checkbox
+                      isSelected={checked}
+                      onChange={() => toggleAllMailFolder(mb.id)}
+                      className="min-w-0 flex-1"
+                    >
+                      <Folder className={cn("w-4 h-4 flex-shrink-0", mb.role ? "text-primary" : "text-muted-foreground")} />
+                      <span className="text-sm text-foreground truncate">{mb.name}</span>
+                    </Checkbox>
+                  </div>
                 );
               })}
             </div>

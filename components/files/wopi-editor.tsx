@@ -1,8 +1,10 @@
 "use client";
+import { Loader } from "@/components/ui/loader";
 
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Loader2, X } from "lucide-react";
+import { X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import type { FileResource } from "@/stores/file-store";
 
 interface WopiEditorProps {
@@ -88,13 +90,15 @@ export function WopiEditor({ resource, accountId, onClose }: WopiEditorProps) {
     <div className="fixed inset-0 z-[100] bg-background flex flex-col">
       <div className="flex items-center justify-between gap-3 px-4 h-12 border-b border-border shrink-0">
         <span className="text-sm font-medium text-foreground truncate">{resource.name}</span>
-        <button
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
           onClick={onClose}
           aria-label={t("office_close")}
-          className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
         >
           <X className="w-4 h-4" />
-        </button>
+        </Button>
       </div>
 
       <div className="relative flex-1 min-h-0">
@@ -106,7 +110,7 @@ export function WopiEditor({ resource, accountId, onClose }: WopiEditorProps) {
           <>
             {!frameLoaded && (
               <div className="absolute inset-0 flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <Loader size="sm" color="current" />
                 {t("office_loading")}
               </div>
             )}

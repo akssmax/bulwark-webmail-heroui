@@ -6,6 +6,8 @@ import { format, parseISO, isBefore, isTomorrow } from "date-fns";
 import { displayNow, isDisplayToday } from "@/lib/timezone";
 import { Check, Flag, CalendarDays, ListTodo, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import type { CalendarTask, Calendar } from "@/lib/jmap/types";
 import type { TaskViewFilter } from "@/stores/task-store";
 import { useSettingsStore } from "@/stores/settings-store";
@@ -137,7 +139,7 @@ export function TaskListView({
           <div className="px-4 py-2 border-b border-border">
             <div className="flex items-center gap-2">
               <Plus className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-              <input
+              <Input
                 type="text"
                 value={quickAddTitle}
                 onChange={(e) => setQuickAddTitle(e.target.value)}
@@ -148,7 +150,7 @@ export function TaskListView({
                   }
                 }}
                 placeholder={t("tasks.quick_add_placeholder")}
-                className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+                className="flex-1 border-0 bg-transparent shadow-none focus-visible:ring-0 text-sm h-auto py-0"
               />
             </div>
           </div>
@@ -167,7 +169,7 @@ export function TaskListView({
         <div className="px-4 py-2 border-b border-border">
           <div className="flex items-center gap-2">
             <Plus className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-            <input
+            <Input
               type="text"
               value={quickAddTitle}
               onChange={(e) => setQuickAddTitle(e.target.value)}
@@ -178,7 +180,7 @@ export function TaskListView({
                 }
               }}
               placeholder={t("tasks.quick_add_placeholder")}
-              className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+              className="flex-1 border-0 bg-transparent shadow-none focus-visible:ring-0 text-sm h-auto py-0"
             />
           </div>
         </div>
@@ -200,18 +202,20 @@ export function TaskListView({
               )}
             >
               {/* Checkbox */}
-              <button
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={(e) => handleToggle(e, task)}
                 className={cn(
-                  "mt-0.5 flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors",
+                  "mt-0.5 flex-shrink-0 w-5 h-5 min-w-5 min-h-5 rounded-full border-2 p-0",
                   isCompleted
-                    ? "bg-success border-success text-success-foreground"
+                    ? "bg-success border-success text-success-foreground hover:bg-success"
                     : "border-muted-foreground/40 hover:border-primary"
                 )}
                 aria-label={isCompleted ? t("tasks.mark_incomplete") : t("tasks.mark_complete")}
               >
                 {isCompleted && <Check className="h-3 w-3" />}
-              </button>
+              </Button>
 
               {/* Content */}
               <div className="flex-1 min-w-0">

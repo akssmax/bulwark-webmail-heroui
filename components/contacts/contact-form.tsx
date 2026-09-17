@@ -5,6 +5,9 @@ import { useTranslations } from "next-intl";
 import { X, Plus, ChevronDown, ChevronRight, User, Building, MapPin, Globe, Cake, Heart, Tag, StickyNote, Mail, Phone, Calendar, UserCircle, Book, Camera, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { AppSelect } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Popover } from "@/components/ui/popover";
 import { Avatar } from "@/components/ui/avatar";
 import { normalizeContactPhotoUri } from "@/stores/contact-store";
 import { cn } from "@/lib/utils";
@@ -69,10 +72,11 @@ function FormSection({ icon: Icon, title, children, collapsible, defaultOpen = t
 
   return (
     <section className="py-5">
-      <button
+      <Button
         type="button"
+        variant="ghost"
         className={cn(
-          "flex items-center gap-2 w-full text-start",
+          "flex items-center gap-2 w-full justify-start h-auto min-h-0 px-0 py-0 font-normal",
           collapsible ? "cursor-pointer" : "cursor-default"
         )}
         onClick={() => collapsible && setOpen(!open)}
@@ -83,7 +87,7 @@ function FormSection({ icon: Icon, title, children, collapsible, defaultOpen = t
         {collapsible && (
           open ? <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" /> : <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
         )}
-      </button>
+      </Button>
       {(open || !collapsible) && (
         <div className="space-y-3 mt-3">
           {children}
@@ -125,31 +129,66 @@ async function processImageFile(file: File): Promise<{ uri: string; mediaType: s
   });
 }
 
-function Select({ value, onChange, children, className }: {
-  value: string;
-  onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <select
-      value={value}
-      onChange={onChange}
-      className={cn(
-        "text-sm bg-transparent border border-input rounded-md px-2.5 py-2 text-foreground",
-        "focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1",
-        "hover:border-muted-foreground/50 transition-colors",
-        className
-      )}
-    >
-      {children}
-    </select>
-  );
-}
-
 export function ContactForm({ contact, addressBooks, allKeywords, defaultAddressBookId, prefill, onSave, onCancel }: ContactFormProps) {
   const t = useTranslations("contacts.form");
   const isEditing = !!contact;
+
+  const contextOptions = useMemo(() => [
+    { value: "", label: "-" },
+    { value: "work", label: t("context_work") },
+    { value: "private", label: t("context_private") },
+  ], [t]);
+
+  const phoneFeatureOptions = useMemo(() => [
+    { value: "", label: t("phone_type") },
+    { value: "voice", label: t("phone_voice") },
+    { value: "cell", label: t("phone_cell") },
+    { value: "fax", label: t("phone_fax") },
+    { value: "pager", label: t("phone_pager") },
+    { value: "video", label: t("phone_video") },
+    { value: "text", label: t("phone_text") },
+  ], [t]);
+
+  const anniversaryKindOptions = useMemo(() => [
+    { value: "birth", label: t("anniversary_birth") },
+    { value: "wedding", label: t("anniversary_wedding") },
+    { value: "death", label: t("anniversary_death") },
+    { value: "other", label: t("anniversary_other") },
+  ], [t]);
+
+  const personalInfoKindOptions = useMemo(() => [
+    { value: "expertise", label: t("personal_expertise") },
+    { value: "hobby", label: t("personal_hobby") },
+    { value: "interest", label: t("personal_interest") },
+    { value: "other", label: t("personal_other") },
+  ], [t]);
+
+  const personalInfoLevelOptions = useMemo(() => [
+    { value: "", label: t("level") },
+    { value: "high", label: t("level_high") },
+    { value: "medium", label: t("level_medium") },
+    { value: "low", label: t("level_low") },
+  ], [t]);
+
+  const genderOptions = useMemo(() => [
+    { value: "", label: "-" },
+    { value: "masculine", label: t("gender_male") },
+    { value: "feminine", label: t("gender_female") },
+    { value: "other", label: t("gender_other") },
+    { value: "none", label: t("gender_none") },
+    { value: "unknown", label: t("gender_unknown") },
+  ], [t]);
+
+  const addressBookOptions = useMemo(() => {
+    if (!addressBooks) return [];
+    return [
+      { value: "", label: t("select_address_book") || "Select a directory..." },
+      ...addressBooks.map((book) => ({
+        value: book.id,
+        label: book.accountName ? `${book.name} (${book.accountName})` : book.name,
+      })),
+    ];
+  }, [addressBooks, t]);
 
   // Split a free-form display name into given/surname for prefill.
   const prefillGivenName = (() => {
@@ -620,9 +659,9 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
         <h2 className="text-lg font-semibold">
           {isEditing ? t("edit_title") : t("create_title")}
         </h2>
-        <button type="button" onClick={onCancel} className="p-1.5 rounded-md hover:bg-muted transition-colors duration-150 text-muted-foreground hover:text-foreground">
+        <Button type="button" variant="ghost" size="icon" onClick={onCancel} aria-label={t("cancel")}>
           <X className="w-5 h-5" />
-        </button>
+        </Button>
       </div>
 
       <div className="flex-1 overflow-y-auto">
@@ -634,11 +673,12 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
           )}
 
           <div className="flex items-center gap-4 pb-4">
-            <button
+            <Button
               type="button"
+              variant="ghost"
               onClick={() => photoInputRef.current?.click()}
               disabled={photoUploading}
-              className="relative group rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-60"
+              className="relative group rounded-full h-auto min-h-0 p-0 disabled:opacity-60"
               title={t("upload_photo")}
               aria-label={t("upload_photo")}
             >
@@ -654,7 +694,7 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
                 className="absolute inset-0 rounded-full bg-black/55 text-white flex flex-col items-center justify-center gap-0.5 opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity"
               >
                 <Camera className="w-5 h-5" />
-                <span className="text-[10px] font-medium leading-none">{t("change_photo")}</span>
+                <span className="text-xs font-medium leading-none">{t("change_photo")}</span>
               </span>
               <input
                 ref={photoInputRef}
@@ -663,21 +703,23 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
                 className="hidden"
                 onChange={handlePhotoSelect}
               />
-            </button>
+            </Button>
             <div className="flex flex-col gap-1 min-w-0 flex-1">
               <p className="text-xs text-muted-foreground">{t("photo_hint")}</p>
               {photoError && (
                 <p className="text-xs text-red-600 dark:text-red-400">{photoError}</p>
               )}
               {photoUri && (
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="sm"
                   onClick={handlePhotoRemove}
-                  className="inline-flex items-center gap-1 self-start text-xs text-muted-foreground hover:text-destructive transition-colors"
+                  className="inline-flex items-center gap-1 self-start h-auto px-0 py-0 text-xs text-muted-foreground hover:text-destructive"
                 >
                   <Trash2 className="w-3 h-3" />
                   {t("remove_photo")}
-                </button>
+                </Button>
               )}
             </div>
           </div>
@@ -686,18 +728,12 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
 
           {addressBooks && addressBooks.length > 1 && (
             <FormSection icon={Book} title={t("section_address_book") || "Directory"}>
-              <select
+              <AppSelect
                 value={selectedBookId}
-                onChange={(e) => setSelectedBookId(e.target.value)}
-                className="w-full px-3 py-2 rounded-md border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
-              >
-                <option value="">{t("select_address_book") || "Select a directory..."}</option>
-                {addressBooks.map((book) => (
-                  <option key={book.id} value={book.id}>
-                    {book.accountName ? `${book.name} (${book.accountName})` : book.name}
-                  </option>
-                ))}
-              </select>
+                onChange={setSelectedBookId}
+                options={addressBookOptions}
+                aria-label={t("section_address_book") || "Directory"}
+              />
             </FormSection>
           )}
 
@@ -709,22 +745,22 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
                   { org: false, label: t("type_person"), icon: User },
                   { org: true, label: t("type_organization"), icon: Building },
                 ].map(({ org, label, icon: Icon }) => (
-                  <button
+                  <Button
                     key={label}
                     type="button"
                     role="radio"
                     aria-checked={isOrg === org}
+                    variant={isOrg === org ? "default" : "ghost"}
+                    size="sm"
                     onClick={() => setIsOrg(org)}
                     className={cn(
-                      "flex items-center gap-1.5 px-2.5 py-1 text-xs rounded transition-colors",
-                      isOrg === org
-                        ? "bg-primary text-primary-foreground"
-                        : "text-muted-foreground hover:text-foreground"
+                      "h-auto px-2.5 py-1 text-xs rounded",
+                      isOrg !== org && "text-muted-foreground hover:text-foreground"
                     )}
                   >
                     <Icon className="w-3.5 h-3.5" />
                     {label}
-                  </button>
+                  </Button>
                 ))}
               </div>
             </div>
@@ -801,18 +837,16 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
                       placeholder={t("email_placeholder")}
                       className={cn("flex-1", emailErrors[i] && "border-red-500 focus:ring-red-500")}
                     />
-                    <Select
+                    <AppSelect
                       value={entry.context}
-                      onChange={(e) => {
+                      onChange={(value) => {
                         const next = [...emails];
-                        next[i] = { ...next[i], context: e.target.value as EmailEntry["context"] };
+                        next[i] = { ...next[i], context: value as EmailEntry["context"] };
                         setEmails(next);
                       }}
-                    >
-                      <option value="">-</option>
-                      <option value="work">{t("context_work")}</option>
-                      <option value="private">{t("context_private")}</option>
-                    </Select>
+                      options={contextOptions}
+                      className="w-auto min-w-[5.5rem]"
+                    />
                     {emails.length > 1 && (
                       <Button type="button" variant="ghost" size="icon" onClick={() => setEmails(emails.filter((_, j) => j !== i))} className="h-8 w-8 shrink-0">
                         <X className="w-3 h-3" />
@@ -848,35 +882,26 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
                     placeholder={t("phone_placeholder")}
                     className="flex-1"
                   />
-                  <Select
+                  <AppSelect
                     value={entry.feature}
-                    onChange={(e) => {
+                    onChange={(value) => {
                       const next = [...phones];
-                      next[i] = { ...next[i], feature: e.target.value as PhoneEntry["feature"] };
+                      next[i] = { ...next[i], feature: value as PhoneEntry["feature"] };
                       setPhones(next);
                     }}
+                    options={phoneFeatureOptions}
                     className="w-[5.5rem]"
-                  >
-                    <option value="">{t("phone_type")}</option>
-                    <option value="voice">{t("phone_voice")}</option>
-                    <option value="cell">{t("phone_cell")}</option>
-                    <option value="fax">{t("phone_fax")}</option>
-                    <option value="pager">{t("phone_pager")}</option>
-                    <option value="video">{t("phone_video")}</option>
-                    <option value="text">{t("phone_text")}</option>
-                  </Select>
-                  <Select
+                  />
+                  <AppSelect
                     value={entry.context}
-                    onChange={(e) => {
+                    onChange={(value) => {
                       const next = [...phones];
-                      next[i] = { ...next[i], context: e.target.value as PhoneEntry["context"] };
+                      next[i] = { ...next[i], context: value as PhoneEntry["context"] };
                       setPhones(next);
                     }}
-                  >
-                    <option value="">-</option>
-                    <option value="work">{t("context_work")}</option>
-                    <option value="private">{t("context_private")}</option>
-                  </Select>
+                    options={contextOptions}
+                    className="w-auto min-w-[5.5rem]"
+                  />
                   <Button type="button" variant="ghost" size="icon" onClick={() => setPhones(phones.filter((_, j) => j !== i))} className="h-8 w-8 shrink-0">
                     <X className="w-3 h-3" />
                   </Button>
@@ -930,14 +955,11 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
                   <div className="grid grid-cols-3 gap-2">
                     <Input value={addr.postcode} onChange={(e) => { const n = [...addresses]; n[i] = { ...n[i], postcode: e.target.value }; setAddresses(n); }} placeholder={t("postcode")} />
                     <Input value={addr.country} onChange={(e) => { const n = [...addresses]; n[i] = { ...n[i], country: e.target.value }; setAddresses(n); }} placeholder={t("country")} />
-                    <Select
+                    <AppSelect
                       value={addr.context}
-                      onChange={(e) => { const n = [...addresses]; n[i] = { ...n[i], context: e.target.value as AddressEntry["context"] }; setAddresses(n); }}
-                    >
-                      <option value="">-</option>
-                      <option value="work">{t("context_work")}</option>
-                      <option value="private">{t("context_private")}</option>
-                    </Select>
+                      onChange={(value) => { const n = [...addresses]; n[i] = { ...n[i], context: value as AddressEntry["context"] }; setAddresses(n); }}
+                      options={contextOptions}
+                    />
                   </div>
                 </div>
               ))}
@@ -988,15 +1010,12 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
                     onChange={(e) => { const n = [...anniversaries]; n[i] = { ...n[i], date: e.target.value }; setAnniversaries(n); }}
                     className="flex-1"
                   />
-                  <Select
+                  <AppSelect
                     value={ann.kind}
-                    onChange={(e) => { const n = [...anniversaries]; n[i] = { ...n[i], kind: e.target.value as AnniversaryEntry["kind"] }; setAnniversaries(n); }}
-                  >
-                    <option value="birth">{t("anniversary_birth")}</option>
-                    <option value="wedding">{t("anniversary_wedding")}</option>
-                    <option value="death">{t("anniversary_death")}</option>
-                    <option value="other">{t("anniversary_other")}</option>
-                  </Select>
+                    onChange={(value) => { const n = [...anniversaries]; n[i] = { ...n[i], kind: value as AnniversaryEntry["kind"] }; setAnniversaries(n); }}
+                    options={anniversaryKindOptions}
+                    className="w-auto min-w-[5.5rem]"
+                  />
                   <Button type="button" variant="ghost" size="icon" onClick={() => setAnniversaries(anniversaries.filter((_, j) => j !== i))} className="h-8 w-8 shrink-0">
                     <X className="w-3 h-3" />
                   </Button>
@@ -1020,24 +1039,18 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
                     placeholder={t("personal_info_placeholder")}
                     className="flex-1"
                   />
-                  <Select
+                  <AppSelect
                     value={pi.kind}
-                    onChange={(e) => { const n = [...personalInfoEntries]; n[i] = { ...n[i], kind: e.target.value as PersonalInfoEntry["kind"] }; setPersonalInfoEntries(n); }}
-                  >
-                    <option value="expertise">{t("personal_expertise")}</option>
-                    <option value="hobby">{t("personal_hobby")}</option>
-                    <option value="interest">{t("personal_interest")}</option>
-                    <option value="other">{t("personal_other")}</option>
-                  </Select>
-                  <Select
+                    onChange={(value) => { const n = [...personalInfoEntries]; n[i] = { ...n[i], kind: value as PersonalInfoEntry["kind"] }; setPersonalInfoEntries(n); }}
+                    options={personalInfoKindOptions}
+                    className="w-auto min-w-[5.5rem]"
+                  />
+                  <AppSelect
                     value={pi.level}
-                    onChange={(e) => { const n = [...personalInfoEntries]; n[i] = { ...n[i], level: e.target.value as PersonalInfoEntry["level"] }; setPersonalInfoEntries(n); }}
-                  >
-                    <option value="">{t("level")}</option>
-                    <option value="high">{t("level_high")}</option>
-                    <option value="medium">{t("level_medium")}</option>
-                    <option value="low">{t("level_low")}</option>
-                  </Select>
+                    onChange={(value) => { const n = [...personalInfoEntries]; n[i] = { ...n[i], level: value as PersonalInfoEntry["level"] }; setPersonalInfoEntries(n); }}
+                    options={personalInfoLevelOptions}
+                    className="w-auto min-w-[5.5rem]"
+                  />
                   <Button type="button" variant="ghost" size="icon" onClick={() => setPersonalInfoEntries(personalInfoEntries.filter((_, j) => j !== i))} className="h-8 w-8 shrink-0">
                     <X className="w-3 h-3" />
                   </Button>
@@ -1067,14 +1080,12 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
                 <label className="text-xs text-muted-foreground mb-1 block">{t("gender_sex")}</label>
-                <Select value={genderSex} onChange={(e) => setGenderSex(e.target.value)} className="w-full">
-                  <option value="">-</option>
-                  <option value="masculine">{t("gender_male")}</option>
-                  <option value="feminine">{t("gender_female")}</option>
-                  <option value="other">{t("gender_other")}</option>
-                  <option value="none">{t("gender_none")}</option>
-                  <option value="unknown">{t("gender_unknown")}</option>
-                </Select>
+                <AppSelect
+                  value={genderSex}
+                  onChange={setGenderSex}
+                  options={genderOptions}
+                  aria-label={t("gender_sex")}
+                />
               </div>
               <div>
                 <label className="text-xs text-muted-foreground mb-1 block">{t("gender_identity")}</label>
@@ -1103,11 +1114,11 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
 
           {/* Notes */}
           <FormSection icon={StickyNote} title={t("note")} collapsible defaultOpen={!!note}>
-            <textarea
+            <Textarea
               value={note}
               onChange={(e) => setNote(e.target.value)}
               placeholder={t("note_placeholder")}
-              className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground resize-y outline-none focus:ring-2 focus:ring-ring"
+              className="min-h-[100px] resize-y"
             />
           </FormSection>
 
@@ -1190,9 +1201,10 @@ function CategoryComboBox({
     }
   };
 
+  const showSuggestions = isOpen && (suggestions.length > 0 || !!canAddNew);
+
   return (
-    <div className="relative">
-      {/* Keyword badges */}
+    <div>
       {currentKeywords.length > 0 && (
         <div className="flex flex-wrap gap-1.5 mb-2">
           {currentKeywords.map(kw => (
@@ -1201,56 +1213,61 @@ function CategoryComboBox({
               className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-primary/10 text-primary border border-primary/20"
             >
               {kw}
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon"
                 onClick={() => removeKeyword(kw)}
-                className="hover:text-destructive transition-colors"
+                className="h-4 w-4 min-w-0 hover:text-destructive"
+                aria-label={kw}
               >
                 <X className="w-3 h-3" />
-              </button>
+              </Button>
             </span>
           ))}
         </div>
       )}
 
-      {/* Input with dropdown */}
-      <Input
-        ref={inputRef}
-        value={inputValue}
-        onChange={(e) => { setInputValue(e.target.value); setIsOpen(true); }}
-        onFocus={() => setIsOpen(true)}
-        onBlur={() => setIsOpen(false)}
-        onKeyDown={handleKeyDown}
-        placeholder={currentKeywords.length === 0 ? placeholder : ""}
-      />
+      <Popover isOpen={showSuggestions} onOpenChange={setIsOpen}>
+        <Popover.Trigger className="w-full">
+          <Input
+            ref={inputRef}
+            value={inputValue}
+            onChange={(e) => { setInputValue(e.target.value); setIsOpen(true); }}
+            onFocus={() => setIsOpen(true)}
+            onKeyDown={handleKeyDown}
+            placeholder={currentKeywords.length === 0 ? placeholder : ""}
+          />
+        </Popover.Trigger>
+        <Popover.Content placement="bottom start" className="w-[var(--trigger-width)] p-0">
+          <Popover.Dialog className="max-h-48 overflow-y-auto py-1">
+            {suggestions.map(kw => (
+              <Button
+                key={kw}
+                type="button"
+                variant="ghost"
+                onClick={() => { addKeyword(kw); inputRef.current?.focus(); }}
+                className="w-full justify-start gap-2 px-3 py-1.5 h-auto text-sm font-normal rounded-none"
+              >
+                <Tag className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                {kw}
+              </Button>
+            ))}
+            {canAddNew && (
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => { addKeyword(inputValue); inputRef.current?.focus(); }}
+                className="w-full justify-start gap-2 px-3 py-1.5 h-auto text-sm font-normal text-primary rounded-none"
+              >
+                <Plus className="w-3.5 h-3.5 flex-shrink-0" />
+                {addLabel}: &quot;{inputValue.trim()}&quot;
+              </Button>
+            )}
+          </Popover.Dialog>
+        </Popover.Content>
+      </Popover>
       <p className="text-xs text-muted-foreground mt-1.5">{hint}</p>
-
-      {/* Dropdown */}
-      {isOpen && (suggestions.length > 0 || canAddNew) && (
-        <div className="absolute left-0 right-0 top-[calc(100%-1.5rem)] mt-1 rounded-md border border-border bg-popover text-popover-foreground shadow-md z-50 max-h-48 overflow-y-auto py-1" onMouseDown={(e) => e.preventDefault()}>
-          {suggestions.map(kw => (
-            <button
-              key={kw}
-              type="button"
-              className="w-full flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-accent transition-colors text-start"
-              onClick={() => { addKeyword(kw); inputRef.current?.focus(); }}
-            >
-              <Tag className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-              {kw}
-            </button>
-          ))}
-          {canAddNew && (
-            <button
-              type="button"
-              className="w-full flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-accent transition-colors text-start text-primary"
-              onClick={() => { addKeyword(inputValue); inputRef.current?.focus(); }}
-            >
-              <Plus className="w-3.5 h-3.5 flex-shrink-0" />
-              {addLabel}: &quot;{inputValue.trim()}&quot;
-            </button>
-          )}
-        </div>
-      )}
     </div>
   );
 }

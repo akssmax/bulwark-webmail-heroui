@@ -3,6 +3,7 @@
 import { useState, useMemo, Fragment } from "react";
 import { useTranslations } from "next-intl";
 import { ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   addMonths, subMonths, addYears, subYears, setMonth, setYear,
   getISOWeek, getWeek, format,
@@ -123,44 +124,48 @@ export function MiniCalendar({
   return (
     <div className="select-none">
       <div className="flex items-center justify-between mb-2">
-        <button
+        <Button
+          variant="ghost"
+          size="icon"
           onClick={handlePrev}
-          className="p-1 rounded hover:bg-muted transition-colors"
+          className="h-7 w-7"
           aria-label={t("nav_prev")}
         >
           <ChevronLeft className="w-4 h-4 text-muted-foreground" />
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="ghost"
           onClick={handleHeaderClick}
           disabled={pickerView === "years"}
           title={pickerView !== "years" ? t("mini_calendar_change") : undefined}
           className={cn(
-            "text-sm font-medium px-2 py-1 rounded-md transition-colors inline-flex items-center gap-1",
-            pickerView !== "years" && "hover:bg-muted cursor-pointer",
-            pickerView === "years" && "cursor-default"
+            "text-sm font-medium px-2 py-1 h-auto min-h-0 inline-flex items-center gap-1",
+            pickerView === "years" && "cursor-default",
           )}
         >
           {headerLabel}
           {pickerView !== "years" && (
             <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
           )}
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
           onClick={handleNext}
-          className="p-1 rounded hover:bg-muted transition-colors"
+          className="h-7 w-7"
           aria-label={t("nav_next")}
         >
           <ChevronRight className="w-4 h-4 text-muted-foreground" />
-        </button>
+        </Button>
       </div>
 
       {pickerView === "days" && (
         <div className={cn("grid gap-0", showWeekNumbers ? "grid-cols-[auto_repeat(7,1fr)]" : "grid-cols-7")}>
           {showWeekNumbers && (
-            <div className="text-center text-[10px] font-medium text-muted-foreground py-1 w-5" />
+            <div className="text-center text-xs font-medium text-muted-foreground py-1 w-5" />
           )}
           {dayHeaderKeys.map((d) => (
-            <div key={d} className="text-center text-[10px] font-medium text-muted-foreground py-1">
+            <div key={d} className="text-center text-xs font-medium text-muted-foreground py-1">
               {t(`days.${d}`)}
             </div>
           ))}
@@ -176,27 +181,27 @@ export function MiniCalendar({
                 {showWeekNumbers && isFirstDayOfRow && (
                   <div
                     key={`wk-${index}`}
-                    className="flex items-center justify-center w-5 text-[9px] text-muted-foreground/60 font-medium"
+                    className="flex items-center justify-center w-5 text-xs text-muted-foreground/60 font-medium"
                   >
                     {weekNumbers[index / 7]}
                   </div>
                 )}
-                <button
+                <Button
                   key={`day-${day.toISOString()}`}
+                  variant={selected ? "default" : "ghost"}
                   onClick={() => onSelectDate(day)}
                   className={cn(
-                    "relative flex items-center justify-center w-7 h-7 text-xs rounded-full transition-colors",
+                    "relative flex items-center justify-center w-7 h-7 min-w-7 p-0 text-xs rounded-full",
                     !inMonth && "text-muted-foreground/40",
-                    inMonth && !selected && "hover:bg-muted",
                     today && !selected && "font-bold text-primary",
-                    selected && "bg-primary text-primary-foreground"
+                    selected && "bg-primary text-primary-foreground",
                   )}
                 >
                   {formatDayNumber(day)}
                   {hasEvent && !selected && (
                     <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary" />
                   )}
-                </button>
+                </Button>
               </Fragment>
             );
           })}
@@ -209,18 +214,17 @@ export function MiniCalendar({
             const isCurrentMonth = i === currentMonth && currentYear === getYear(displayNow());
             const isSelected = i === getMonth(selectedDate) && currentYear === getYear(selectedDate);
             return (
-              <button
+              <Button
                 key={i}
+                variant={isSelected ? "default" : "ghost"}
                 onClick={() => handlePickMonth(i)}
                 className={cn(
-                  "py-2 text-xs rounded-md transition-colors",
-                  isSelected && "bg-primary text-primary-foreground",
+                  "py-2 h-auto min-h-0 text-xs rounded-md w-full",
                   !isSelected && isCurrentMonth && "font-bold text-primary",
-                  !isSelected && !isCurrentMonth && "hover:bg-muted"
                 )}
               >
                 {t(`months.${labelKey}`)}
-              </button>
+              </Button>
             );
           })}
         </div>
@@ -233,19 +237,18 @@ export function MiniCalendar({
             const isCurrentYear = year === getYear(displayNow());
             const isSelected = year === getYear(selectedDate);
             return (
-              <button
+              <Button
                 key={year}
+                variant={isSelected ? "default" : "ghost"}
                 onClick={() => handlePickYear(year)}
                 className={cn(
-                  "py-2 text-xs rounded-md transition-colors",
-                  isSelected && "bg-primary text-primary-foreground",
+                  "py-2 h-auto min-h-0 text-xs rounded-md w-full",
                   !isSelected && isCurrentYear && "font-bold text-primary",
                   !isSelected && !isCurrentYear && !inDecade && "text-muted-foreground/40",
-                  !isSelected && !isCurrentYear && "hover:bg-muted"
                 )}
               >
                 {year}
-              </button>
+              </Button>
             );
           })}
         </div>

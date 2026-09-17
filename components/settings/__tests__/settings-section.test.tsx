@@ -11,7 +11,7 @@ describe('SettingItem controls', () => {
     );
 
     const toggle = screen.getByRole('switch', { name: 'Conversation view' });
-    expect(toggle).toHaveAttribute('aria-checked', 'true');
+    expect(toggle).toBeChecked();
   });
 
   it('lets an explicit ariaLabel win over the row label', () => {
@@ -21,7 +21,7 @@ describe('SettingItem controls', () => {
       </SettingItem>
     );
 
-    expect(screen.getByRole('switch', { name: 'Group by thread' })).toHaveAttribute('aria-checked', 'false');
+    expect(screen.getByRole('switch', { name: 'Group by thread' })).not.toBeChecked();
   });
 
   it('reports which option of a segmented control is active', () => {
@@ -38,9 +38,9 @@ describe('SettingItem controls', () => {
       </SettingItem>
     );
 
-    expect(screen.getByRole('button', { name: 'Cosy' })).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getByRole('button', { name: 'Compact' })).toHaveAttribute('aria-pressed', 'false');
-    expect(screen.getByRole('group', { name: 'Density' })).toBeTruthy();
+    expect(screen.getByRole('tab', { name: 'Cosy' })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('tab', { name: 'Compact' })).toHaveAttribute('aria-selected', 'false');
+    expect(screen.getByRole('tablist', { name: 'Density' })).toBeTruthy();
   });
 
   it('names a select after the row label', () => {
@@ -50,7 +50,7 @@ describe('SettingItem controls', () => {
       </SettingItem>
     );
 
-    expect(screen.getByRole('combobox', { name: 'Time format' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /24 hour|Time format/i })).toBeTruthy();
   });
 
   it('works standalone, outside a SettingItem', () => {

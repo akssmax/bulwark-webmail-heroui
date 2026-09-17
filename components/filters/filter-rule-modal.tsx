@@ -4,8 +4,10 @@ import { useState, useCallback, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { X, Plus, Trash2 } from "lucide-react";
-import { useFocusTrap } from "@/hooks/use-focus-trap";
+import { AppSelect } from "@/components/ui/select";
+import { AppModal } from "@/components/ui/modal";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Plus, Trash2 } from "lucide-react";
 import { toast } from "@/stores/toast-store";
 import type {
   FilterRule,
@@ -56,10 +58,6 @@ function makeEmptyCondition(): FilterCondition {
   return { field: "from", comparator: "contains", value: "" };
 }
 
-// Multi-value handling: conditions are stored as string | string[]. The UI
-// presents them as a single comma-separated text input — the user types
-// "a, b, c" and the saved value becomes ["a","b","c"]. Single entries stay
-// strings so existing single-value rules don't change shape.
 function valueToInputString(v: string | string[]): string {
   if (Array.isArray(v)) return v.join(", ");
   return v;
@@ -102,15 +100,11 @@ export function FilterRuleModal({
   );
   const [stopProcessing, setStopProcessing] = useState(rule?.stopProcessing ?? false);
 
-  const modalRef = useFocusTrap({ isActive: true, onEscape: onClose });
-
   const { hierarchicalMailboxes, mailboxPathMap } = useMemo(() => {
     const tree = buildMailboxTree(mailboxes.filter((mb) => !mb.isShared));
     const pathMap = new Map<string, string>();
     const buildPaths = (nodes: MailboxNode[], parentPath = "") => {
       for (const node of nodes) {
-        // Sieve fileinto expects the IMAP-canonical "INBOX" for the inbox,
-        // not the localized JMAP display name (e.g. "Entrada" in pt-BR).
         const segment = node.role === "inbox" ? "INBOX" : node.name;
         const fullPath = parentPath ? `${parentPath}/${segment}` : segment;
         pathMap.set(node.id, fullPath);
@@ -121,6 +115,29 @@ export function FilterRuleModal({
     return { hierarchicalMailboxes: flattenMailboxTree(tree), mailboxPathMap: pathMap };
   }, [mailboxes]);
 
+  const fieldOptions = ALL_FIELDS.map((f) => ({
+    value: f,
+    label: t(`condition_fields.${f}`),
+  }));
+
+  const actionTypeOptions = ALL_ACTION_TYPES.map((a) => ({
+    value: a,
+    label: t(`action_types.${a}`),
+  }));
+
+  const mailboxOptions = [
+    { value: "", label: t("move_to_folder") },
+    ...hierarchicalMailboxes.map((mb) => ({
+      value: mailboxPathMap.get(mb.id) || mb.name,
+      label: `${"\u00A0".repeat(mb.depth * 3)}${mb.name}`,
+    })),
+  ];
+
+  const labelOptions = [
+    { value: "", label: t("label_placeholder") },
+    ...emailKeywords.map((kw) => ({ value: kw.id, label: tagName(kw.id) })),
+  ];
+
   const handleSave = useCallback(() => {
     const trimmedName = name.trim();
     if (!trimmedName) {
@@ -128,11 +145,6 @@ export function FilterRuleModal({
       return;
     }
 
-    // While editing, condition.value is always the raw string typed into the
-    // input (commas not yet split). Convert to array form here on save so a
-    // user typing "a, b, c" actually persists as ["a","b","c"]. This is the
-    // moment we know editing is finished - splitting earlier would eat any
-    // comma the user just typed mid-edit.
     const validConditions = conditions
       .filter((c) => {
         if (c.field === "attachment" && c.comparator === "has_any") return true;
@@ -140,8 +152,8 @@ export function FilterRuleModal({
       })
       .map((c) => {
         if (c.field === "attachment" && c.comparator === "has_any") return c;
-        if (c.field === "size") return c; // numeric, single-value only
-        if (typeof c.value !== "string") return c; // already structured
+        if (c.field === "size") return c;
+        if (typeof c.value !== "string") return c;
         const parsed = inputStringToValue(c.value);
         return { ...c, value: parsed };
       });
@@ -174,9 +186,6 @@ export function FilterRuleModal({
       prev.map((c, i) => {
         if (i !== index) return c;
         const updated = { ...c, ...updates };
-        // Reconcile the comparator when the field changes so we never end up
-        // with e.g. (field=attachment, comparator=contains) — invalid for the
-        // Sieve generator. Each field has its own valid comparator set.
         if (updates.field && updates.field !== c.field) {
           const allowed = comparatorsFor(updates.field);
           if (!allowed.includes(c.comparator)) {
@@ -186,12 +195,9 @@ export function FilterRuleModal({
         if (updates.field && updates.field !== "header") {
           delete updated.headerName;
         }
-        // has_any takes no value; clear it so we don't leak old text into
-        // the generated Sieve.
         if (updated.field === "attachment" && updated.comparator === "has_any") {
           updated.value = "";
         }
-        // Size is numeric, single value only - collapse any list to scalar.
         if (updated.field === "size" && Array.isArray(updated.value)) {
           updated.value = updated.value[0] ?? "";
         }
@@ -227,300 +233,16 @@ export function FilterRuleModal({
     setActions((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const selectClass =
-    "px-2.5 py-1.5 text-sm rounded-md bg-muted border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-colors duration-150 cursor-pointer hover:border-muted-foreground";
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-[1px]" onClick={onClose} aria-hidden="true" />
-      <div
-        ref={modalRef}
-        role="dialog"
-        aria-modal="true"
-        aria-label={isEdit ? t("edit_rule") : t("new_rule")}
-        className="relative bg-background border border-border rounded-lg shadow-xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200"
-      >
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border">
-          <h2 className="text-lg font-semibold text-foreground">
-            {isEdit ? t("edit_rule") : t("new_rule")}
-          </h2>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-md hover:bg-muted transition-colors duration-150 text-muted-foreground hover:text-foreground"
-            aria-label={t("cancel")}
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        <div className="px-6 py-4 space-y-6">
-          <div>
-            <label className="text-sm font-medium mb-1 block text-foreground">
-              {t("rule_name")}
-            </label>
-            <Input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder={t("rule_name_placeholder")}
-              maxLength={200}
-              autoFocus
-            />
-          </div>
-
-          <div>
-            <label className="text-sm font-medium mb-2 block text-foreground">
-              {t("match_type")}
-            </label>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => setMatchType("all")}
-                className={`px-3 py-1.5 text-xs rounded-md transition-colors duration-150 ${
-                  matchType === "all"
-                    ? "bg-primary text-primary-foreground font-medium"
-                    : "bg-muted hover:bg-accent text-foreground"
-                }`}
-              >
-                {t("match_all")}
-              </button>
-              <button
-                type="button"
-                onClick={() => setMatchType("any")}
-                className={`px-3 py-1.5 text-xs rounded-md transition-colors duration-150 ${
-                  matchType === "any"
-                    ? "bg-primary text-primary-foreground font-medium"
-                    : "bg-muted hover:bg-accent text-foreground"
-                }`}
-              >
-                {t("match_any")}
-              </button>
-            </div>
-          </div>
-
-          <div>
-            <label className="text-sm font-medium mb-2 block text-foreground">
-              {t("conditions")}
-            </label>
-            <div className="space-y-2">
-              {conditions.map((condition, index) => (
-                <div key={index} className="flex items-center gap-2 flex-wrap">
-                  <select
-                    value={condition.field}
-                    onChange={(e) =>
-                      updateCondition(index, { field: e.target.value as FilterConditionField })
-                    }
-                    className={selectClass}
-                    aria-label={t("conditions")}
-                  >
-                    {ALL_FIELDS.map((f) => (
-                      <option key={f} value={f}>
-                        {t(`condition_fields.${f}`)}
-                      </option>
-                    ))}
-                  </select>
-
-                  {condition.field === "header" && (
-                    <Input
-                      value={condition.headerName || ""}
-                      onChange={(e) =>
-                        updateCondition(index, { headerName: e.target.value })
-                      }
-                      placeholder={t("header_name")}
-                      className="w-28"
-                    />
-                  )}
-
-                  <select
-                    value={condition.comparator}
-                    onChange={(e) =>
-                      updateCondition(index, { comparator: e.target.value as FilterComparator })
-                    }
-                    className={selectClass}
-                    aria-label={t("comparators.contains")}
-                  >
-                    {comparatorsFor(condition.field).map((c) => (
-                      <option key={c} value={c}>
-                        {t(`comparators.${c}`)}
-                      </option>
-                    ))}
-                  </select>
-
-                  {/* has_any takes no value; render a stub so the row layout
-                      stays consistent but no input is editable. */}
-                  {condition.field === "attachment" && condition.comparator === "has_any" ? (
-                    <div className="flex-1 min-w-[120px]" />
-                  ) : (
-                    <Input
-                      value={valueToInputString(condition.value)}
-                      onChange={(e) =>
-                        // Store the raw input string while typing. Splitting
-                        // commas into an array on every keystroke would eat
-                        // the comma the moment it's typed.
-                        updateCondition(index, { value: e.target.value })
-                      }
-                      onBlur={(e) => {
-                        // On blur: normalise comma-separated input into an
-                        // array (or single string when only one item). Size
-                        // stays numeric/single-value; attachment-has_any has
-                        // no value at all.
-                        if (condition.field === "size") return;
-                        if (
-                          condition.field === "attachment" &&
-                          condition.comparator === "has_any"
-                        )
-                          return;
-                        const parsed = inputStringToValue(e.target.value);
-                        // Only update if the normalised shape actually
-                        // differs - avoids triggering a no-op re-render and
-                        // resetting the user's cursor on every blur.
-                        if (
-                          JSON.stringify(parsed) !== JSON.stringify(condition.value)
-                        ) {
-                          updateCondition(index, { value: parsed });
-                        }
-                      }}
-                      placeholder={
-                        condition.field === "size"
-                          ? t("size_placeholder")
-                          : condition.field === "attachment"
-                            ? t("attachment_type_placeholder")
-                            : t("value_placeholder_multi")
-                      }
-                      className="flex-1 min-w-[120px]"
-                      type={condition.field === "size" ? "number" : "text"}
-                    />
-                  )}
-
-                  <button
-                    type="button"
-                    onClick={() => removeCondition(index)}
-                    disabled={conditions.length <= 1}
-                    className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-destructive transition-colors disabled:opacity-30 disabled:pointer-events-none"
-                    aria-label={t("delete_rule")}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              ))}
-            </div>
-            <button
-              type="button"
-              onClick={() => setConditions((prev) => [...prev, makeEmptyCondition()])}
-              className="flex items-center gap-1 mt-2 text-sm text-primary hover:underline"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              {t("add_condition")}
-            </button>
-          </div>
-
-          <div>
-            <label className="text-sm font-medium mb-2 block text-foreground">
-              {t("actions")}
-            </label>
-            <div className="space-y-2">
-              {actions.map((action, index) => (
-                <div key={index} className="flex items-center gap-2 flex-wrap">
-                  <select
-                    value={action.type}
-                    onChange={(e) =>
-                      updateAction(index, { type: e.target.value as FilterActionType })
-                    }
-                    className={selectClass}
-                    aria-label={t("actions")}
-                  >
-                    {ALL_ACTION_TYPES.map((a) => (
-                      <option key={a} value={a}>
-                        {t(`action_types.${a}`)}
-                      </option>
-                    ))}
-                  </select>
-
-                  {ACTIONS_WITH_MAILBOX.has(action.type) && (
-                    <select
-                      value={action.value || ""}
-                      onChange={(e) => updateAction(index, { value: e.target.value })}
-                      className={`${selectClass} flex-1 min-w-[140px]`}
-                      aria-label={t("move_to_folder")}
-                    >
-                      <option value="">{t("move_to_folder")}</option>
-                      {hierarchicalMailboxes.map((mb) => (
-                        <option key={mb.id} value={mailboxPathMap.get(mb.id) || mb.name}>
-                          {"\u00A0".repeat(mb.depth * 3)}{mb.name}
-                        </option>
-                      ))}
-                    </select>
-                  )}
-
-                  {action.type === "forward" && (
-                    <Input
-                      value={action.value || ""}
-                      onChange={(e) => updateAction(index, { value: e.target.value })}
-                      placeholder={t("forward_placeholder")}
-                      type="email"
-                      className="flex-1 min-w-[180px]"
-                    />
-                  )}
-
-                  {action.type === "reject" && (
-                    <Input
-                      value={action.value || ""}
-                      onChange={(e) => updateAction(index, { value: e.target.value })}
-                      placeholder={t("reject_placeholder")}
-                      className="flex-1 min-w-[180px]"
-                    />
-                  )}
-
-                  {action.type === "add_label" && (
-                    <select
-                      value={action.value || ""}
-                      onChange={(e) => updateAction(index, { value: e.target.value })}
-                      className={`${selectClass} flex-1 min-w-[140px]`}
-                      aria-label={t("label_placeholder")}
-                    >
-                      <option value="">{t("label_placeholder")}</option>
-                      {emailKeywords.map((kw) => (
-                        <option key={kw.id} value={kw.id}>{tagName(kw.id)}</option>
-                      ))}
-                    </select>
-                  )}
-
-                  <button
-                    type="button"
-                    onClick={() => removeAction(index)}
-                    disabled={actions.length <= 1}
-                    className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-destructive transition-colors disabled:opacity-30 disabled:pointer-events-none"
-                    aria-label={t("delete_rule")}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              ))}
-            </div>
-            <button
-              type="button"
-              onClick={() => setActions((prev) => [...prev, makeEmptyAction()])}
-              className="flex items-center gap-1 mt-2 text-sm text-primary hover:underline"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              {t("add_action")}
-            </button>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="stopProcessing"
-              checked={stopProcessing}
-              onChange={(e) => setStopProcessing(e.target.checked)}
-              className="rounded border-input"
-            />
-            <label htmlFor="stopProcessing" className="text-sm text-foreground">
-              {t("stop_processing")}
-            </label>
-          </div>
-        </div>
-
-        <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-border">
+    <AppModal
+      isOpen
+      onClose={onClose}
+      size="lg"
+      className="max-w-2xl max-h-[90vh]"
+      title={isEdit ? t("edit_rule") : t("new_rule")}
+      bodyClassName="px-6 py-4 space-y-6 overflow-y-auto max-h-[calc(90vh-140px)]"
+      footer={(
+        <div className="flex items-center justify-end gap-2 w-full">
           <Button variant="outline" onClick={onClose}>
             {t("cancel")}
           </Button>
@@ -528,7 +250,227 @@ export function FilterRuleModal({
             {t("save")}
           </Button>
         </div>
+      )}
+    >
+      <div>
+        <label className="text-sm font-medium mb-1 block text-foreground">
+          {t("rule_name")}
+        </label>
+        <Input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder={t("rule_name_placeholder")}
+          maxLength={200}
+          autoFocus
+        />
       </div>
-    </div>
+
+      <div>
+        <label className="text-sm font-medium mb-2 block text-foreground">
+          {t("match_type")}
+        </label>
+        <div className="flex gap-2">
+          {(["all", "any"] as const).map((type) => (
+            <Button
+              key={type}
+              type="button"
+              size="sm"
+              variant={matchType === type ? "default" : "outline"}
+              className="text-xs"
+              onClick={() => setMatchType(type)}
+            >
+              {t(type === "all" ? "match_all" : "match_any")}
+            </Button>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <label className="text-sm font-medium mb-2 block text-foreground">
+          {t("conditions")}
+        </label>
+        <div className="space-y-2">
+          {conditions.map((condition, index) => (
+            <div key={index} className="flex items-center gap-2 flex-wrap">
+              <AppSelect
+                value={condition.field}
+                onChange={(v) =>
+                  updateCondition(index, { field: v as FilterConditionField })
+                }
+                options={fieldOptions}
+                aria-label={t("conditions")}
+                className="w-auto min-w-[120px]"
+              />
+
+              {condition.field === "header" && (
+                <Input
+                  value={condition.headerName || ""}
+                  onChange={(e) =>
+                    updateCondition(index, { headerName: e.target.value })
+                  }
+                  placeholder={t("header_name")}
+                  className="w-28"
+                />
+              )}
+
+              <AppSelect
+                value={condition.comparator}
+                onChange={(v) =>
+                  updateCondition(index, { comparator: v as FilterComparator })
+                }
+                options={comparatorsFor(condition.field).map((c) => ({
+                  value: c,
+                  label: t(`comparators.${c}`),
+                }))}
+                aria-label={t("comparators.contains")}
+                className="w-auto min-w-[120px]"
+              />
+
+              {condition.field === "attachment" && condition.comparator === "has_any" ? (
+                <div className="flex-1 min-w-[120px]" />
+              ) : (
+                <Input
+                  value={valueToInputString(condition.value)}
+                  onChange={(e) =>
+                    updateCondition(index, { value: e.target.value })
+                  }
+                  onBlur={(e) => {
+                    if (condition.field === "size") return;
+                    if (
+                      condition.field === "attachment" &&
+                      condition.comparator === "has_any"
+                    )
+                      return;
+                    const parsed = inputStringToValue(e.target.value);
+                    if (
+                      JSON.stringify(parsed) !== JSON.stringify(condition.value)
+                    ) {
+                      updateCondition(index, { value: parsed });
+                    }
+                  }}
+                  placeholder={
+                    condition.field === "size"
+                      ? t("size_placeholder")
+                      : condition.field === "attachment"
+                        ? t("attachment_type_placeholder")
+                        : t("value_placeholder_multi")
+                  }
+                  className="flex-1 min-w-[120px]"
+                  type={condition.field === "size" ? "number" : "text"}
+                />
+              )}
+
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => removeCondition(index)}
+                disabled={conditions.length <= 1}
+                className="text-muted-foreground hover:text-destructive disabled:opacity-30"
+                aria-label={t("delete_rule")}
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            </div>
+          ))}
+        </div>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => setConditions((prev) => [...prev, makeEmptyCondition()])}
+          className="mt-2 gap-1 text-primary h-auto p-0 hover:underline"
+        >
+          <Plus className="w-3.5 h-3.5" />
+          {t("add_condition")}
+        </Button>
+      </div>
+
+      <div>
+        <label className="text-sm font-medium mb-2 block text-foreground">
+          {t("actions")}
+        </label>
+        <div className="space-y-2">
+          {actions.map((action, index) => (
+            <div key={index} className="flex items-center gap-2 flex-wrap">
+              <AppSelect
+                value={action.type}
+                onChange={(v) =>
+                  updateAction(index, { type: v as FilterActionType })
+                }
+                options={actionTypeOptions}
+                aria-label={t("actions")}
+                className="w-auto min-w-[120px]"
+              />
+
+              {ACTIONS_WITH_MAILBOX.has(action.type) && (
+                <AppSelect
+                  value={action.value || ""}
+                  onChange={(v) => updateAction(index, { value: v })}
+                  options={mailboxOptions}
+                  aria-label={t("move_to_folder")}
+                  className="flex-1 min-w-[140px]"
+                />
+              )}
+
+              {action.type === "forward" && (
+                <Input
+                  value={action.value || ""}
+                  onChange={(e) => updateAction(index, { value: e.target.value })}
+                  placeholder={t("forward_placeholder")}
+                  type="email"
+                  className="flex-1 min-w-[180px]"
+                />
+              )}
+
+              {action.type === "reject" && (
+                <Input
+                  value={action.value || ""}
+                  onChange={(e) => updateAction(index, { value: e.target.value })}
+                  placeholder={t("reject_placeholder")}
+                  className="flex-1 min-w-[180px]"
+                />
+              )}
+
+              {action.type === "add_label" && (
+                <AppSelect
+                  value={action.value || ""}
+                  onChange={(v) => updateAction(index, { value: v })}
+                  options={labelOptions}
+                  aria-label={t("label_placeholder")}
+                  className="flex-1 min-w-[140px]"
+                />
+              )}
+
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => removeAction(index)}
+                disabled={actions.length <= 1}
+                className="text-muted-foreground hover:text-destructive disabled:opacity-30"
+                aria-label={t("delete_rule")}
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            </div>
+          ))}
+        </div>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => setActions((prev) => [...prev, makeEmptyAction()])}
+          className="mt-2 gap-1 text-primary h-auto p-0 hover:underline"
+        >
+          <Plus className="w-3.5 h-3.5" />
+          {t("add_action")}
+        </Button>
+      </div>
+
+      <Checkbox isSelected={stopProcessing} onChange={setStopProcessing} className="text-sm text-foreground">
+        {t("stop_processing")}
+      </Checkbox>
+    </AppModal>
   );
 }

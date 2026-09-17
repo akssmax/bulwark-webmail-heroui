@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import type { TaskViewFilter } from "@/stores/task-store";
 
@@ -29,30 +30,29 @@ export function TaskToolbar({
     <div className="flex items-center gap-2 px-4 py-2 border-b border-border flex-wrap">
       <div className="flex border border-border rounded-md overflow-hidden">
         {FILTERS.map((f) => (
-          <button
+          <Button
             key={f}
+            type="button"
+            size="sm"
+            variant={f === filter ? "default" : "ghost"}
             onClick={() => onFilterChange(f)}
             className={cn(
-              "px-3 py-1.5 text-xs font-medium transition-colors",
-              f === filter
-                ? "bg-primary text-primary-foreground"
-                : "hover:bg-muted text-muted-foreground"
+              "rounded-none px-3 py-1.5 text-xs font-medium h-auto",
+              f !== filter && "text-muted-foreground hover:bg-muted"
             )}
           >
             {t(`tasks.filter_${f}`)}
-          </button>
+          </Button>
         ))}
       </div>
 
-      <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer select-none ms-2">
-        <input
-          type="checkbox"
-          checked={showCompleted}
-          onChange={(e) => onShowCompletedChange(e.target.checked)}
-          className="rounded border-border"
-        />
+      <Checkbox
+        isSelected={showCompleted}
+        onChange={onShowCompletedChange}
+        className="text-xs text-muted-foreground ms-2"
+      >
         {t("tasks.show_completed")}
-      </label>
+      </Checkbox>
 
       <div className="flex-1" />
 

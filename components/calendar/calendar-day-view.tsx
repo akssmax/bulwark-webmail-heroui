@@ -6,6 +6,7 @@ import { useDisplayDateFormatter } from "@/hooks/use-display-date-formatter";
 import { format, isSameDay, parseISO, eachDayOfInterval, differenceInCalendarDays } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Check } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { EventCard } from "./event-card";
 import { QuickEventInput } from "./quick-event-input";
 import { formatSnapTime, getEventDayBounds, getPrimaryCalendarId, isTimedEventFullDayOnDate, layoutOverlappingEvents } from "@/lib/calendar-utils";
@@ -324,7 +325,7 @@ export function CalendarDayView({
                     >
                       {allDayEvents.length > 0 && (
                         <>
-                          <div className="text-[10px] text-muted-foreground mb-1">{t("events.all_day")}</div>
+                          <div className="text-xs text-muted-foreground mb-1">{t("events.all_day")}</div>
                           <div className="space-y-1">
                             {allDayEvents.map((ev) => {
                               const calId = getPrimaryCalendarId(ev);
@@ -346,7 +347,7 @@ export function CalendarDayView({
                       )}
                       {dayTasks.length > 0 && (
                         <>
-                          <div className={cn("text-[10px] text-muted-foreground mb-1", allDayEvents.length > 0 && "mt-2")}>{t("tasks.label")}</div>
+                          <div className={cn("text-xs text-muted-foreground mb-1", allDayEvents.length > 0 && "mt-2")}>{t("tasks.label")}</div>
                           <div className="space-y-0.5">
                             {dayTasks.map((task) => {
                               const isCompleted = task.progress === "completed";
@@ -358,17 +359,19 @@ export function CalendarDayView({
                                   className="flex items-center gap-1.5 px-1.5 py-0.5 rounded text-xs cursor-pointer hover:bg-muted/50 transition-colors"
                                   style={{ borderLeft: `3px solid ${color}` }}
                                 >
-                                  <button
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
                                     onClick={(e) => { e.stopPropagation(); onToggleTaskComplete?.(task); }}
                                     className={cn(
-                                      "flex-shrink-0 w-3.5 h-3.5 rounded-full border flex items-center justify-center",
+                                      "flex-shrink-0 w-3.5 h-3.5 min-w-3.5 min-h-3.5 rounded-full border p-0",
                                       isCompleted
-                                        ? "bg-success border-success text-success-foreground"
+                                        ? "bg-success border-success text-success-foreground hover:bg-success"
                                         : "border-muted-foreground/40 hover:border-primary"
                                     )}
                                   >
                                     {isCompleted && <Check className="h-2.5 w-2.5" />}
-                                  </button>
+                                  </Button>
                                   <span className={cn("truncate", isCompleted && "line-through text-muted-foreground")}>
                                     {task.title || t("tasks.no_title")}
                                   </span>
@@ -396,7 +399,7 @@ export function CalendarDayView({
                   style={{ height: HOUR_HEIGHT }}
                 >
                   {h > 0 && (
-                    <span className={cn("absolute top-0 right-2 -translate-y-1/2 leading-none", isMobile ? "text-[10px]" : "text-xs")}>
+                    <span className={cn("absolute top-0 right-2 -translate-y-1/2 leading-none", isMobile ? "text-xs" : "text-xs")}>
                       {formatHour(h)}
                     </span>
                   )}
@@ -516,7 +519,7 @@ export function CalendarDayView({
                           height: ((dragCreate.endMinutes - dragCreate.startMinutes) / 60) * HOUR_HEIGHT,
                         }}
                       >
-                        <div className="text-[10px] font-medium text-primary px-1.5 py-0.5">
+                        <div className="text-xs font-medium text-primary px-1.5 py-0.5">
                           {formatSnapTime(dragCreate.startMinutes, timeFormat)} – {formatSnapTime(dragCreate.endMinutes, timeFormat)}
                         </div>
                       </div>
@@ -531,7 +534,7 @@ export function CalendarDayView({
                           <div className="w-2.5 h-2.5 rounded-full bg-primary -ms-1" />
                           <div className="flex-1 h-0.5 bg-primary rounded-full" />
                         </div>
-                        <div className="absolute -top-4 left-2 text-[10px] font-medium text-primary bg-background/90 px-1 rounded shadow-sm">
+                        <div className="absolute -top-4 left-2 text-xs font-medium text-primary bg-background/90 px-1 rounded shadow-sm">
                           {formatSnapTime(dropTarget.minutes, timeFormat)}
                         </div>
                       </div>
@@ -554,10 +557,10 @@ export function CalendarDayView({
                               backgroundColor: `${color}10`,
                             }}
                           >
-                            <div className="text-[10px] font-medium px-1.5 py-0.5 truncate" style={{ color }}>
+                            <div className="text-xs font-medium px-1.5 py-0.5 truncate" style={{ color }}>
                               {pendingPreview.title}
                             </div>
-                            <div className="text-[9px] px-1.5 opacity-70" style={{ color }}>
+                            <div className="text-xs px-1.5 opacity-70" style={{ color }}>
                               {formatSnapTime(startMin, timeFormat)} – {formatSnapTime(startMin + durationMin, timeFormat)}
                             </div>
                           </div>

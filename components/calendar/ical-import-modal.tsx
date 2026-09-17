@@ -1,10 +1,15 @@
 "use client";
+import { Loader } from "@/components/ui/loader";
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
-import { X, Upload, Check, Loader2, RefreshCw, Globe } from "lucide-react";
+import { AppModal } from "@/components/ui/modal";
+import { AppSelect } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { X, Upload, Check, RefreshCw, Globe } from "lucide-react";
 import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 import type { CalendarEvent, Calendar } from "@/lib/jmap/types";
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
 import { getEventStartDate } from "@/lib/calendar-utils";
@@ -20,7 +25,7 @@ interface ICalImportModalProps {
   initialUrl?: string;
 }
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const ACCEPTED_EXTENSIONS = [".ics", ".ical"];
 
 type ImportStep = "select" | "preview" | "importing";
@@ -48,7 +53,8 @@ export function ICalImportModal({ calendars, client, onClose, initialUrl }: ICal
   const [urlInput, setUrlInput] = useState(initialUrl || "");
   const [isFetchingUrl, setIsFetchingUrl] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const modalRef = useRef<HTMLDivElement>(null);
+
+  const calendarOptions = calendars.map((cal) => ({ value: cal.id, label: cal.name }));
 
   const validateFile = useCallback((file: File): string | null => {
     if (file.size > MAX_FILE_SIZE) return t("file_too_large");
@@ -208,249 +214,206 @@ export function ICalImportModal({ calendars, client, onClose, initialUrl }: ICal
     }
   };
 
-  useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", handleKey);
-    return () => window.removeEventListener("keydown", handleKey);
-  }, [onClose]);
-
-  useEffect(() => {
-    const modal = modalRef.current;
-    if (!modal) return;
-    const focusableEls = modal.querySelectorAll<HTMLElement>(
-      'input, select, textarea, button, [tabindex]:not([tabindex="-1"])'
-    );
-    const firstEl = focusableEls[0];
-    const lastEl = focusableEls[focusableEls.length - 1];
-
-    const handler = (e: KeyboardEvent) => {
-      if (e.key !== "Tab") return;
-      if (e.shiftKey && document.activeElement === firstEl) {
-        e.preventDefault();
-        lastEl?.focus();
-      } else if (!e.shiftKey && document.activeElement === lastEl) {
-        e.preventDefault();
-        firstEl?.focus();
-      }
-    };
-    modal.addEventListener("keydown", handler);
-    firstEl?.focus();
-    return () => modal.removeEventListener("keydown", handler);
-  }, [step]);
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-[1px]" onClick={onClose} aria-hidden="true" />
-      <div
-        ref={modalRef}
-        role="dialog"
-        aria-modal="true"
-        aria-label={t("title")}
-        className="relative bg-background border border-border rounded-lg shadow-xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200"
-      >
+    <AppModal
+      isOpen
+      onClose={step === "importing" ? () => {} : onClose}
+      size="lg"
+      className="max-w-lg max-h-[90vh]"
+      bodyClassName="space-y-4 overflow-y-auto"
+      header={(
         <div className="flex items-center justify-between px-6 py-4 border-b border-border">
           <h2 className="text-lg font-semibold">{t("title")}</h2>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-md hover:bg-muted transition-colors duration-150 text-muted-foreground hover:text-foreground"
-            aria-label={tCommon("close")}
-          >
+          <Button variant="ghost" size="icon" onClick={onClose} aria-label={tCommon("close")}>
             <X className="w-5 h-5" />
-          </button>
+          </Button>
         </div>
-
-        <div className="px-6 py-4 space-y-4">
-          {step === "select" && !isParsing && (
-            <>
-              <div className="flex border-b border-border mb-4">
-                <button
-                  onClick={() => { setImportMode("file"); setError(null); }}
-                  className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-                    importMode === "file"
-                      ? "border-primary text-primary"
-                      : "border-transparent text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  <Upload className="w-4 h-4" />
-                  {t("tab_file")}
-                </button>
-                <button
-                  onClick={() => { setImportMode("url"); setError(null); }}
-                  className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-                    importMode === "url"
-                      ? "border-primary text-primary"
-                      : "border-transparent text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  <Globe className="w-4 h-4" />
-                  {t("tab_url")}
-                </button>
-              </div>
-
-              {importMode === "file" && (
-                <div
-                  onClick={() => fileInputRef.current?.click()}
-                  onDragOver={handleDragOver}
-                  onDragLeave={handleDragLeave}
-                  onDrop={handleDrop}
-                  className={`flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-8 cursor-pointer transition-colors ${
-                    isDragging
-                      ? "border-primary bg-primary/5"
-                      : "border-border hover:border-primary/50 hover:bg-muted/50"
-                  }`}
-                >
-                  <Upload className="w-8 h-8 text-muted-foreground mb-3" />
-                  <p className="text-sm font-medium">{t("select_file")}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{t("drop_file")}</p>
-                  <p className="text-xs text-muted-foreground mt-2">{t("supported_formats")}</p>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept=".ics,.ical"
-                    onChange={handleFileChange}
-                    className="hidden"
-                  />
-                </div>
-              )}
-
-              {importMode === "url" && (
-                <div className="space-y-3">
-                  <p className="text-sm text-muted-foreground">{t("url_description")}</p>
-                  <div className="flex gap-2">
-                    <input
-                      type="url"
-                      value={urlInput}
-                      onChange={(e) => setUrlInput(e.target.value)}
-                      placeholder={t("url_placeholder")}
-                      className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                      onKeyDown={(e) => { if (e.key === "Enter") handleUrlFetch(); }}
-                    />
-                    <Button
-                      onClick={handleUrlFetch}
-                      disabled={!urlInput.trim() || isFetchingUrl}
-                    >
-                      {isFetchingUrl ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        t("fetch")
-                      )}
-                    </Button>
-                  </div>
-                  <p className="text-xs text-muted-foreground">{t("url_hint")}</p>
-                </div>
-              )}
-            </>
-          )}
-
-          {isParsing && (
-            <div className="flex flex-col items-center justify-center py-8">
-              <Loader2 className="w-6 h-6 animate-spin text-primary mb-3" />
-              <p className="text-sm text-muted-foreground">{t("parsing")}</p>
-            </div>
-          )}
-
-          {error && (
-            <div className="text-sm text-destructive bg-destructive/10 rounded-md px-3 py-2">
-              {error}
-            </div>
-          )}
-
-          {step === "preview" && parsedEvents.length > 0 && (
-            <>
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-muted-foreground">
-                  {t("parsed_events", { count: parsedEvents.length })}
-                </p>
-                <button
-                  onClick={toggleAll}
-                  className="text-xs text-primary hover:underline"
-                >
-                  {selectedIndices.size === parsedEvents.length
-                    ? t("deselect_all")
-                    : t("select_all")}
-                </button>
-              </div>
-
-              <div className="max-h-[300px] overflow-y-auto border border-border rounded-md divide-y divide-border">
-                {parsedEvents.map((event, index) => (
-                  <label
-                    key={index}
-                    className="flex items-start gap-3 px-3 py-2.5 hover:bg-muted/50 cursor-pointer"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={selectedIndices.has(index)}
-                      onChange={() => toggleEvent(index)}
-                      className="mt-0.5 rounded border-input"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">
-                        {event.title || tCal("events.no_title")}
-                      </p>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-xs text-muted-foreground">
-                          {formatEventDate(event)}
-                        </span>
-                        {event.recurrenceRules && event.recurrenceRules.length > 0 && (
-                          <span className="inline-flex items-center gap-0.5 text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
-                            <RefreshCw className="w-3 h-3" />
-                            {event.recurrenceRules[0].frequency}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </label>
-                ))}
-              </div>
-
-              {calendars.length > 1 && (
-                <div>
-                  <label className="text-sm font-medium mb-1 block">
-                    {t("target_calendar")}
-                  </label>
-                  <select
-                    value={calendarId}
-                    onChange={(e) => setCalendarId(e.target.value)}
-                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                  >
-                    {calendars.map((cal) => (
-                      <option key={cal.id} value={cal.id}>
-                        {cal.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-            </>
-          )}
-
-          {step === "importing" && (
-            <div className="flex flex-col items-center justify-center py-8">
-              <Loader2 className="w-6 h-6 animate-spin text-primary mb-3" />
-              <p className="text-sm text-muted-foreground">{t("importing")}</p>
-            </div>
-          )}
-        </div>
-
-        {step !== "importing" && (
-          <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-border">
-            <Button variant="outline" onClick={onClose}>
-              {tForm("cancel")}
+      )}
+      footer={step !== "importing" ? (
+        <div className="flex items-center justify-end gap-2 w-full">
+          <Button variant="outline" onClick={onClose}>
+            {tForm("cancel")}
+          </Button>
+          {step === "preview" && (
+            <Button
+              onClick={handleImport}
+              disabled={selectedIndices.size === 0}
+            >
+              <Check className="w-4 h-4 me-1" />
+              {t("import_button")} ({selectedIndices.size})
             </Button>
-            {step === "preview" && (
-              <Button
-                onClick={handleImport}
-                disabled={selectedIndices.size === 0}
-              >
-                <Check className="w-4 h-4 me-1" />
-                {t("import_button")} ({selectedIndices.size})
-              </Button>
-            )}
+          )}
+        </div>
+      ) : undefined}
+    >
+      {step === "select" && !isParsing && (
+        <>
+          <div className="flex border-b border-border mb-4">
+            <Button
+              variant="ghost"
+              onClick={() => { setImportMode("file"); setError(null); }}
+              className={cn(
+                "flex items-center gap-1.5 px-4 py-2 text-sm font-medium border-b-2 rounded-none h-auto",
+                importMode === "file"
+                  ? "border-primary text-primary"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <Upload className="w-4 h-4" />
+              {t("tab_file")}
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={() => { setImportMode("url"); setError(null); }}
+              className={cn(
+                "flex items-center gap-1.5 px-4 py-2 text-sm font-medium border-b-2 rounded-none h-auto",
+                importMode === "url"
+                  ? "border-primary text-primary"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <Globe className="w-4 h-4" />
+              {t("tab_url")}
+            </Button>
           </div>
-        )}
-      </div>
-    </div>
+
+          {importMode === "file" && (
+            <div
+              onClick={() => fileInputRef.current?.click()}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              className={`flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-8 cursor-pointer transition-colors ${
+                isDragging
+                  ? "border-primary bg-primary/5"
+                  : "border-border hover:border-primary/50 hover:bg-muted/50"
+              }`}
+            >
+              <Upload className="w-8 h-8 text-muted-foreground mb-3" />
+              <p className="text-sm font-medium">{t("select_file")}</p>
+              <p className="text-xs text-muted-foreground mt-1">{t("drop_file")}</p>
+              <p className="text-xs text-muted-foreground mt-2">{t("supported_formats")}</p>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".ics,.ical"
+                onChange={handleFileChange}
+                className="hidden"
+              />
+            </div>
+          )}
+
+          {importMode === "url" && (
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">{t("url_description")}</p>
+              <div className="flex gap-2">
+                <input
+                  type="url"
+                  value={urlInput}
+                  onChange={(e) => setUrlInput(e.target.value)}
+                  placeholder={t("url_placeholder")}
+                  className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  onKeyDown={(e) => { if (e.key === "Enter") handleUrlFetch(); }}
+                />
+                <Button
+                  onClick={handleUrlFetch}
+                  disabled={!urlInput.trim() || isFetchingUrl}
+                >
+                  {isFetchingUrl ? (
+                    <Loader size="sm" color="current" />
+                  ) : (
+                    t("fetch")
+                  )}
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">{t("url_hint")}</p>
+            </div>
+          )}
+        </>
+      )}
+
+      {isParsing && (
+        <div className="flex flex-col items-center justify-center py-8">
+          <Loader size="md" color="accent" className="mb-3" />
+          <p className="text-sm text-muted-foreground">{t("parsing")}</p>
+        </div>
+      )}
+
+      {error && (
+        <div className="text-sm text-destructive bg-destructive/10 rounded-md px-3 py-2">
+          {error}
+        </div>
+      )}
+
+      {step === "preview" && parsedEvents.length > 0 && (
+        <>
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">
+              {t("parsed_events", { count: parsedEvents.length })}
+            </p>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggleAll}
+              className="text-xs text-primary h-auto min-h-0 px-0 hover:underline"
+            >
+              {selectedIndices.size === parsedEvents.length
+                ? t("deselect_all")
+                : t("select_all")}
+            </Button>
+          </div>
+
+          <div className="max-h-[300px] overflow-y-auto border border-border rounded-md divide-y divide-border">
+            {parsedEvents.map((event, index) => (
+              <Checkbox
+                key={index}
+                isSelected={selectedIndices.has(index)}
+                onChange={() => toggleEvent(index)}
+                className="w-full px-3 py-2.5 hover:bg-muted/50"
+                contentClassName="items-start gap-3 w-full"
+              >
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">
+                    {event.title || tCal("events.no_title")}
+                  </p>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-xs text-muted-foreground">
+                      {formatEventDate(event)}
+                    </span>
+                    {event.recurrenceRules && event.recurrenceRules.length > 0 && (
+                      <span className="inline-flex items-center gap-0.5 text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                        <RefreshCw className="w-3 h-3" />
+                        {event.recurrenceRules[0].frequency}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </Checkbox>
+            ))}
+          </div>
+
+          {calendars.length > 1 && (
+            <div>
+              <label className="text-sm font-medium mb-1 block">
+                {t("target_calendar")}
+              </label>
+              <AppSelect
+                value={calendarId}
+                onChange={setCalendarId}
+                options={calendarOptions}
+                aria-label={t("target_calendar")}
+              />
+            </div>
+          )}
+        </>
+      )}
+
+      {step === "importing" && (
+        <div className="flex flex-col items-center justify-center py-8">
+          <Loader size="md" color="accent" className="mb-3" />
+          <p className="text-sm text-muted-foreground">{t("importing")}</p>
+        </div>
+      )}
+    </AppModal>
   );
 }

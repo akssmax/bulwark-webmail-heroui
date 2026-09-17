@@ -6,6 +6,7 @@ import { useSettingsStore } from "@/stores/settings-store";
 import { SettingsSection, SettingItem, Select, ToggleSwitch } from "./settings-section";
 import { RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import {
   DEFAULT_ATTACHMENT_TEMPLATE,
   DEFAULT_BUNDLE_TEMPLATE,
@@ -84,26 +85,23 @@ function TemplateEditor({
             spellCheck={false}
             className="flex-1 px-3 py-1.5 text-sm rounded-md bg-muted border border-border text-foreground font-mono focus:outline-none focus:ring-2 focus:ring-ring transition-colors duration-150"
           />
-          <button
+          <Button
             type="button"
+            variant="outline"
             onClick={() => onChange(defaultValue)}
             disabled={value === defaultValue}
             title={resetLabel}
-            className={cn(
-              "px-2 rounded-md border border-border text-foreground transition-colors duration-150",
-              value === defaultValue
-                ? "opacity-40 cursor-not-allowed"
-                : "hover:bg-muted cursor-pointer",
-            )}
+            className="px-2"
           >
             <RotateCcw className="w-4 h-4" />
-          </button>
+          </Button>
         </div>
         <div className="flex flex-wrap gap-1.5">
           {tokens.map((t) => (
-            <button
+            <Button
               key={t.token}
               type="button"
+              variant="secondary"
               title={t.description}
               onClick={() => {
                 const input = inputRef.current;
@@ -113,10 +111,10 @@ function TemplateEditor({
                 }
                 insertTokenAtCursor(input, t.token, value, onChange);
               }}
-              className="px-2 py-0.5 text-xs font-mono rounded bg-muted hover:bg-accent border border-border text-foreground transition-colors duration-150 cursor-pointer"
+              className="px-2 py-0.5 text-xs font-mono h-auto min-h-0"
             >
               {`{${t.token}}`}
-            </button>
+            </Button>
           ))}
         </div>
         <div className="text-xs text-muted-foreground">

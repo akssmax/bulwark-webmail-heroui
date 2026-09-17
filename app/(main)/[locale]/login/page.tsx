@@ -1,4 +1,5 @@
 "use client";
+import { Loader } from "@/components/ui/loader";
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "@/i18n/navigation";
@@ -6,6 +7,8 @@ import { useParams, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { AppSelect } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useAuthStore } from "@/stores/auth-store";
 import { useAccountStore } from "@/stores/account-store";
 import { useThemeStore } from "@/stores/theme-store";
@@ -14,7 +17,7 @@ import { useConfig } from "@/hooks/use-config";
 import { useMenuNavigation } from "@/hooks/use-menu-navigation";
 import { apiFetch, getPathPrefix, toRouterPath, withBasePath } from "@/lib/browser-navigation";
 import { cn } from "@/lib/utils";
-import { AlertCircle, Loader2, X, Info, Eye, EyeOff, LogIn, Sun, Moon, Monitor, Check, Shield, Play, Copy } from "lucide-react";
+import { AlertCircle, X, Info, Eye, EyeOff, LogIn, Sun, Moon, Monitor, Check, Shield, Play, Copy } from "lucide-react";
 import { type OAuthMetadata } from "@/lib/oauth/discovery";
 import { generateCodeVerifier, generateCodeChallenge, generateState } from "@/lib/oauth/pkce";
 import { useUpdateStore, selectBanner } from "@/stores/update-store";
@@ -96,13 +99,15 @@ function VersionBadge() {
               <p className="text-red-500 dark:text-red-400">{banner.advisory}</p>
             )}
           </div>
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={handleCopy}
-            className="p-1 rounded hover:bg-muted transition-colors"
+            className="h-7 w-7"
             aria-label="Copy version info"
           >
             {copied ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
-          </button>
+          </Button>
         </div>
       </div>
     </div>
@@ -458,7 +463,7 @@ export default function LoginPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted/30">
         <div className="w-full max-w-sm mx-auto px-4 text-center" role="status">
-          <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
+          <Loader size="lg" color="accent" className="mx-auto" />
           <span className="sr-only">{t("loading")}</span>
         </div>
       </div>
@@ -469,7 +474,7 @@ export default function LoginPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted/30">
         <div className="w-full max-w-md mx-auto px-4 text-center">
-          <div className="rounded-2xl border border-border/60 bg-background/80 backdrop-blur-sm shadow-xl p-8">
+          <div className="rounded-2xl border border-border/60 bg-surface/90 backdrop-blur-sm shadow-xl p-8">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-500/10 mb-5">
               <AlertCircle className="w-8 h-8 text-red-500" />
             </div>
@@ -487,7 +492,7 @@ export default function LoginPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted/30">
         <div className="w-full max-w-md mx-auto px-4 text-center">
-          <div className="rounded-2xl border border-border/60 bg-background/80 backdrop-blur-sm shadow-xl p-8">
+          <div className="rounded-2xl border border-border/60 bg-surface/90 backdrop-blur-sm shadow-xl p-8">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-500/10 mb-5">
               <AlertCircle className="w-8 h-8 text-red-500" />
             </div>
@@ -710,22 +715,19 @@ export default function LoginPage() {
   // (issue #799).
   const serverPicker = hasServerList && jmapServers.length > 1 ? (
     <div className="space-y-1.5">
-      <label htmlFor="jmap-server-select" className="block text-sm font-medium text-foreground">
+      <label id="jmap-server-select-label" htmlFor="jmap-server-select" className="block text-sm font-medium text-foreground">
         {t("jmap_server_label")}
       </label>
-      <select
-        id="jmap-server-select"
+      <AppSelect
         value={selectedServer?.id ?? ""}
-        onChange={(e) => setSelectedServerId(e.target.value)}
+        onChange={setSelectedServerId}
         disabled={domainAutoLocked || oauthLoading}
-        className="h-11 w-full px-3.5 bg-muted/40 border border-border/60 rounded-xl focus:bg-background focus:border-primary/50 transition-all duration-200 text-sm text-foreground disabled:opacity-70 disabled:cursor-not-allowed"
-      >
-        {jmapServers.map((s) => (
-          <option key={s.id} value={s.id}>{s.label}</option>
-        ))}
-      </select>
+        options={jmapServers.map((s) => ({ value: s.id, label: s.label }))}
+        aria-labelledby="jmap-server-select-label"
+        className="[&_[data-slot=trigger]]:h-11 [&_[data-slot=trigger]]:rounded-xl"
+      />
       {domainAutoLocked && (
-        <p className="text-[11px] text-muted-foreground leading-snug">
+        <p className="text-xs text-muted-foreground leading-snug">
           {t("jmap_server_auto_picked")}
         </p>
       )}
@@ -738,12 +740,13 @@ export default function LoginPage() {
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-background via-muted/10 to-muted/30 relative px-4">
         {/* Theme toggle */}
         <div className="absolute top-5 right-5" ref={themeMenuRef} suppressHydrationWarning>
-          <button
+          <Button
             type="button"
             ref={themeButtonRef}
+            variant="outline"
             onClick={() => setShowThemeMenu(!showThemeMenu)}
             className={cn(
-              "flex items-center gap-2 px-3 py-2 rounded-xl border text-sm transition-all duration-200",
+              "gap-2 rounded-xl text-sm",
               showThemeMenu
                 ? "bg-secondary border-border text-foreground shadow-md"
                 : "bg-background/60 backdrop-blur-sm border-border/50 text-muted-foreground hover:text-foreground hover:bg-secondary/80 hover:border-border"
@@ -754,7 +757,7 @@ export default function LoginPage() {
           >
             <CurrentThemeIcon className="w-4 h-4" />
             <span className="hidden sm:inline" suppressHydrationWarning>{currentThemeOption.label}</span>
-          </button>
+          </Button>
 
           {showThemeMenu && (
             <div
@@ -768,14 +771,15 @@ export default function LoginPage() {
                 const Icon = option.icon;
                 const isActive = theme === option.value;
                 return (
-                  <button
+                  <Button
                     key={option.value}
                     type="button"
+                    variant="ghost"
                     role="menuitemradio"
                     aria-checked={isActive}
                     onClick={() => handleThemeSelect(option.value)}
                     className={cn(
-                      "w-full flex items-center gap-3 px-3.5 py-2.5 text-sm transition-colors",
+                      "w-full justify-start gap-3 px-3.5 py-2.5 h-auto text-sm rounded-none",
                       isActive
                         ? "bg-primary/10 text-foreground font-medium"
                         : "text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -784,7 +788,7 @@ export default function LoginPage() {
                     <Icon className="w-4 h-4" />
                     <span className="flex-1 text-start">{option.label}</span>
                     {isActive && <Check className="w-3.5 h-3.5 text-primary" />}
-                  </button>
+                  </Button>
                 );
               })}
             </div>
@@ -792,7 +796,7 @@ export default function LoginPage() {
         </div>
 
         <div className="w-full max-w-[440px] mx-auto">
-          <div className="rounded-2xl border border-border/60 bg-background/80 backdrop-blur-sm shadow-xl shadow-black/5 dark:shadow-black/20 overflow-hidden">
+          <div className="rounded-2xl border border-border/60 bg-surface/90 backdrop-blur-sm shadow-xl shadow-black/5 dark:shadow-black/20 overflow-hidden">
             {/* Header with logo */}
             <div className="px-8 pt-12 pb-4 text-center">
               <div className="inline-flex items-center justify-center w-20 h-20 mb-6">
@@ -836,7 +840,7 @@ export default function LoginPage() {
               >
                 {demoLoading ? (
                   <div className="flex items-center gap-3">
-                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <Loader size="md" color="current" />
                     {t("demo_launching")}
                   </div>
                 ) : (
@@ -890,12 +894,13 @@ export default function LoginPage() {
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-background via-muted/10 to-muted/30 relative px-4">
       {/* Theme toggle - top right, dropdown style */}
       <div className="absolute top-5 right-5" ref={themeMenuRef} suppressHydrationWarning>
-        <button
+        <Button
           type="button"
           ref={themeButtonRef}
+          variant="outline"
           onClick={() => setShowThemeMenu(!showThemeMenu)}
           className={cn(
-            "flex items-center gap-2 px-3 py-2 rounded-xl border text-sm transition-all duration-200",
+            "gap-2 rounded-xl text-sm",
             showThemeMenu
               ? "bg-secondary border-border text-foreground shadow-md"
               : "bg-background/60 backdrop-blur-sm border-border/50 text-muted-foreground hover:text-foreground hover:bg-secondary/80 hover:border-border"
@@ -906,7 +911,7 @@ export default function LoginPage() {
         >
           <CurrentThemeIcon className="w-4 h-4" />
           <span className="hidden sm:inline" suppressHydrationWarning>{currentThemeOption.label}</span>
-        </button>
+        </Button>
 
         {showThemeMenu && (
           <div
@@ -920,14 +925,15 @@ export default function LoginPage() {
               const Icon = option.icon;
               const isActive = theme === option.value;
               return (
-                <button
+                <Button
                   key={option.value}
                   type="button"
+                  variant="ghost"
                   role="menuitemradio"
                   aria-checked={isActive}
                   onClick={() => handleThemeSelect(option.value)}
                   className={cn(
-                    "w-full flex items-center gap-3 px-3.5 py-2.5 text-sm transition-colors",
+                    "w-full justify-start gap-3 px-3.5 py-2.5 h-auto text-sm rounded-none",
                     isActive
                       ? "bg-primary/10 text-foreground font-medium"
                       : "text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -936,7 +942,7 @@ export default function LoginPage() {
                   <Icon className="w-4 h-4" />
                   <span className="flex-1 text-start">{option.label}</span>
                   {isActive && <Check className="w-3.5 h-3.5 text-primary" />}
-                </button>
+                </Button>
               );
             })}
           </div>
@@ -945,7 +951,7 @@ export default function LoginPage() {
 
       <div className="w-full max-w-[400px] mx-auto">
         {/* Card container */}
-        <div className="rounded-2xl border border-border/60 bg-background/80 backdrop-blur-sm shadow-xl shadow-black/5 dark:shadow-black/20 overflow-hidden">
+        <div className="rounded-2xl border border-border/60 bg-surface/90 backdrop-blur-sm shadow-xl shadow-black/5 dark:shadow-black/20 overflow-hidden">
           {/* Header section with logo */}
           <div className="px-8 pt-10 pb-6 text-center">
             <div className={cn("inline-flex items-center justify-center mb-5", !hasLogoSize && "w-16 h-16")}>
@@ -984,14 +990,16 @@ export default function LoginPage() {
                   <p className="text-sm text-info flex-1 leading-relaxed">
                     {t("session_expired")}
                   </p>
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
+                    size="icon"
                     onClick={() => setSessionExpired(false)}
-                    className="p-1 rounded-md text-info hover:bg-info/10 transition-colors flex-shrink-0"
+                    className="h-8 w-8 text-info hover:bg-info/10 flex-shrink-0"
                     aria-label={t("dismiss")}
                   >
                     <X className="w-4 h-4" />
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}
@@ -1026,7 +1034,7 @@ export default function LoginPage() {
                 >
                   {isLoading ? (
                     <div className="flex items-center gap-2">
-                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <Loader size="sm" color="current" />
                       {t("signing_in")}
                     </div>
                   ) : (
@@ -1053,7 +1061,7 @@ export default function LoginPage() {
                   >
                     {oauthLoading ? (
                       <div className="flex items-center gap-2">
-                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <Loader size="sm" color="current" />
                         {t("signing_in")}
                       </div>
                     ) : (
@@ -1076,7 +1084,7 @@ export default function LoginPage() {
                   </div>
                 ) : (
                   <div className="flex justify-center py-4">
-                    <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                    <Loader size="md" color="accent" />
                   </div>
                 )}
               </div>
@@ -1100,7 +1108,7 @@ export default function LoginPage() {
                         placeholder={t("jmap_endpoint_placeholder")}
                         required
                       />
-                      <p className="text-[11px] text-muted-foreground leading-snug">
+                      <p className="text-xs text-muted-foreground leading-snug">
                         {t("jmap_endpoint_cors_hint")}
                       </p>
                     </div>
@@ -1145,14 +1153,16 @@ export default function LoginPage() {
                               onClick={() => selectSuggestion(username)}
                             >
                               <span className="text-sm text-foreground">{username}</span>
-                              <button
+                              <Button
                                 type="button"
+                                variant="ghost"
+                                size="icon"
                                 onClick={(e) => removeUsername(username, e)}
-                                className="p-1 hover:bg-secondary rounded-md transition-colors"
-                                title={t("remove_from_history")}
+                                className="h-7 w-7"
+                                aria-label={t("remove_from_history")}
                               >
                                 <X className="w-3 h-3 text-muted-foreground" />
-                              </button>
+                              </Button>
                             </div>
                           ))}
                         </div>
@@ -1176,10 +1186,12 @@ export default function LoginPage() {
                         required
                         autoComplete="current-password"
                       />
-                      <button
+                      <Button
                         type="button"
+                        variant="ghost"
+                        size="icon"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-md text-muted-foreground hover:text-foreground transition-colors"
+                        className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 text-muted-foreground"
                         aria-label={showPassword ? t("hide_password") : t("show_password")}
                         tabIndex={-1}
                       >
@@ -1188,7 +1200,7 @@ export default function LoginPage() {
                         ) : (
                           <Eye className="w-4 h-4" />
                         )}
-                      </button>
+                      </Button>
                     </div>
                   </div>
 
@@ -1198,17 +1210,19 @@ export default function LoginPage() {
                       external directory); server-required TOTP still shows. */}
                   {!showTotpField ? (
                     loginShowTotp ? (
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
+                      size="sm"
                       onClick={() => {
                         setShowTotpField(true);
                         setTimeout(() => totpInputRef.current?.focus(), 50);
                       }}
-                      className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                      className="h-auto px-0 gap-1.5 text-xs text-muted-foreground hover:text-foreground"
                     >
                       <Shield className="w-3.5 h-3.5" />
                       {t("totp_toggle")}
-                    </button>
+                    </Button>
                     ) : null
                   ) : (
                     <div className="space-y-1.5">
@@ -1236,26 +1250,13 @@ export default function LoginPage() {
 
                   {/* Remember me */}
                   {rememberMeEnabled && (
-                    <label className="flex items-center gap-2.5 cursor-pointer group select-none pt-1">
-                      <span className="relative flex items-center justify-center">
-                        <input
-                          type="checkbox"
-                          checked={rememberMe}
-                          onChange={(e) => setRememberMe(e.target.checked)}
-                          className="peer sr-only"
-                        />
-                        <span className="flex items-center justify-center w-[18px] h-[18px] rounded-[5px] border border-border/80 bg-muted/40 peer-checked:bg-primary peer-checked:border-primary peer-focus-visible:ring-2 peer-focus-visible:ring-ring peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-background transition-all duration-200">
-                          {rememberMe && (
-                            <svg className="w-3 h-3 text-primary-foreground" viewBox="0 0 12 12" fill="none">
-                              <path d="M2 6L5 9L10 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                          )}
-                        </span>
-                      </span>
-                      <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
-                        {t("remember_me")}
-                      </span>
-                    </label>
+                    <Checkbox
+                      isSelected={rememberMe}
+                      onChange={setRememberMe}
+                      className="pt-1 text-sm text-muted-foreground"
+                    >
+                      {t("remember_me")}
+                    </Checkbox>
                   )}
                 </fieldset>
 
@@ -1266,7 +1267,7 @@ export default function LoginPage() {
                 >
                   {isLoading ? (
                     <div className="flex items-center gap-2">
-                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <Loader size="sm" color="current" />
                       {t("signing_in")}
                     </div>
                   ) : (
@@ -1296,7 +1297,7 @@ export default function LoginPage() {
                       disabled={oauthLoading || isLoading}
                     >
                       {oauthLoading ? (
-                        <Loader2 className="w-4 h-4 animate-spin me-2" />
+                        <Loader size="sm" color="current" className="me-2" />
                       ) : (
                         <LogIn className="w-4 h-4 me-2" />
                       )}
@@ -1345,7 +1346,7 @@ export default function LoginPage() {
                 >
                   {demoLoading ? (
                     <div className="flex items-center gap-2">
-                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <Loader size="sm" color="current" />
                       {t("demo_launching")}
                     </div>
                   ) : (

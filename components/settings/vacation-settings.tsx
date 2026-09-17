@@ -1,4 +1,5 @@
 'use client';
+import { Loader } from "@/components/ui/loader";
 
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
@@ -10,8 +11,9 @@ import { useAuthStore } from '@/stores/auth-store';
 import { useManagedAccountStore } from '@/stores/managed-account-store';
 import { sanitizeEmailHtml } from '@/lib/email-sanitization';
 import { htmlToPlainText } from '@/lib/html-to-text';
-import { Loader2, AlertTriangle, Eye, EyeOff } from 'lucide-react';
+import { AlertTriangle, Eye, EyeOff } from "lucide-react";
 import { toast } from '@/stores/toast-store';
+import { DateTimePickerField } from '@/components/ui/date-picker';
 
 function utcToLocalDatetime(utcIso: string): string {
   const d = new Date(utcIso);
@@ -148,7 +150,7 @@ export function VacationSettings() {
     return (
       <SettingsSection title={t('title')} description={t('description')}>
         <div className="flex items-center gap-2 py-4 text-sm text-muted-foreground">
-          <Loader2 className="w-4 h-4 animate-spin" />
+          <Loader size="sm" color="current" />
           {t('loading')}
         </div>
       </SettingsSection>
@@ -190,22 +192,20 @@ export function VacationSettings() {
           label={t('date_range.start')}
           description={t('date_range.start_description')}
         >
-          <input
-            type="datetime-local"
+          <DateTimePickerField
             value={localFromDate ? utcToLocalDatetime(localFromDate) : ''}
             onChange={(e) => setLocalFromDate(e.target.value ? new Date(e.target.value).toISOString() : '')}
-            className="px-3 py-1.5 text-sm rounded-md bg-muted border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-colors duration-150 hover:border-muted-foreground"
+            aria-label={t('date_range.start')}
           />
         </SettingItem>
         <SettingItem
           label={t('date_range.end')}
           description={t('date_range.end_description')}
         >
-          <input
-            type="datetime-local"
+          <DateTimePickerField
             value={localToDate ? utcToLocalDatetime(localToDate) : ''}
             onChange={(e) => setLocalToDate(e.target.value ? new Date(e.target.value).toISOString() : '')}
-            className="px-3 py-1.5 text-sm rounded-md bg-muted border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-colors duration-150 hover:border-muted-foreground"
+            aria-label={t('date_range.end')}
           />
         </SettingItem>
       </SettingsSection>
@@ -263,14 +263,15 @@ export function VacationSettings() {
         if (!localTextBody.trim() && !showHtmlPreview) return null;
         return (
           <SettingsSection title={t('preview.title')}>
-            <button
+            <Button
               type="button"
+              variant="ghost"
               onClick={() => setShowPreview(!showPreview)}
-              className="flex items-center gap-2 text-sm text-primary hover:underline"
+              className="flex items-center gap-2 text-sm text-primary h-auto min-h-0 px-0 hover:underline font-normal"
             >
               {showPreview ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               {showPreview ? t('preview.hide') : t('preview.show')}
-            </button>
+            </Button>
             {showPreview && (
               <div className="mt-3 p-4 rounded border border-border bg-background">
                 {localSubject && (
@@ -318,7 +319,7 @@ export function VacationSettings() {
         >
           {isSaving ? (
             <>
-              <Loader2 className="w-4 h-4 me-2 animate-spin" />
+              <Loader size="sm" color="current" className="me-2" />
               {t('saving')}
             </>
           ) : (

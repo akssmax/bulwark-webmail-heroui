@@ -1,28 +1,65 @@
+"use client";
+
 import * as React from "react";
+import { Input as HeroInput } from "@heroui/react";
 import { cn } from "@/lib/utils";
+import {
+  DatePickerField,
+  DateTimePickerField,
+  TimePickerField,
+} from "@/components/ui/date-picker";
 
 export interface InputProps
   extends React.InputHTMLAttributes<HTMLInputElement> {}
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
   ({ className, type, ...props }, ref) => {
+    if (type === "date") {
+      return (
+        <DatePickerField
+          className={className}
+          value={typeof props.value === "string" ? props.value : undefined}
+          onChange={props.onChange}
+          isDisabled={props.disabled}
+          name={props.name}
+          aria-label={props["aria-label"]}
+        />
+      );
+    }
+    if (type === "time") {
+      return (
+        <TimePickerField
+          className={className}
+          value={typeof props.value === "string" ? props.value : undefined}
+          onChange={props.onChange}
+          isDisabled={props.disabled}
+          name={props.name}
+          aria-label={props["aria-label"]}
+        />
+      );
+    }
+    if (type === "datetime-local") {
+      return (
+        <DateTimePickerField
+          className={className}
+          value={typeof props.value === "string" ? props.value : undefined}
+          onChange={props.onChange}
+          isDisabled={props.disabled}
+          name={props.name}
+          aria-label={props["aria-label"]}
+        />
+      );
+    }
+
     return (
-      <input
-        type={type}
-        className={cn(
-          "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground transition-all duration-200",
-          "file:border-0 file:bg-transparent file:text-sm file:font-medium",
-          "placeholder:text-muted-foreground",
-          "hover:border-muted-foreground",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:border-ring",
-          "disabled:cursor-not-allowed disabled:opacity-50",
-          className
-        )}
+      <HeroInput
         ref={ref}
+        type={type}
+        className={cn("w-full", className)}
         {...props}
       />
     );
-  }
+  },
 );
 Input.displayName = "Input";
 

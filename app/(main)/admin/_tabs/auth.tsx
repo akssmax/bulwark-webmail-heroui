@@ -1,8 +1,15 @@
 'use client';
+import { Loader } from "@/components/ui/loader";
 
 import { useEffect, useState } from 'react';
-import { Save, Loader2, RotateCcw, Sparkles } from 'lucide-react';
+import { Save, RotateCcw, Sparkles } from "lucide-react";
 import { apiFetch } from '@/lib/browser-navigation';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { AppSelect } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
+import { AppModal } from '@/components/ui/modal';
 
 interface ConfigEntry {
   // Sensitive keys (sessionSecret, oauthClientSecret) come back with
@@ -139,14 +146,10 @@ export function AuthTab() {
           <p className="text-sm text-muted-foreground mt-1">OAuth, SSO, and session configuration</p>
         </div>
         {hasEdits && (
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="inline-flex items-center gap-2 h-9 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 disabled:opacity-50 transition-all shadow-sm"
-          >
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+          <Button onClick={handleSave} disabled={saving} className="h-9 gap-2">
+            {saving ? <Loader size="sm" color="current" /> : <Save className="w-4 h-4" />}
             Save changes
-          </button>
+          </Button>
         )}
       </div>
 
@@ -168,104 +171,92 @@ export function AuthTab() {
               Requires your Stalwart account to have admin permissions.
             </p>
           </div>
-          <button
+          <Button
             onClick={openSetupDialog}
             disabled={setupRunning}
-            className="shrink-0 inline-flex items-center gap-2 h-9 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 disabled:opacity-50 transition-all shadow-sm"
+            className="shrink-0 h-9 gap-2"
           >
-            {setupRunning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+            {setupRunning ? <Loader size="sm" color="current" /> : <Sparkles className="w-4 h-4" />}
             {setupRunning ? 'Configuring…' : 'Set up automagically'}
-          </button>
+          </Button>
         </div>
       </div>
 
-      {setupOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="oauth-setup-title"
-          onClick={(e) => { if (e.target === e.currentTarget && !setupRunning) setSetupOpen(false); }}
-        >
-          <div className="w-full max-w-md rounded-lg border border-border bg-background shadow-xl">
-            <div className="px-5 py-4 border-b border-border">
-              <h3 id="oauth-setup-title" className="text-base font-medium text-foreground">Auto-configure OAuth</h3>
-              <p className="text-xs text-muted-foreground mt-1">
-                Verify the URLs below before continuing. The webmail and Stalwart can live on different domains.
-              </p>
-            </div>
-            <div className="px-5 py-4 space-y-4">
-              <div>
-                <label htmlFor="setup-origin" className="block text-xs font-medium text-foreground mb-1">
-                  Webmail origin
-                </label>
-                <input
-                  id="setup-origin"
-                  type="url"
-                  value={setupOrigin}
-                  onChange={(e) => setSetupOrigin(e.target.value)}
-                  disabled={setupRunning}
-                  placeholder="https://webmail.example.com"
-                  className="w-full h-9 rounded-md border border-input bg-background px-2.5 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                />
-                <p className="text-[11px] text-muted-foreground mt-1">
-                  Used to register redirect URIs (one per locale: <code>{setupOrigin.trim().replace(/\/+$/, '') || 'https://…'}/&lt;locale&gt;/auth/callback</code>) on Stalwart.
-                </p>
-                {!setupOriginValid && setupOrigin.length > 0 && (
-                  <p className="text-[11px] text-destructive mt-1">Must be like https://host with no path.</p>
-                )}
-              </div>
-              <div>
-                <label htmlFor="setup-issuer" className="block text-xs font-medium text-foreground mb-1">
-                  Stalwart issuer URL
-                </label>
-                <input
-                  id="setup-issuer"
-                  type="url"
-                  value={setupIssuer}
-                  onChange={(e) => setSetupIssuer(e.target.value)}
-                  disabled={setupRunning}
-                  placeholder="https://mail.example.com"
-                  className="w-full h-9 rounded-md border border-input bg-background px-2.5 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                />
-                <p className="text-[11px] text-muted-foreground mt-1">
-                  Where Stalwart serves <code>/.well-known/oauth-authorization-server</code>. Saved as <code>OAUTH_ISSUER_URL</code>. Pre-filled from your JMAP server URL.
-                </p>
-                {!setupIssuerValid && setupIssuer.length > 0 && (
-                  <p className="text-[11px] text-destructive mt-1">Must be like https://host with no path.</p>
-                )}
-              </div>
-              <label className="inline-flex items-center gap-2 text-xs text-foreground select-none cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={setupOauthOnly}
-                  onChange={(e) => setSetupOauthOnly(e.target.checked)}
-                  className="h-3.5 w-3.5 rounded border-input"
-                  disabled={setupRunning}
-                />
-                Also enable “OAuth only” (hide password login)
-              </label>
-            </div>
-            <div className="px-5 py-3 border-t border-border flex items-center justify-end gap-2 bg-muted/30 rounded-b-lg">
-              <button
-                onClick={() => setSetupOpen(false)}
-                disabled={setupRunning}
-                className="h-9 px-3 rounded-md border border-input bg-background text-sm text-foreground hover:bg-muted disabled:opacity-50 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleAutoSetup}
-                disabled={setupRunning || !setupOriginValid || !setupIssuerValid}
-                className="inline-flex items-center gap-2 h-9 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 disabled:opacity-50 transition-all shadow-sm"
-              >
-                {setupRunning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                {setupRunning ? 'Configuring…' : 'Configure'}
-              </button>
-            </div>
+      <AppModal
+        isOpen={setupOpen}
+        onClose={() => { if (!setupRunning) setSetupOpen(false); }}
+        title="Auto-configure OAuth"
+        size="sm"
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setSetupOpen(false)} disabled={setupRunning}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleAutoSetup}
+              disabled={setupRunning || !setupOriginValid || !setupIssuerValid}
+              className="gap-2"
+            >
+              {setupRunning ? <Loader size="sm" color="current" /> : <Sparkles className="w-4 h-4" />}
+              {setupRunning ? 'Configuring…' : 'Configure'}
+            </Button>
+          </>
+        }
+      >
+        <p className="text-xs text-muted-foreground mb-4">
+          Verify the URLs below before continuing. The webmail and Stalwart can live on different domains.
+        </p>
+        <div className="space-y-4">
+          <div>
+            <label htmlFor="setup-origin" className="block text-xs font-medium text-foreground mb-1">
+              Webmail origin
+            </label>
+            <Input
+              id="setup-origin"
+              type="url"
+              value={setupOrigin}
+              onChange={(e) => setSetupOrigin(e.target.value)}
+              disabled={setupRunning}
+              placeholder="https://webmail.example.com"
+              className="h-9"
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              Used to register redirect URIs (one per locale: <code>{setupOrigin.trim().replace(/\/+$/, '') || 'https://…'}/&lt;locale&gt;/auth/callback</code>) on Stalwart.
+            </p>
+            {!setupOriginValid && setupOrigin.length > 0 && (
+              <p className="text-xs text-destructive mt-1">Must be like https://host with no path.</p>
+            )}
           </div>
+          <div>
+            <label htmlFor="setup-issuer" className="block text-xs font-medium text-foreground mb-1">
+              Stalwart issuer URL
+            </label>
+            <Input
+              id="setup-issuer"
+              type="url"
+              value={setupIssuer}
+              onChange={(e) => setSetupIssuer(e.target.value)}
+              disabled={setupRunning}
+              placeholder="https://mail.example.com"
+              className="h-9"
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              Where Stalwart serves <code>/.well-known/oauth-authorization-server</code>. Saved as <code>OAUTH_ISSUER_URL</code>. Pre-filled from your JMAP server URL.
+            </p>
+            {!setupIssuerValid && setupIssuer.length > 0 && (
+              <p className="text-xs text-destructive mt-1">Must be like https://host with no path.</p>
+            )}
+          </div>
+          <Checkbox
+            isSelected={setupOauthOnly}
+            onChange={setSetupOauthOnly}
+            isDisabled={setupRunning}
+            className="text-xs text-foreground"
+          >
+            Also enable “OAuth only” (hide password login)
+          </Checkbox>
         </div>
-      )}
+      </AppModal>
 
       <Section title="OAuth / OpenID Connect">
         <Toggle label="OAuth Enabled" configKey="oauthEnabled" value={currentValue('oauthEnabled') as boolean} source={config.oauthEnabled?.source} onChange={handleChange} onRevert={handleRevert} />
@@ -319,7 +310,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 function SourceBadge({ source }: { source?: string }) {
   if (!source || source === 'default') return null;
   return (
-    <span className={`text-[10px] font-medium uppercase tracking-wider px-1.5 py-0.5 rounded ${source === 'admin' ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
+    <span className={`text-xs font-medium uppercase tracking-wider px-1.5 py-0.5 rounded ${source === 'admin' ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
       {source}
     </span>
   );
@@ -339,10 +330,17 @@ function Text({ label, description, configKey, value, source, onChange, onRevert
         {description && <p className="text-xs text-muted-foreground mt-0.5">{description}</p>}
       </div>
       <div className="flex items-center gap-2 w-full sm:w-auto">
-        <input type={type} value={value ?? ''} onChange={(e) => onChange(configKey, e.target.value)} placeholder={placeholder}
-          className="h-8 w-full sm:w-64 rounded-md border border-input bg-background px-2.5 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+        <Input
+          type={type}
+          value={value ?? ''}
+          onChange={(e) => onChange(configKey, e.target.value)}
+          placeholder={placeholder}
+          className="h-8 w-full sm:w-64"
+        />
         {source === 'admin' && (
-          <button onClick={() => onRevert(configKey)} className="shrink-0 text-muted-foreground hover:text-foreground" title="Revert"><RotateCcw className="w-3.5 h-3.5" /></button>
+          <Button variant="ghost" size="icon" onClick={() => onRevert(configKey)} className="shrink-0 h-8 w-8" aria-label="Revert">
+            <RotateCcw className="w-3.5 h-3.5" />
+          </Button>
         )}
       </div>
     </div>
@@ -363,13 +361,11 @@ function Toggle({ label, description, configKey, value, source, onChange, onReve
         {description && <p className="text-xs text-muted-foreground mt-0.5">{description}</p>}
       </div>
       <div className="flex items-center gap-2 shrink-0">
-        <button type="button" role="switch" aria-checked={value} aria-label={label}
-          onClick={() => onChange(configKey, !value)}
-          className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${value ? 'bg-primary' : 'bg-muted-foreground/25 dark:bg-muted-foreground/50'}`}>
-          <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-background shadow transition-transform ${value ? 'translate-x-[18px]' : 'translate-x-[3px]'}`} />
-        </button>
+        <Switch checked={value} onChange={(checked) => onChange(configKey, checked)} aria-label={label} />
         {source === 'admin' && (
-          <button onClick={() => onRevert(configKey)} className="text-muted-foreground hover:text-foreground" title="Revert"><RotateCcw className="w-3.5 h-3.5" /></button>
+          <Button variant="ghost" size="icon" onClick={() => onRevert(configKey)} className="h-8 w-8" aria-label="Revert">
+            <RotateCcw className="w-3.5 h-3.5" />
+          </Button>
         )}
       </div>
     </div>
@@ -391,12 +387,17 @@ function Select({ label, description, configKey, value, source, options, optionL
         {description && <p className="text-xs text-muted-foreground mt-0.5">{description}</p>}
       </div>
       <div className="flex items-center gap-2 shrink-0">
-        <select value={value ?? ''} onChange={(e) => onChange(configKey, e.target.value)}
-          className="h-8 rounded-md border border-input bg-background px-2.5 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-          {options.map(o => <option key={o} value={o}>{optionLabels?.[o] ?? o}</option>)}
-        </select>
+        <AppSelect
+          value={value ?? ''}
+          onChange={(next) => onChange(configKey, next)}
+          options={options.map((o) => ({ value: o, label: optionLabels?.[o] ?? o }))}
+          aria-label={label}
+          className="w-auto min-w-[10rem]"
+        />
         {source === 'admin' && (
-          <button onClick={() => onRevert(configKey)} className="text-muted-foreground hover:text-foreground" title="Revert"><RotateCcw className="w-3.5 h-3.5" /></button>
+          <Button variant="ghost" size="icon" onClick={() => onRevert(configKey)} className="h-8 w-8" aria-label="Revert">
+            <RotateCcw className="w-3.5 h-3.5" />
+          </Button>
         )}
       </div>
     </div>

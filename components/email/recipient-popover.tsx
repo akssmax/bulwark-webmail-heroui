@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Mail, Phone, Building, ExternalLink, Copy, Send, UserPlus } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { MailtoLink } from "@/components/ui/mailto-link";
 import { useContactStore, getContactDisplayName } from "@/stores/contact-store";
@@ -128,16 +129,17 @@ export function RecipientPopover({ name, email, displayLabel, onViewContact, cla
 
   return (
     <>
-      <button
+      <Button
         ref={triggerRef}
+        variant="ghost"
         onClick={handleToggle}
         className={cn(
-          "text-foreground hover:text-primary hover:underline cursor-pointer transition-colors min-w-0 break-words",
+          "h-auto min-h-0 p-0 font-normal text-foreground hover:bg-transparent hover:text-primary hover:underline",
           className
         )}
       >
         <bdi>{displayLabel || name || email}</bdi>
-      </button>
+      </Button>
 
       {isOpen &&
         position &&
@@ -203,14 +205,16 @@ export function RecipientPopover({ name, email, displayLabel, onViewContact, cla
 
             {/* Actions */}
             <div className="border-t border-border px-2 py-2 flex items-center gap-1">
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => handleCopyEmail(email)}
-                className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground px-2 py-1.5 rounded hover:bg-muted transition-colors"
+                className="h-auto min-h-0 gap-1.5 px-2 py-1.5 text-xs text-muted-foreground"
                 title="Copy email"
               >
                 <Copy className="w-3.5 h-3.5" />
                 Copy
-              </button>
+              </Button>
               <MailtoLink
                 to={email}
                 className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground px-2 py-1.5 rounded hover:bg-muted transition-colors"
@@ -220,14 +224,16 @@ export function RecipientPopover({ name, email, displayLabel, onViewContact, cla
                 Email
               </MailtoLink>
               {onViewContact && (
-                <button
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={handleViewContact}
-                  className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground px-2 py-1.5 rounded hover:bg-muted transition-colors ms-auto"
+                  className="ms-auto h-auto min-h-0 gap-1.5 px-2 py-1.5 text-xs text-muted-foreground"
                   title={contact ? "View contact" : "View details"}
                 >
                   {contact ? <ExternalLink className="w-3.5 h-3.5" /> : <UserPlus className="w-3.5 h-3.5" />}
                   {contact ? "View contact" : "View details"}
-                </button>
+                </Button>
               )}
             </div>
           </div>,

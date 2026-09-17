@@ -7,6 +7,7 @@ import type { ReplyIdentityMatch, SendDelaySeconds } from '@/stores/settings-sto
 import { useAuthStore } from '@/stores/auth-store';
 import { SettingsSection, SettingItem, Select, ToggleSwitch } from './settings-section';
 import { X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import {
   SUPPORTED_SUB_ADDRESS_DELIMITERS,
   isSupportedSubAddressDelimiter,
@@ -196,14 +197,16 @@ export function ComposingSettings() {
             {attachmentReminderKeywords.map((kw) => (
               <span key={kw} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-muted text-foreground">
                 {kw}
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="icon"
                   aria-label={t('attachment_reminder.remove')}
                   onClick={() => updateSetting('attachmentReminderKeywords', attachmentReminderKeywords.filter(k => k !== kw))}
-                  className="text-muted-foreground hover:text-foreground"
+                  className="h-5 w-5 min-w-0"
                 >
                   <X className="w-3 h-3" />
-                </button>
+                </Button>
               </span>
             ))}
           </div>
@@ -225,13 +228,14 @@ export function ComposingSettings() {
               placeholder={t('attachment_reminder.add_placeholder')}
               className="flex-1 min-w-0 px-2 py-1 text-sm bg-background border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-ring"
             />
-            <button
+            <Button
               type="submit"
+              variant="secondary"
               disabled={!newKeyword.trim()}
-              className="px-3 py-1 text-sm bg-muted hover:bg-accent rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+              className="text-sm"
             >
               {t('attachment_reminder.add')}
-            </button>
+            </Button>
           </form>
         </div>
       )}

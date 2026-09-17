@@ -7,6 +7,7 @@
 // DEFINITIONS (stores/message-list-tabs-store.ts) - no plugin iframe here.
 
 import { useEffect, useRef } from 'react';
+import { Button } from '@heroui/react';
 import { icons as lucideIcons, type LucideIcon } from 'lucide-react';
 import { useMessageListTabsStore } from '@/stores/message-list-tabs-store';
 import { useEmailStore } from '@/stores/email-store';
@@ -80,18 +81,17 @@ export function MessageListTabs() {
         const unread = tabCounts[tab.id] ?? 0;
         const isActive = tab.id === activeTabId;
         return (
-          <button
+          <Button
             key={tab.id}
-            role="tab"
             aria-selected={isActive}
-            onClick={() => handleSelect(tab.id)}
+            variant={isActive ? 'secondary' : 'ghost'}
+            onPress={() => handleSelect(tab.id)}
             className={cn(
-              'relative flex items-center gap-1.5 px-3.5 py-2.5 text-sm whitespace-nowrap select-none',
-              'border-b-2 -mb-px rounded-t-md transition-colors duration-150',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
+              'relative flex items-center gap-1.5 px-3.5 py-2.5 h-auto min-h-0 rounded-none text-sm whitespace-nowrap select-none',
+              'border-b-2 -mb-px rounded-t-md',
               isActive
                 ? 'border-primary text-foreground font-medium'
-                : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/40',
+                : 'border-transparent text-muted-foreground',
             )}
             style={isActive && tab.color ? { borderBottomColor: tab.color } : undefined}
           >
@@ -113,7 +113,7 @@ export function MessageListTabs() {
                 {unread > 99 ? '99+' : unread}
               </span>
             )}
-          </button>
+          </Button>
         );
       })}
     </div>

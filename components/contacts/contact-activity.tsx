@@ -1,8 +1,9 @@
 "use client";
+import { Loader } from "@/components/ui/loader";
 
 import { useEffect, useState } from "react";
 import { useTranslations, useFormatter } from "next-intl";
-import { Loader2 } from "lucide-react";
+
 import { useRouter } from "@/i18n/navigation";
 import { useAuthStore } from "@/stores/auth-store";
 import { useEmailStore } from "@/stores/email-store";
@@ -10,6 +11,7 @@ import { useCalendarStore } from "@/stores/calendar-store";
 import { Avatar } from "@/components/ui/avatar";
 import { Section } from "./contact-detail";
 import type { ContactCard, Email, CalendarEvent } from "@/lib/jmap/types";
+import { Button } from "@/components/ui/button";
 
 const EMAIL_LIMIT = 5;
 const EVENT_LIMIT = 5;
@@ -225,11 +227,12 @@ export function ContactActivity({ contact }: ContactActivityProps) {
             {emails.map((email) => {
               const sender = getEmailSender(email);
               return (
-                <button
+                <Button
                   key={email.id}
                   type="button"
+                  variant="ghost"
                   onClick={() => handleOpenEmail(email)}
-                  className="w-full text-start flex items-start gap-3 px-2 py-2 rounded-md hover:bg-muted/60 transition-colors touch-manipulation"
+                  className="w-full justify-start flex items-start gap-3 px-2 py-2 h-auto min-h-0 rounded-md font-normal touch-manipulation"
                 >
                   <Avatar name={sender.name} email={sender.address} size="sm" />
                   <div className="flex-1 min-w-0">
@@ -250,7 +253,7 @@ export function ContactActivity({ contact }: ContactActivityProps) {
                       </p>
                     )}
                   </div>
-                </button>
+                </Button>
               );
             })}
           </div>
@@ -273,11 +276,12 @@ export function ContactActivity({ contact }: ContactActivityProps) {
                 </div>
                 <div className="-mx-2">
                   {group.map((event) => (
-                    <button
+                    <Button
                       key={event.id}
                       type="button"
+                      variant="ghost"
                       onClick={() => handleOpenEvent(event)}
-                      className="w-full text-start flex items-baseline gap-3 px-2 py-2 rounded-md hover:bg-muted/60 transition-colors touch-manipulation"
+                      className="w-full justify-start flex items-baseline gap-3 px-2 py-2 h-auto min-h-0 rounded-md font-normal touch-manipulation"
                     >
                       <span className="text-xs text-muted-foreground tabular-nums w-20 flex-shrink-0">
                         {formatEventTime(event)}
@@ -285,7 +289,7 @@ export function ContactActivity({ contact }: ContactActivityProps) {
                       <span className="text-sm truncate flex-1 min-w-0">
                         {event.title || t("no_title")}
                       </span>
-                    </button>
+                    </Button>
                   ))}
                 </div>
               </div>
@@ -300,7 +304,7 @@ export function ContactActivity({ contact }: ContactActivityProps) {
 function LoadingRow() {
   return (
     <div className="flex items-center gap-2 text-sm text-muted-foreground">
-      <Loader2 className="w-4 h-4 animate-spin" />
+      <Loader size="sm" color="current" />
     </div>
   );
 }

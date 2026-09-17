@@ -1,4 +1,5 @@
 "use client";
+import { Loader } from "@/components/ui/loader";
 
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -6,7 +7,7 @@ import { useTranslations } from "next-intl";
 import { useAuthStore } from "@/stores/auth-store";
 import { apiFetch, getPathPrefix, toRouterPath } from "@/lib/browser-navigation";
 import { buildSettingsPath } from "@/lib/deep-links";
-import { Loader2, AlertCircle } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useParams } from "next/navigation";
 
@@ -232,7 +233,7 @@ function OAuthCallbackInner() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/20">
       <div className="w-full max-w-sm mx-auto px-4 text-center" role="status">
-        <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-4" />
+        <Loader size="lg" color="accent" className="mx-auto mb-4" />
         <p className="text-muted-foreground text-sm">{t("oauth_completing")}</p>
       </div>
     </div>
@@ -245,7 +246,7 @@ export default function OAuthCallbackPage() {
       fallback={
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/20">
           <div className="w-full max-w-sm mx-auto px-4 text-center" role="status">
-            <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-4" />
+            <Loader size="lg" color="accent" className="mx-auto mb-4" />
           </div>
         </div>
       }

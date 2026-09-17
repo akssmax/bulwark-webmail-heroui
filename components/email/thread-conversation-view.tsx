@@ -1,4 +1,5 @@
 "use client";
+import { Loader } from "@/components/ui/loader";
 
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import DOMPurify from "dompurify";
@@ -13,25 +14,7 @@ import { useThemeStore } from "@/stores/theme-store";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { formatDate, formatFileSize, cn } from "@/lib/utils";
-import {
-  ArrowLeft,
-  ChevronDown,
-  ChevronUp,
-  Reply,
-  ReplyAll,
-  Forward,
-  Paperclip,
-  Star,
-  Download,
-  Loader2,
-  FileText,
-  FileImage,
-  FileVideo,
-  FileAudio,
-  FileArchive,
-  File,
-  Eye,
-} from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronUp, Reply, ReplyAll, Forward, Paperclip, Star, Download, FileText, FileImage, FileVideo, FileAudio, FileArchive, File, Eye } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useContactStore } from "@/stores/contact-store";
@@ -140,7 +123,7 @@ export function ThreadConversationView({
     return (
       <div className="flex-1 flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-3">
-          <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+          <Loader size="lg" color="current" />
           <p className="text-sm text-muted-foreground">{t("threads.loading")}</p>
         </div>
       </div>
@@ -151,12 +134,14 @@ export function ThreadConversationView({
     <div className="flex flex-col h-full bg-background">
       {/* Header */}
       <div className="flex items-center px-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 sticky top-0 z-10" style={{ gap: 'var(--density-item-gap)', paddingBlock: 'var(--density-header-py)' }}>
-        <button
+        <Button
+          variant="ghost"
+          size="icon"
           onClick={onBack}
-          className="p-2 -ms-2 rounded-full hover:bg-muted transition-colors"
+          className="-ms-2 rounded-full"
         >
           <ArrowLeft className="w-5 h-5" />
-        </button>
+        </Button>
         <div className="flex-1 min-w-0">
           <h1 className="font-semibold text-foreground break-words">
             {thread.latestEmail.subject || t("email_viewer.no_subject")}
@@ -517,10 +502,11 @@ function EmailCard({
       isUnread && !isExpanded && "border-s-2 border-l-primary"
     )}>
       {/* Card Header - Always visible */}
-      <button
+      <Button
+        variant="ghost"
         onClick={onToggleExpanded}
         className={cn(
-          "w-full flex items-start text-start transition-colors",
+          "h-auto w-full items-start justify-start text-start transition-colors",
           !isExpanded && "hover:bg-muted/50"
         )}
         style={{ gap: 'var(--density-item-gap)', padding: 'var(--density-card-p)' }}
@@ -564,7 +550,7 @@ function EmailCard({
             <ChevronDown className="w-5 h-5 text-muted-foreground" />
           )}
         </div>
-      </button>
+      </Button>
 
       {/* Expanded Content */}
       {isExpanded && (
@@ -640,14 +626,15 @@ function EmailCard({
                   const isPreviewable = isFilePreviewable(attachment.name, attachment.type);
                   const opensPreview = isPreviewable && mailAttachmentAction === 'preview';
                   return (
-                    <button
+                    <Button
                       key={idx}
+                      variant="ghost"
                       onClick={(e) => {
                         e.stopPropagation();
                         onDownloadAttachment?.(attachment.blobId, attachment.name || 'attachment', attachment.type);
                       }}
                       title={opensPreview ? t('files.preview') : t('email_viewer.download')}
-                      className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted hover:bg-muted/80 transition-colors text-sm"
+                      className="h-auto gap-2 rounded-lg bg-muted px-3 py-2 text-sm font-normal hover:bg-muted/80"
                     >
                       <Icon className="w-4 h-4 text-muted-foreground" />
                       <span className="truncate max-w-[150px]">{attachment.name || 'Attachment'}</span>
@@ -659,7 +646,7 @@ function EmailCard({
                       ) : (
                         <Download className="w-4 h-4 text-muted-foreground" />
                       )}
-                    </button>
+                    </Button>
                   );
                 })}
               </div>

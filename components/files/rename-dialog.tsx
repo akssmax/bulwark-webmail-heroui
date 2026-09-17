@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { AppModal } from "@/components/ui/modal";
 
 interface RenameDialogProps {
   currentName: string;
@@ -32,30 +33,31 @@ export function RenameDialog({ currentName, title, label, onConfirm, onCancel }:
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onCancel}>
-      <div
-        className="bg-background border border-border rounded-lg shadow-lg p-6 w-full max-w-sm mx-4"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <h2 className="text-lg font-semibold mb-4">{title || t("rename_title")}</h2>
-        <form onSubmit={handleSubmit}>
-          <Input
-            autoFocus
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder={label || t("new_name")}
-            className="mb-4"
-          />
-          <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
-              {t("cancel")}
-            </Button>
-            <Button type="submit" disabled={!name.trim() || isSubmitting}>
-              {t("save")}
-            </Button>
-          </div>
-        </form>
-      </div>
-    </div>
+    <AppModal
+      isOpen
+      onClose={onCancel}
+      title={title || t("rename_title")}
+      size="sm"
+      footer={(
+        <>
+          <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
+            {t("cancel")}
+          </Button>
+          <Button type="submit" form="rename-form" disabled={!name.trim() || isSubmitting}>
+            {t("save")}
+          </Button>
+        </>
+      )}
+    >
+      <form id="rename-form" onSubmit={handleSubmit}>
+        <Input
+          autoFocus
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder={label || t("new_name")}
+          aria-label={label || t("new_name")}
+        />
+      </form>
+    </AppModal>
   );
 }

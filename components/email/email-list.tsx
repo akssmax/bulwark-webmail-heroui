@@ -1,11 +1,12 @@
 "use client";
+import { Loader } from "@/components/ui/loader";
 
 import { Email, ThreadGroup } from "@/lib/jmap/types";
 import { ThreadListItem } from "./thread-list-item";
 import type { Attachment } from "@/lib/jmap/types";
 import { EmailContextMenu } from "./email-context-menu";
 import { cn } from "@/lib/utils";
-import { Trash2, Mail, MailX, MailOpen, Loader2, SearchX, AlertTriangle, CalendarClock, ShieldCheck } from "lucide-react";
+import { Trash2, Mail, MailX, MailOpen, SearchX, AlertTriangle, CalendarClock, ShieldCheck } from "lucide-react";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -404,7 +405,7 @@ export function EmailList({
               className="hover:bg-accent transition-colors disabled:opacity-50"
             >
               {isProcessing ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <Loader size="sm" color="current" />
               ) : (
                 <MailOpen className="w-4 h-4" />
               )}
@@ -418,7 +419,7 @@ export function EmailList({
               className="hover:bg-accent transition-colors disabled:opacity-50"
             >
               {isProcessing ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <Loader size="sm" color="current" />
               ) : (
                 <Mail className="w-4 h-4" />
               )}
@@ -433,7 +434,7 @@ export function EmailList({
                 className="text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100/50 dark:hover:bg-emerald-950/30 transition-colors disabled:opacity-50"
               >
                 {isProcessing ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <Loader size="sm" color="current" />
                 ) : (
                   <ShieldCheck className="w-4 h-4" />
                 )}
@@ -448,7 +449,7 @@ export function EmailList({
               className="text-red-600 dark:text-red-400 hover:bg-red-100/50 dark:hover:bg-red-950/30 transition-colors disabled:opacity-50"
             >
               {isProcessing ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <Loader size="sm" color="current" />
               ) : (
                 <Trash2 className="w-4 h-4" />
               )}
@@ -499,7 +500,7 @@ export function EmailList({
             className="text-destructive border-destructive/30 hover:bg-destructive/10 text-xs"
           >
             {isProcessing ? (
-              <Loader2 className="w-3 h-3 animate-spin me-1" />
+              <Loader size="sm" color="current" className="me-1" />
             ) : (
               <Trash2 className="w-3 h-3 me-1" />
             )}
@@ -514,7 +515,7 @@ export function EmailList({
         {isLoading && emails.length > 0 && (
           <div className="absolute inset-0 bg-background/50 z-10 flex items-center justify-center animate-in fade-in duration-150">
             <div className="flex items-center gap-2 text-sm text-muted-foreground bg-background/90 px-4 py-2 rounded-full shadow-sm border border-border">
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <Loader size="sm" color="current" />
               <span>{t('loading')}</span>
             </div>
           </div>
@@ -604,7 +605,7 @@ export function EmailList({
             <div className="py-4 flex justify-center">
               {footerIsLoadingMore && footerHasMore && (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <Loader size="sm" color="current" />
                   <span>{t('loading_more')}</span>
                 </div>
               )}

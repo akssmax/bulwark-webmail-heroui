@@ -4,6 +4,7 @@ import { useRef, useState, type DragEvent } from "react";
 import { useTranslations } from "next-intl";
 import { Mail, Calendar, BookUser, HardDrive, Settings, PenSquare, MailOpen, Folder, Search, X, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import { useProTabStore, type ProTab, type ProTabKind, type ProPaneId } from "@/stores/pro-tab-store";
 import {
   PRO_TAB_DRAG_MIME,
@@ -245,13 +246,13 @@ export function ProTabBar({
             <span className="truncate flex-1 min-w-0" title={label}>{label}</span>
 
             {tab.closeable && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onClose(tab.id);
-                }}
+              <Button
+                variant="ghost"
+                size="icon"
+                onMouseDown={(e) => e.stopPropagation()}
+                onClick={() => onClose(tab.id)}
                 className={cn(
-                  "ms-1 flex items-center justify-center w-4 h-4 rounded-sm transition-colors flex-shrink-0",
+                  "ms-1 h-4 w-4 min-w-4 rounded-sm flex-shrink-0",
                   "text-muted-foreground hover:bg-muted-foreground/20 hover:text-foreground",
                   !isActive && "opacity-0 group-hover:opacity-100 focus-visible:opacity-100",
                 )}
@@ -259,7 +260,7 @@ export function ProTabBar({
                 tabIndex={isActive ? 0 : -1}
               >
                 <X className="w-3 h-3" />
-              </button>
+              </Button>
             )}
 
             {isActive && (

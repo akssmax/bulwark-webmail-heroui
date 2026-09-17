@@ -5,7 +5,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import type { ContactCard } from "@/lib/jmap/types";
 import { getContactDisplayName, getContactPrimaryEmail } from "@/stores/contact-store";
-import { CheckSquare, Square } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import type { Density } from "@/stores/settings-store";
 
 interface ContactListItemProps {
@@ -68,22 +68,13 @@ export function ContactListItem({ contact, isSelected, isChecked, hasSelection, 
       style={{ gap: 'var(--density-item-gap)', paddingInline: '16px', paddingBlock: 'var(--density-item-py)' }}
     >
       {hasSelection && (
-        <button
-          onClick={onCheckboxClick}
-          className={cn(
-            "p-1 rounded flex-shrink-0 transition-all duration-200",
-            "hover:bg-muted/50 hover:scale-110",
-            "active:scale-95",
-            "animate-in fade-in zoom-in-95 duration-150",
-            isChecked && "text-primary"
-          )}
-        >
-          {isChecked ? (
-            <CheckSquare className="w-4 h-4 animate-in zoom-in-50 duration-200" />
-          ) : (
-            <Square className="w-4 h-4 text-muted-foreground opacity-60 hover:opacity-100 transition-opacity" />
-          )}
-        </button>
+        <Checkbox
+          isSelected={isChecked}
+          aria-label="Select contact"
+          className="flex-shrink-0"
+          contentClassName="p-1"
+          onChange={() => onCheckboxClick({ stopPropagation: () => {} } as React.MouseEvent)}
+        />
       )}
 
       {density !== 'extra-compact' && (

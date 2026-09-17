@@ -4,6 +4,7 @@ import { useState, useRef, useCallback, useEffect, forwardRef, useImperativeHand
 import { useTranslations } from "next-intl";
 import { X } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
 import { useContactStore } from "@/stores/contact-store";
 
@@ -149,7 +150,7 @@ export const ParticipantInput = forwardRef<ParticipantInputHandle, ParticipantIn
                   i === activeIndex ? "bg-accent text-accent-foreground" : "hover:bg-muted"
                 }`}
               >
-                <Avatar name={s.name} email={s.email} size="sm" className="shrink-0 w-7 h-7 text-[10px]" />
+                <Avatar name={s.name} email={s.email} size="sm" className="shrink-0 w-7 h-7 text-xs" />
                 <div className="min-w-0">
                   <div className="font-medium truncate">{s.name || s.email}</div>
                   {s.name && (
@@ -170,30 +171,33 @@ export const ParticipantInput = forwardRef<ParticipantInputHandle, ParticipantIn
               className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-muted text-foreground max-w-[200px]"
             >
               {!disabled ? (
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
                   onClick={() => {
                     onRemove(p.email);
                     setQuery(p.email);
                     setTimeout(() => inputRef.current?.focus(), 0);
                   }}
-                  className="truncate hover:underline focus:outline-none focus:underline cursor-text"
+                  className="truncate h-auto min-h-0 p-0 font-normal hover:underline hover:bg-transparent"
                   aria-label={`${t("edit")} ${p.name || p.email}`}
                 >
                   {p.name || p.email}
-                </button>
+                </Button>
               ) : (
                 <span className="truncate">{p.name || p.email}</span>
               )}
               {!disabled && (
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="icon"
                   onClick={() => onRemove(p.email)}
-                  className="flex-shrink-0 p-0.5 rounded-full hover:bg-muted-foreground/20 transition-colors min-w-[20px] min-h-[20px] flex items-center justify-center"
+                  className="flex-shrink-0 h-5 w-5 min-w-5 min-h-5 rounded-full hover:bg-muted-foreground/20"
                   aria-label={`${t("remove")} ${p.name || p.email}`}
                 >
                   <X className="w-3 h-3" />
-                </button>
+                </Button>
               )}
             </span>
           ))}

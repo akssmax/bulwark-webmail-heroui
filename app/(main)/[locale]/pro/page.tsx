@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, type ComponentType, type DragEvent } from "react";
 import { useTranslations } from "next-intl";
 import { NavigationRail } from "@/components/layout/navigation-rail";
+import { LoaderBlock } from "@/components/ui/loader";
 import { KeyboardShortcutsModal } from "@/components/keyboard-shortcuts-modal";
 import { SidebarAppsModal } from "@/components/layout/sidebar-apps-modal";
 import { InlineAppView } from "@/components/layout/inline-app-view";
@@ -444,10 +445,7 @@ export default function ProHome() {
   if (!initialCheckDone || authLoading || !isAuthenticated || !client) {
     return (
       <div className="flex h-screen items-center justify-center bg-background">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-foreground mx-auto"></div>
-          <p className="mt-4 text-sm text-muted-foreground">{t("common.loading")}</p>
-        </div>
+        <LoaderBlock label={t("common.loading")} size="lg" />
       </div>
     );
   }
@@ -507,7 +505,7 @@ export default function ProHome() {
         <div className="flex flex-1 overflow-hidden">
           {/* Leftmost Navigation Rail - identical to the standard layout */}
           <div
-            className="w-14 bg-secondary flex flex-col flex-shrink-0"
+            className="w-14 bg-sidebar flex flex-col flex-shrink-0 border-e border-sidebar-border"
             style={{ borderRight: '1px solid rgba(128, 128, 128, 0.3)' }}
           >
             <NavigationRail
