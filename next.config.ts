@@ -39,7 +39,10 @@ if (basePath && !basePath.startsWith("/")) {
 }
 
 const nextConfig: NextConfig = {
-  output: "standalone",
+  // Next 16.3 + Vercel's adapter skips next-server.js.nft.json when output is
+  // standalone, which then fails onBuildComplete. Keep standalone for Docker
+  // and self-host; let Vercel package the app itself.
+  output: process.env.VERCEL ? undefined : "standalone",
   allowedDevOrigins: ["192.168.1.51"],
   basePath: basePath || undefined,
   // esbuild ships native binaries + a README the bundler can't parse; load
