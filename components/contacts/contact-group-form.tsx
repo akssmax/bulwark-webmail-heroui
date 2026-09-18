@@ -2,9 +2,10 @@
 
 import { useState, useMemo } from "react";
 import { useTranslations } from "next-intl";
-import { Search, Check, X } from "lucide-react";
+import { Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SearchField } from "@/components/ui/search-field";
 import { Avatar } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import type { ContactCard } from "@/lib/jmap/types";
@@ -108,15 +109,14 @@ export function ContactGroupForm({
           <label className="text-sm text-muted-foreground mb-2 block">
             {t("groups.members_label")} ({selectedIds.size})
           </label>
-          <div className="relative mb-2">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder={t("groups.search_members")}
-              value={memberSearch}
-              onChange={(e) => setMemberSearch(e.target.value)}
-              className="ps-9"
-            />
-          </div>
+          <SearchField
+            className="mb-2"
+            placeholder={t("groups.search_members")}
+            aria-label={t("groups.search_members")}
+            value={memberSearch}
+            onChange={setMemberSearch}
+            onClear={() => setMemberSearch("")}
+          />
 
           <div className="border rounded-md max-h-64 overflow-y-auto divide-y divide-border">
             {filteredIndividuals.length === 0 ? (

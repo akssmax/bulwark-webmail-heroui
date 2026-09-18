@@ -2,9 +2,9 @@
 
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Check, Search } from "lucide-react";
+import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Input } from "@/components/ui/input";
+import { SearchField } from "@/components/ui/search-field";
 import { MenuButton } from "@/components/ui/menu-button";
 import { useSettingsStore } from "@/stores/settings-store";
 import { buildKeywordTree, type KeywordNode } from "@/lib/keyword-nesting";
@@ -99,15 +99,14 @@ export function TagPicker({
   return (
     <>
       {showSearch && (
-        <div className={cn("relative", touch ? "px-3 pb-2" : "px-2 pb-1")}>
-          <Search className="absolute start-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none z-10" />
-          <Input
-            type="text"
+        <div className={cn(touch ? "px-3 pb-2" : "px-2 pb-1")}>
+          <SearchField
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            onChange={setQuery}
+            onClear={() => setQuery("")}
             placeholder={t("tag_filter_placeholder")}
             aria-label={t("tag_filter_placeholder")}
-            className="h-8 ps-8 text-sm"
+            inputClassName="h-8 text-sm"
           />
         </div>
       )}

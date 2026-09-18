@@ -9,7 +9,6 @@ import {
   LogOut,
   Settings as SettingsIcon,
   Palette,
-  Search,
   User,
   Shield,
   UserPen,
@@ -34,11 +33,10 @@ import {
   Bug,
   SwatchBook,
   Download,
-  X,
   type LucideIcon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { SearchField } from '@/components/ui/search-field';
 import { AppearanceSettings } from '@/components/settings/appearance-settings';
 import { AppTopBannerSlot } from '@/components/plugins/app-top-banner-slot';
 import { LayoutSettings } from '@/components/settings/layout-settings';
@@ -764,29 +762,14 @@ export function SettingsApp({ linkSegments }: SettingsAppProps = {}) {
 
         <div className="flex-1 overflow-y-auto">
           <div className="px-4 pt-3 pb-1">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-              <Input
-                type="search"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={t('search_placeholder')}
-                className="ps-9 pe-9 h-10"
-                aria-label={t('search_placeholder')}
-              />
-              {searchQuery && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7"
-                  aria-label={t('search_clear')}
-                >
-                  <X className="w-4 h-4" />
-                </Button>
-              )}
-            </div>
+            <SearchField
+              value={searchQuery}
+              onChange={setSearchQuery}
+              onClear={() => setSearchQuery('')}
+              placeholder={t('search_placeholder')}
+              aria-label={t('search_placeholder')}
+              clearLabel={t('search_clear')}
+            />
           </div>
           <div className="py-2">
             {filteredGroupedTabs.length === 0 && (
@@ -910,29 +893,15 @@ export function SettingsApp({ linkSegments }: SettingsAppProps = {}) {
 
         <div className="flex-1 overflow-y-auto py-2" data-tour="settings-tabs">
           <div className="px-3 pt-1 pb-1">
-            <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
-              <Input
-                type="search"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={t('search_placeholder')}
-                className="ps-8 pe-8 h-9 text-sm"
-                aria-label={t('search_placeholder')}
-              />
-              {searchQuery && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-1.5 top-1/2 -translate-y-1/2 h-6 w-6"
-                  aria-label={t('search_clear')}
-                >
-                  <X className="w-3.5 h-3.5" />
-                </Button>
-              )}
-            </div>
+            <SearchField
+              value={searchQuery}
+              onChange={setSearchQuery}
+              onClear={() => setSearchQuery('')}
+              placeholder={t('search_placeholder')}
+              aria-label={t('search_placeholder')}
+              clearLabel={t('search_clear')}
+              inputClassName="text-sm"
+            />
           </div>
           <div className="px-2 space-y-0.5">
             {filteredGroupedTabs.length === 0 && (

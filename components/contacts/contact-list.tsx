@@ -5,6 +5,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { Search, BookUser, Trash2, Users, Download, X, UserPlus, Filter, Mail, Phone, Image as ImageIcon, RotateCcw, Menu, ArrowDownAZ } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { SearchField } from "@/components/ui/search-field";
 import { AppSelect } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ContactListItem } from "./contact-list-item";
@@ -317,28 +318,16 @@ export function ContactList({
                 }
               }}
             />
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                type="text"
-                placeholder={t("search_placeholder")}
-                value={searchQuery}
-                onChange={(e) => onSearchChange(e.target.value)}
-                className={cn("ps-9 h-9", searchQuery && "pe-8")}
-              />
-              {searchQuery && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => onSearchChange("")}
-                  className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
-                  aria-label={t("clear_search")}
-                >
-                  <X className="w-4 h-4" />
-                </Button>
-              )}
-            </div>
+            <SearchField
+              className="flex-1"
+              inputClassName="h-9"
+              placeholder={t("search_placeholder")}
+              aria-label={t("search_placeholder")}
+              clearLabel={t("clear_search")}
+              value={searchQuery}
+              onChange={onSearchChange}
+              onClear={() => onSearchChange("")}
+            />
             <Button
               type="button"
               variant="ghost"

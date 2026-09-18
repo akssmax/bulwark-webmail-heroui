@@ -2,10 +2,7 @@
 
 import { useCallback, useId, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Search, X } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { SearchField } from "@/components/ui/search-field";
 import { useContactStore } from "@/stores/contact-store";
 import { useSearchHistoryStore } from "@/stores/search-history-store";
 import { buildSearchSuggestions, type ContactSuggestion, type SearchSuggestion } from "@/lib/search-suggestions";
@@ -118,28 +115,29 @@ export function SearchBox({ value, onChange, onSubmit, onClear, onSelectContact,
         }}
         className="relative"
       >
-        <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input
-          type="text"
+        <SearchField
           autoFocus={autoFocus}
           placeholder={t("search_placeholder_hint")}
           value={value}
-          onChange={(e) => {
-            onChange(e.target.value);
+          onChange={(next) => {
+            onChange(next);
             setOpen(true);
             setSelectedIndex(-1);
+          }}
+          onClear={() => {
+            close();
+            onClear();
           }}
           onFocus={() => setOpen(true)}
           onClick={() => setOpen(true)}
           onBlur={(e) => {
-            // Focus moving into the dropdown (e.g. its action buttons) keeps it open.
             const next = e.relatedTarget as Node | null;
             if (next && containerRef.current?.contains(next)) return;
             close();
           }}
           onKeyDown={handleKeyDown}
-          className={cn("ps-9 h-9", value && "pe-8")}
           role="combobox"
+          aria-label={title ?? t("search_placeholder_hint")}
           aria-expanded={showDropdown}
           aria-controls={listId}
           aria-autocomplete="list"
@@ -149,22 +147,8 @@ export function SearchBox({ value, onChange, onSubmit, onClear, onSelectContact,
           data-tour="search-input"
           disabled={disabled}
           title={title}
+          clearLabel={t("clear_search")}
         />
-        {value && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={() => {
-              close();
-              onClear();
-            }}
-            className="absolute end-1 top-1/2 size-7 min-w-7 -translate-y-1/2 text-muted-foreground"
-            aria-label={t("clear_search")}
-          >
-            <X className="w-4 h-4" />
-          </Button>
-        )}
       </form>
       {showDropdown && (
         <SearchSuggestions

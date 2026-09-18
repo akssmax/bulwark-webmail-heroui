@@ -3043,6 +3043,8 @@
     "nav_prev": "Previous",
     "nav_next": "Next",
     "nav_open_menu": "Open menu",
+    "nav_open_sidebar": "Show calendar sidebar",
+    "nav_close_sidebar": "Hide calendar sidebar",
     "import": {
       "title": "Import Calendar",
       "tab_file": "File",

@@ -2,10 +2,10 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { FileText, Pencil, Trash2, Star, Copy, Search } from 'lucide-react';
+import { FileText, Pencil, Trash2, Star, Copy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { SearchField } from '@/components/ui/search-field';
 import { AppModal } from '@/components/ui/modal';
 import { TemplateForm } from './template-form';
 import { useTemplateStore } from '@/stores/template-store';
@@ -79,15 +79,14 @@ export function TemplateManagerModal({ isOpen, onClose }: TemplateManagerModalPr
     >
       {!isCreating && !editingId && (
         <div className="flex items-center gap-3 mb-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={t('search_placeholder')}
-              className="ps-9"
-            />
-          </div>
+          <SearchField
+            className="flex-1"
+            value={searchQuery}
+            onChange={setSearchQuery}
+            onClear={() => setSearchQuery('')}
+            placeholder={t('search_placeholder')}
+            aria-label={t('search_placeholder')}
+          />
           <Button
             onClick={() => setIsCreating(true)}
             size="sm"

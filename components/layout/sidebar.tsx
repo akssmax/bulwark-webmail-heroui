@@ -283,7 +283,7 @@ function SidebarRow({
       data-shared={testShared ? 'true' : undefined}
       data-selected={isSelected ? 'true' : undefined}
       className={cn(
-        "sidebar-row group w-full flex items-center text-sm",
+        "sidebar-row group flex items-center text-sm",
         isCollapsed ? "justify-center" : "list-box-item pe-1 ps-0",
         !isCollapsed && (
           isVirtual
@@ -412,7 +412,7 @@ function SidebarSectionHeader({
 
   return (
     <div
-      className={cn("sidebar-row group w-full flex items-center", paddingX, !first && "mt-1")}
+      className={cn("sidebar-row group flex items-center", paddingX, !first && "mt-1")}
     >
       <HeroButton
         variant="ghost"
@@ -767,7 +767,7 @@ function VacationBanner() {
       variant="ghost"
       onPress={() => router.push('/settings')}
       className={cn(
-        "sidebar-row w-full justify-start px-3 text-xs rounded-none",
+        "sidebar-row justify-start px-3 text-xs rounded-none",
         "bg-amber-500/10 dark:bg-amber-400/10 text-amber-700 dark:text-amber-400",
       )}
     >

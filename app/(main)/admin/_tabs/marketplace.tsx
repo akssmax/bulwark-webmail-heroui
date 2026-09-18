@@ -3,11 +3,11 @@ import { Loader } from "@/components/ui/loader";
 
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
-import { Search, Download, Check, Store, Puzzle, SwatchBook, Star, Eye, AlertTriangle, ArrowUpCircle } from "lucide-react";
+import { Download, Check, Store, Puzzle, SwatchBook, Star, Eye, AlertTriangle, ArrowUpCircle } from "lucide-react";
 import { apiFetch } from '@/lib/browser-navigation';
 import { compareVersions, isVersionSatisfied } from '@/lib/version-compare';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { SearchField } from '@/components/ui/search-field';
 
 const CURRENT_APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION || '0.0.0';
 
@@ -167,16 +167,15 @@ export function MarketplaceTab() {
       )}
 
       <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-        <div className="relative flex-1 min-w-0">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            type="text"
-            placeholder="Search extensions..."
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            className="w-full h-9 ps-9"
-          />
-        </div>
+        <SearchField
+          className="flex-1 min-w-0"
+          inputClassName="h-9"
+          placeholder="Search extensions..."
+          aria-label="Search extensions"
+          value={searchInput}
+          onChange={setSearchInput}
+          onClear={() => setSearchInput("")}
+        />
         <div className="flex items-center gap-1 rounded-md border border-input bg-background p-0.5 self-start sm:self-auto">
           {(['all', 'plugin', 'theme'] as const).map((t) => (
             <Button

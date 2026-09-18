@@ -7,6 +7,7 @@ import { useParams, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordField } from "@/components/ui/password-field";
 import { AppSelect } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAuthStore } from "@/stores/auth-store";
@@ -17,7 +18,7 @@ import { useConfig } from "@/hooks/use-config";
 import { useMenuNavigation } from "@/hooks/use-menu-navigation";
 import { apiFetch, getPathPrefix, toRouterPath, withBasePath } from "@/lib/browser-navigation";
 import { cn } from "@/lib/utils";
-import { AlertCircle, X, Info, Eye, EyeOff, LogIn, Sun, Moon, Monitor, Check, Shield, Play, Copy } from "lucide-react";
+import { AlertCircle, X, Info, LogIn, Sun, Moon, Monitor, Check, Shield, Play, Copy } from "lucide-react";
 import { type OAuthMetadata } from "@/lib/oauth/discovery";
 import { generateCodeVerifier, generateCodeChallenge, generateState } from "@/lib/oauth/pkce";
 import { useUpdateStore, selectBanner } from "@/stores/update-store";
@@ -174,7 +175,6 @@ export default function LoginPage() {
   const [showTotpField, setShowTotpField] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [sessionExpired, setSessionExpired] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
   const [shakeError, setShakeError] = useState(false);
   const [showThemeMenu, setShowThemeMenu] = useState(false);
 
@@ -1175,33 +1175,17 @@ export default function LoginPage() {
                     <label htmlFor="password" className="block text-sm font-medium text-foreground">
                       {t("password_label")}
                     </label>
-                    <div className="relative">
-                      <Input
-                        id="password"
-                        type={showPassword ? "text" : "password"}
-                        value={formData.password}
-                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                        className="h-11 px-3.5 pe-11 bg-muted/40 border-border/60 rounded-xl focus:bg-background focus:border-primary/50 transition-all duration-200"
-                        placeholder={t("password_placeholder")}
-                        required
-                        autoComplete="current-password"
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 text-muted-foreground"
-                        aria-label={showPassword ? t("hide_password") : t("show_password")}
-                        tabIndex={-1}
-                      >
-                        {showPassword ? (
-                          <EyeOff className="w-4 h-4" />
-                        ) : (
-                          <Eye className="w-4 h-4" />
-                        )}
-                      </Button>
-                    </div>
+                    <PasswordField
+                      id="password"
+                      value={formData.password}
+                      onChange={(password) => setFormData({ ...formData, password })}
+                      inputClassName="h-11 px-3.5 bg-muted/40 border-border/60 rounded-xl focus:bg-background focus:border-primary/50 transition-all duration-200"
+                      placeholder={t("password_placeholder")}
+                      required
+                      autoComplete="current-password"
+                      revealLabel={t("show_password")}
+                      hideLabel={t("hide_password")}
+                    />
                   </div>
 
                   {/* 2FA toggle / field. The manual toggle can be hidden via

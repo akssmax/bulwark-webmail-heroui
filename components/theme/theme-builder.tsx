@@ -14,23 +14,30 @@ import { Download, RotateCcw } from "lucide-react";
 import JSZip from "jszip";
 import {
   BRAND_SWATCHES,
+  DARK_BACKGROUND_SWATCHES,
   FONT_PRESETS,
+  LIGHT_BACKGROUND_SWATCHES,
   RADIUS_PRESETS,
   buildThemeZipManifest,
+  grayPaletteToDraft,
+  matchGrayPalette,
   useCustomThemeStore,
   type CustomThemeDraft,
 } from "@/lib/theme/custom-theme-store";
 import { cn } from "@/lib/utils";
 import { SegmentedTabs } from "@/components/ui/segmented-tabs";
+import { NeutralPalettePicker } from "@/components/theme/neutral-palette-picker";
 
 function BrandColorControl({
   label,
   value,
   onChange,
+  swatches = BRAND_SWATCHES,
 }: {
   label: string;
   value: string;
   onChange: (next: string) => void;
+  swatches?: readonly string[];
 }) {
   return (
     <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
@@ -57,7 +64,7 @@ function BrandColorControl({
             className="flex flex-wrap gap-2"
             onChange={(color) => onChange(color.toString("hex"))}
           >
-            {BRAND_SWATCHES.map((swatch) => (
+            {swatches.map((swatch) => (
               <ColorSwatchPicker.Item key={swatch} color={swatch}>
                 <ColorSwatchPicker.Swatch />
               </ColorSwatchPicker.Item>
@@ -120,6 +127,9 @@ function MailPreview() {
 
 export function ThemeBuilder({ compact = false }: { compact?: boolean }) {
   const draft = useCustomThemeStore();
+  const activeGrayPalette =
+    draft.grayPalette ??
+    matchGrayPalette(draft.backgroundLight, draft.backgroundDark);
 
   return (
     <div className={cn("grid gap-6", compact ? "grid-cols-1" : "lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]")}>
@@ -136,15 +146,39 @@ export function ThemeBuilder({ compact = false }: { compact?: boolean }) {
           value={draft.accent}
           onChange={(accent) => draft.setDraft({ accent })}
         />
+
+        <div className="space-y-2">
+          <Label className="text-sm font-medium">Gray base</Label>
+          <p className="text-xs text-muted-foreground">
+            Tailwind neutral families — sets light/dark backgrounds and gray tokens.
+          </p>
+          <NeutralPalettePicker
+            value={activeGrayPalette}
+            onChange={(id) => draft.setDraft(grayPaletteToDraft(id))}
+          />
+        </div>
+
         <BrandColorControl
           label="Light background"
           value={draft.backgroundLight}
-          onChange={(backgroundLight) => draft.setDraft({ backgroundLight })}
+          onChange={(backgroundLight) =>
+            draft.setDraft({
+              backgroundLight,
+              grayPalette: matchGrayPalette(backgroundLight, draft.backgroundDark) ?? draft.grayPalette,
+            })
+          }
+          swatches={LIGHT_BACKGROUND_SWATCHES}
         />
         <BrandColorControl
           label="Dark background"
           value={draft.backgroundDark}
-          onChange={(backgroundDark) => draft.setDraft({ backgroundDark })}
+          onChange={(backgroundDark) =>
+            draft.setDraft({
+              backgroundDark,
+              grayPalette: matchGrayPalette(draft.backgroundLight, backgroundDark) ?? draft.grayPalette,
+            })
+          }
+          swatches={DARK_BACKGROUND_SWATCHES}
         />
 
         <div className="space-y-2">

@@ -3,10 +3,9 @@
 import { useState, useMemo, useRef, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { icons as lucideIcons, type LucideIcon } from 'lucide-react';
-import { Search, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { SearchField } from '@/components/ui/search-field';
 
 // Curated list of commonly useful icons, organized by category
 const POPULAR_ICONS = [
@@ -90,26 +89,16 @@ export function IconPicker({ value, onChange, className }: IconPickerProps) {
   return (
     <div className={cn('space-y-2', className)}>
       <div className="flex items-center gap-2">
-        <div className="relative flex-1">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder={t('search_icons')}
-            className="ps-8 h-8 text-xs"
-          />
-          {search && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setSearch('')}
-              className="absolute right-1 top-1/2 h-6 w-6 min-w-6 -translate-y-1/2 text-muted-foreground"
-              aria-label={t('search_icons')}
-            >
-              <X className="w-3 h-3" />
-            </Button>
-          )}
-        </div>
+        <SearchField
+          className="flex-1"
+          inputClassName="h-8 text-xs"
+          value={search}
+          onChange={setSearch}
+          onClear={() => setSearch('')}
+          placeholder={t('search_icons')}
+          aria-label={t('search_icons')}
+          clearLabel={t('search_icons')}
+        />
         <Button
           variant={showAll ? 'default' : 'outline'}
           size="sm"

@@ -60,6 +60,8 @@ interface EventModalProps {
   currentUserEmails?: string[];
   isSubscriptionCalendar?: (calendarId: string) => boolean;
   isMobile?: boolean;
+  /** Rendered as an overlay sidesheet on desktop (not inline in the layout). */
+  overlay?: boolean;
 }
 
 /**
@@ -203,6 +205,7 @@ export function EventModal({
   currentUserEmails = [],
   isSubscriptionCalendar,
   isMobile = false,
+  overlay = false,
 }: EventModalProps) {
   const t = useTranslations("calendar");
   const locale = useLocale();
@@ -216,6 +219,7 @@ export function EventModal({
   const mobileRootClass = isPaneScoped
     ? "absolute inset-0 z-40 flex flex-col bg-background"
     : "fixed inset-0 z-50 flex flex-col bg-background";
+  const isDialogModal = isMobile || overlay;
   const isEdit = !!event;
   const formatEventDate = useFormatEventDate();
   const [mode, setMode] = useState<"view" | "edit">(isEdit ? "view" : "edit");
@@ -704,7 +708,7 @@ export function EventModal({
     const participants = getParticipantList(event);
 
     return (
-      <div ref={modalRef} role="dialog" aria-modal={isMobile || undefined} aria-label={event.title || t("events.no_title")} className={isMobile ? mobileRootClass : "flex flex-col h-full bg-background"}>
+      <div ref={modalRef} role="dialog" aria-modal={isDialogModal || undefined} aria-label={event.title || t("events.no_title")} className={isMobile ? mobileRootClass : "flex flex-col h-full bg-background"}>
         <div className="flex items-center justify-between px-6 py-4 border-b border-border flex-shrink-0">
           <h2 className="text-lg font-semibold truncate">{event.title || t("events.no_title")}</h2>
           <Button variant="ghost" size="icon" onClick={onClose} aria-label={t("form.cancel")}>
@@ -850,7 +854,7 @@ export function EventModal({
     const color = getEventColor(event, eventCalendar);
 
     return (
-      <div ref={modalRef} role="dialog" aria-modal={isMobile || undefined} aria-label={event.title || t("events.no_title")} className={isMobile ? mobileRootClass : "flex flex-col h-full bg-background"}>
+      <div ref={modalRef} role="dialog" aria-modal={isDialogModal || undefined} aria-label={event.title || t("events.no_title")} className={isMobile ? mobileRootClass : "flex flex-col h-full bg-background"}>
         {/* Color accent bar */}
         <div className="h-1 w-full flex-shrink-0" style={{ backgroundColor: color }} />
 
@@ -1046,7 +1050,7 @@ export function EventModal({
   }
 
   return (
-    <div ref={modalRef} role="dialog" aria-modal={isMobile || undefined} aria-label={isEdit ? t("events.edit") : t("events.create")} data-tour="event-modal" className={isMobile ? mobileRootClass : "flex flex-col h-full bg-background"}>
+    <div ref={modalRef} role="dialog" aria-modal={isDialogModal || undefined} aria-label={isEdit ? t("events.edit") : t("events.create")} data-tour="event-modal" className={isMobile ? mobileRootClass : "flex flex-col h-full bg-background"}>
       <div className="flex items-center justify-between px-6 py-4 border-b border-border flex-shrink-0">
         <h2 className="text-lg font-semibold">
           {isEdit ? t("events.edit") : t("events.create")}

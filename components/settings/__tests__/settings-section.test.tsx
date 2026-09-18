@@ -1,5 +1,5 @@
-import { render, screen } from '@testing-library/react';
-import { describe, it, expect } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
 import { SettingItem, ToggleSwitch, RadioGroup, Select } from '../settings-section';
 
 describe('SettingItem controls', () => {
@@ -57,5 +57,17 @@ describe('SettingItem controls', () => {
     render(<ToggleSwitch checked onChange={() => {}} ariaLabel="Standalone" />);
 
     expect(screen.getByRole('switch', { name: 'Standalone' })).toBeTruthy();
+  });
+
+  it('toggles when the track is clicked', () => {
+    const onChange = vi.fn();
+    render(
+      <SettingItem label="Conversation view">
+        <ToggleSwitch checked={false} onChange={onChange} />
+      </SettingItem>
+    );
+
+    fireEvent.click(screen.getByRole('switch', { name: 'Conversation view' }));
+    expect(onChange).toHaveBeenCalledWith(true);
   });
 });

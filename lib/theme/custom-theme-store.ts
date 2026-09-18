@@ -5,7 +5,22 @@ import type { ThemeDensity, ThemeManifest } from '@/lib/plugin-types';
 import { injectCustomThemeCSS, removeCustomThemeCSS } from '@/lib/theme-loader';
 import { getOklchChannels, toOklchCss } from '@/lib/color-transform';
 import { customizerTokensToThemeTokenSet } from '@/lib/theme/generate-customizer-theme';
+import {
+  DEFAULT_GRAY_PALETTE_ID,
+  type GrayPaletteId,
+} from '@/lib/theme/gray-palettes';
 import { DARK_THEME_SELECTOR, LIGHT_THEME_SELECTOR } from '@/lib/theme/heroui-bridge';
+
+export {
+  DEFAULT_GRAY_PALETTE_ID,
+  GRAY_PALETTES,
+  LIGHT_BACKGROUND_SWATCHES,
+  DARK_BACKGROUND_SWATCHES,
+  grayPaletteToDraft,
+  getGrayPalette,
+  matchGrayPalette,
+  type GrayPaletteId,
+} from '@/lib/theme/gray-palettes';
 
 export interface CustomThemeDraft {
   accent: string;
@@ -19,6 +34,10 @@ export interface CustomThemeDraft {
   accentHue: number;
   /** Neutral chroma mixed into grays. */
   baseChroma: number;
+  /** Hue for neutral surfaces (borders, muted, sidebar). */
+  neutralHue: number;
+  /** Tailwind-style gray family preset. */
+  grayPalette: GrayPaletteId;
   /** Multiplier for `--field-radius` relative to `--radius`. */
   fieldRadiusScale: number;
   /** `custom` uses generated tokens; otherwise a built-in theme id. */
@@ -34,6 +53,8 @@ export const DEFAULT_CUSTOM_THEME: Omit<CustomThemeDraft, 'enabled'> = {
   fontSans: 'var(--font-geist-sans), system-ui, sans-serif',
   accentHue: 253.83,
   baseChroma: 0.0133,
+  neutralHue: 0,
+  grayPalette: DEFAULT_GRAY_PALETTE_ID,
   fieldRadiusScale: 1.5,
   presetId: 'custom',
 };
@@ -83,7 +104,11 @@ interface CustomThemeState extends CustomThemeDraft {
 }
 
 function draftToManifest(draft: Omit<CustomThemeDraft, 'enabled'>): ThemeManifest {
-  const generated = customizerTokensToThemeTokenSet(draft.accentHue, draft.baseChroma);
+  const generated = customizerTokensToThemeTokenSet(
+    draft.accentHue,
+    draft.baseChroma,
+    draft.neutralHue,
+  );
   const lightBg = toOklchCss(draft.backgroundLight);
   const darkBg = toOklchCss(draft.backgroundDark);
   return {
@@ -208,6 +233,8 @@ export const useCustomThemeStore = create<CustomThemeState>()(
         enabled: state.enabled,
         accentHue: state.accentHue,
         baseChroma: state.baseChroma,
+        neutralHue: state.neutralHue,
+        grayPalette: state.grayPalette,
         fieldRadiusScale: state.fieldRadiusScale,
         presetId: state.presetId,
       }),
@@ -216,6 +243,8 @@ export const useCustomThemeStore = create<CustomThemeState>()(
         ...(persisted as Partial<CustomThemeDraft>),
         accentHue: (persisted as Partial<CustomThemeDraft>)?.accentHue ?? DEFAULT_CUSTOM_THEME.accentHue,
         baseChroma: (persisted as Partial<CustomThemeDraft>)?.baseChroma ?? DEFAULT_CUSTOM_THEME.baseChroma,
+        neutralHue: (persisted as Partial<CustomThemeDraft>)?.neutralHue ?? DEFAULT_CUSTOM_THEME.neutralHue,
+        grayPalette: (persisted as Partial<CustomThemeDraft>)?.grayPalette ?? DEFAULT_CUSTOM_THEME.grayPalette,
         fieldRadiusScale: (persisted as Partial<CustomThemeDraft>)?.fieldRadiusScale ?? DEFAULT_CUSTOM_THEME.fieldRadiusScale,
         presetId: (persisted as Partial<CustomThemeDraft>)?.presetId ?? 'custom',
       }),

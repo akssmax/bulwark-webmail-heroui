@@ -10,7 +10,7 @@ export interface ButtonProps
   extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "color"> {
   variant?: "default" | "ghost" | "outline" | "destructive" | "secondary";
   size?: "sm" | "md" | "lg" | "icon";
-  /** Tooltip label. Icon buttons also inherit `title` or `aria-label` when omitted. Pass `false` to disable. */
+  /** Tooltip label. Inherits `title` (any size) or `aria-label` (icon-only) when omitted. Pass `false` to disable. */
   tooltip?: React.ReactNode | false;
   tooltipPlacement?: "top" | "bottom" | "left" | "right";
 }
@@ -84,10 +84,14 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const buttonRef = React.useRef<HTMLButtonElement>(null);
     const heroSize = size === "icon" ? "sm" : size;
     const tooltipDisabled = tooltip === false;
-    const tooltipContent =
-      !tooltipDisabled && size === "icon"
-        ? (tooltip ?? title ?? ariaLabel)
-        : undefined;
+    const tooltipContent = tooltipDisabled
+      ? undefined
+      : tooltip ??
+        (typeof title === "string" && title.length > 0
+          ? title
+          : size === "icon"
+            ? ariaLabel
+            : undefined);
     const button = (
       <HeroButton
         ref={mergeRefs(ref, buttonRef)}

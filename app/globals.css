@@ -14,7 +14,7 @@
   --color-foreground: oklch(0.2077 0.0398 265.75);
   --color-primary: oklch(0.6231 0.188 259.81);
   --color-primary-foreground: oklch(1 0 0);
-  --color-secondary: oklch(0.9842 0.0034 247.86);
+  --color-secondary: oklch(0.945 0.01 247.86);
   --color-secondary-foreground: oklch(0.2077 0.0398 265.75);
   --color-muted: oklch(0.9683 0.0069 247.9);
   --color-muted-foreground: oklch(0.5544 0.0407 257.42);
@@ -59,6 +59,19 @@
   --color-chart-5: oklch(0.6056 0.2189 292.72);
 
   /* Settings variables */
+  --font-sans:
+    var(--font-geist-sans),
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    "Helvetica Neue",
+    Arial,
+    "Noto Sans Thai",
+    "Leelawadee UI",
+    Tahoma,
+    sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   --font-size-base: 16px;
   --list-item-height: 48px;
   --transition-duration: 0.2s;
@@ -105,6 +118,9 @@
   --field-border-width: 1px;
   --field-shadow: none;
   --radius: 0.75rem;
+  /* Selected tab pill: raised surface + contrasting label (HeroUI --segment). */
+  --segment: var(--color-card);
+  --segment-foreground: var(--color-foreground);
 }
 
 .dark,
@@ -186,6 +202,8 @@
   --field-border: var(--color-border);
   --field-border-width: 1px;
   --field-shadow: none;
+  --segment: var(--color-card);
+  --segment-foreground: var(--color-foreground);
 }
 
 @theme inline {
@@ -240,17 +258,7 @@
 body {
   background-color: var(--color-background);
   color: var(--color-foreground);
-  font-family:
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    Roboto,
-    "Helvetica Neue",
-    Arial,
-    "Noto Sans Thai",
-    "Leelawadee UI",
-    Tahoma,
-    sans-serif;
+  font-family: var(--font-sans);
   font-feature-settings:
     "rlig" 1,
     "calt" 1;
@@ -268,12 +276,40 @@ body {
 .close-button--default,
 [data-slot="card-description"],
 [data-slot="close-button"],
-.tabs__tab {
+.tabs__tab,
+[data-slot="tabs-tab"],
+.calendar__header-cell,
+.range-calendar__header-cell,
+[data-slot="calendar-header-cell"],
+[data-slot="range-calendar-header-cell"] {
   color: var(--muted);
 }
 
-.tabs__tab[data-selected="true"] {
+.tabs__tab,
+[data-slot="tabs-tab"] {
+  isolation: isolate;
+}
+
+.tabs__tab[data-selected="true"],
+[data-slot="tabs-tab"][data-selected="true"] {
   color: var(--segment-foreground, var(--foreground));
+}
+
+/* HeroUI places .tabs__indicator after the label; keep it behind the text.
+   Unlayered so this wins over @layer components, and isolation above keeps
+   z-index: -1 inside the tab (ScrollShadow overflow can otherwise flatten it). */
+.tabs__indicator,
+[data-slot="tabs-indicator"] {
+  z-index: -1;
+}
+
+/* Primary segmented tabs: HeroUI only fills `.tabs__list-container` with
+   bg-default and never sets a stroke. On a surface/card that fill is nearly
+   invisible. Pin the group to --border (HeroUI alias of --color-border).
+   Secondary (underline) tabs already draw their own border-b / border-s. */
+.tabs:not(.tabs--secondary) > .tabs__list-container,
+.tabs:not(.tabs--secondary) [data-slot="tabs-list-container"] {
+  border: 1px solid var(--border);
 }
 
 /* Native <select> option lists are painted by the browser, not by the
@@ -331,7 +367,7 @@ option {
   --color-card-foreground: oklch(0.2077 0.0398 265.75);
   --color-popover: oklch(1 0 0);
   --color-popover-foreground: oklch(0.2077 0.0398 265.75);
-  --color-secondary: oklch(0.9842 0.0034 247.86);
+  --color-secondary: oklch(0.945 0.01 247.86);
   --color-secondary-foreground: oklch(0.2077 0.0398 265.75);
   --color-accent: oklch(0.9319 0.0316 255.59);
   --color-accent-foreground: oklch(0.4244 0.1809 265.64);
@@ -940,6 +976,8 @@ option {
   min-height: var(--density-sidebar-row);
   padding-block: var(--density-sidebar-py);
   gap: var(--density-item-gap);
+  margin-inline: var(--density-spacing-1);
+  width: calc(100% - 2 * var(--density-spacing-1));
 }
 
 @media (max-width: 1023px) {
@@ -969,6 +1007,11 @@ option {
 /* Collapsed mail sidebar (lg:w-12): inset folder icons so row hover/selection
    pills don't flush against the scroll container edges. */
 @media (min-width: 1024px) {
+  .sidebar-collapsed .sidebar-row {
+    margin-inline: 0;
+    width: 100%;
+  }
+
   .sidebar-collapsed .sidebar-scroll {
     padding-inline: var(--density-spacing-1);
   }
@@ -994,6 +1037,49 @@ option {
   .sidebar-collapsed .sidebar-row-hit:focus-visible {
     @apply status-focused;
   }
+}
+
+/* Sidebar mini calendar — full-width HeroUI calendar with event markers */
+.mini-calendar .calendar {
+  @apply w-full max-w-none;
+}
+
+.mini-calendar .calendar__header {
+  @apply pb-2;
+}
+
+.mini-calendar .calendar__cell-indicator {
+  @apply bg-primary;
+}
+
+.select__trigger {
+  @apply items-center;
+}
+
+.select__trigger:has(.select__indicator),
+.select__trigger:has([data-slot="select-indicator"]),
+.select__trigger:has([data-slot="select-default-indicator"]) {
+  padding-inline-end: 1.75rem;
+}
+
+.select__trigger.h-8,
+.select__trigger.min-h-8 {
+  @apply py-0;
+}
+
+.select__value {
+  @apply flex items-center leading-tight;
+}
+
+/* Gradient hue/chroma tracks: keep HeroUI track height + ::after pill.
+   Only hide the fill so the gradient on the track stays visible. */
+.slider.slider--gradient-track .slider__fill {
+  @apply pointer-events-none opacity-0;
+}
+
+.slider.slider--gradient-track .slider__track[data-fill-start="true"],
+.slider.slider--gradient-track .slider__track[data-fill-end="true"] {
+  @apply border-x-transparent;
 }
 
 /* RTL: mirror directional icons (chevrons/arrows) so prev/next, back/forward,

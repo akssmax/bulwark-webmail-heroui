@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef, useMemo, type TouchEvent as ReactTouchEvent } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo, type ReactNode, type TouchEvent as ReactTouchEvent } from "react";
 import { useRouter } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { Plus } from "lucide-react";
@@ -89,6 +89,31 @@ function isRecurringEvent(event: CalendarEvent): boolean {
   return (event.recurrenceRules?.length ?? 0) > 0 || event.recurrenceId != null;
 }
 
+/** Overlay panel on the right; calendar keeps full width underneath. */
+function CalendarSideSheet({
+  closeLabel,
+  onClose,
+  children,
+}: {
+  closeLabel: string;
+  onClose: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <>
+      <button
+        type="button"
+        className="absolute inset-0 z-30 bg-black/20"
+        aria-label={closeLabel}
+        onClick={onClose}
+      />
+      <div className="absolute inset-y-0 end-0 z-40 flex w-[400px] max-w-full flex-col border-s border-border bg-background shadow-xl overflow-hidden animate-slide-in-from-right">
+        {children}
+      </div>
+    </>
+  );
+}
+
 export interface CalendarAppProps {
   /** Path segments after `/calendar` (`['day', '2026-08-06']`). */
   linkSegments?: string[];
@@ -107,6 +132,22 @@ export function CalendarApp({ linkSegments }: CalendarAppProps = {}) {
   const isNarrow = !isDesktop;
   const [narrowSidebarOpen, setNarrowSidebarOpen] = useState(false);
   useEffect(() => { if (!isNarrow) setNarrowSidebarOpen(false); }, [isNarrow]);
+
+  // Desktop sidebar: collapsed by default; narrow/mobile uses overlay instead.
+  const [sidebarOpen, setSidebarOpen] = useState(() => {
+    try {
+      const stored = localStorage.getItem("calendar-sidebar-open");
+      if (stored !== null) return stored === "true";
+    } catch { /* ignore */ }
+    return false;
+  });
+  const toggleSidebar = useCallback(() => {
+    setSidebarOpen((open) => {
+      const next = !open;
+      try { localStorage.setItem("calendar-sidebar-open", String(next)); } catch { /* ignore */ }
+      return next;
+    });
+  }, []);
   const { showAppsModal, inlineApp, loadedApps, handleManageApps, handleInlineApp, closeInlineApp, closeAppsModal } = useSidebarApps();
   const { client, isAuthenticated, logout, checkAuth, switchAccount, activeAccountId, isLoading: authLoading } = useAuthStore();
   const [initialCheckDone, setInitialCheckDone] = useState(() => useAuthStore.getState().isAuthenticated && !!useAuthStore.getState().client);
@@ -567,6 +608,19 @@ export function CalendarApp({ linkSegments }: CalendarAppProps = {}) {
     setEditEvent(event);
     setDefaultModalDate(undefined);
     setShowEventModal(true);
+  }, []);
+
+  const closeEventModal = useCallback(() => {
+    setShowEventModal(false);
+    setEditEvent(null);
+    setPendingPreview(null);
+    setDefaultCalendarIdForCreate(undefined);
+    setDefaultModalAllDay(false);
+  }, []);
+
+  const closeTaskModal = useCallback(() => {
+    setShowTaskModal(false);
+    setEditTask(null);
   }, []);
 
   const openCreateTaskModal = useCallback(() => {
@@ -1546,15 +1600,17 @@ export function CalendarApp({ linkSegments }: CalendarAppProps = {}) {
         <>
           <div
             className={cn(
-              "border-e border-sidebar-border bg-sidebar overflow-y-auto flex-shrink-0 p-3",
+              "bg-sidebar flex-shrink-0 overflow-hidden",
               !isResizing && "transition-[width] duration-300",
+              (isNarrow || sidebarOpen) && "border-e border-sidebar-border overflow-y-auto p-3",
               isNarrow && cn(
                 "absolute inset-y-0 left-0 z-50 w-72 pt-[env(safe-area-inset-top)]",
                 "transform transition-transform duration-300 ease-in-out",
                 !narrowSidebarOpen && "-translate-x-full"
               )
             )}
-            style={isNarrow ? undefined : { width: `${calSidebarWidth}px` }}
+            style={isNarrow ? undefined : { width: sidebarOpen ? `${calSidebarWidth}px` : 0 }}
+            aria-hidden={!isNarrow && !sidebarOpen}
           >
             <MiniCalendar
               selectedDate={selectedDate}
@@ -1632,7 +1688,7 @@ export function CalendarApp({ linkSegments }: CalendarAppProps = {}) {
               multiAccountMode={multiAccountEnabled && accountClients.length > 1}
             />
           </div>
-          {!isNarrow && (
+          {!isNarrow && sidebarOpen && (
             <ResizeHandle
               onResizeStart={() => { dragStartWidth.current = calSidebarWidth; setIsResizing(true); }}
               onResize={(delta) => setCalSidebarWidth(Math.max(180, Math.min(400, dragStartWidth.current + delta)))}
@@ -1666,6 +1722,8 @@ export function CalendarApp({ linkSegments }: CalendarAppProps = {}) {
           onToggleVisibility={toggleCalendarVisibility}
           enableCalendarTasks={enableCalendarTasks}
           onMenuClick={isNarrow ? () => setNarrowSidebarOpen(true) : undefined}
+          sidebarOpen={!isNarrow ? sidebarOpen : undefined}
+          onSidebarToggle={!isNarrow ? toggleSidebar : undefined}
         />
 
         <div
@@ -1685,9 +1743,9 @@ export function CalendarApp({ linkSegments }: CalendarAppProps = {}) {
             {renderView()}
           </div>
 
-          {/* Desktop event panel */}
+          {/* Desktop event sidesheet */}
           {!isMobile && showEventModal && (
-            <div className="w-[400px] border-s border-border flex-shrink-0 overflow-hidden">
+            <CalendarSideSheet closeLabel={t("form.cancel")} onClose={closeEventModal}>
               <EventModal
                 key={editEvent?.id ?? 'new'}
                 event={editEvent}
@@ -1700,28 +1758,29 @@ export function CalendarApp({ linkSegments }: CalendarAppProps = {}) {
                 onDelete={handleDeleteEvent}
                 onDuplicate={handleDuplicateEvent}
                 onRsvp={handleRsvp}
-                onClose={() => { setShowEventModal(false); setEditEvent(null); setPendingPreview(null); setDefaultCalendarIdForCreate(undefined); setDefaultModalAllDay(false); }}
+                onClose={closeEventModal}
                 onPreviewChange={setPendingPreview}
                 currentUserEmails={currentUserEmails}
                 isSubscriptionCalendar={isSubscriptionCalendar}
                 isMobile={false}
+                overlay
               />
-            </div>
+            </CalendarSideSheet>
           )}
 
-          {/* Desktop task panel */}
+          {/* Desktop task sidesheet */}
           {!isMobile && showTaskModal && (
-            <div className="w-[400px] border-s border-border flex-shrink-0 overflow-hidden">
+            <CalendarSideSheet closeLabel={t("form.cancel")} onClose={closeTaskModal}>
               <TaskModal
                 key={editTask?.id ?? 'new-task'}
                 task={editTask}
                 calendars={displayCalendars}
                 onSave={handleSaveTask}
                 onDelete={handleDeleteTask}
-                onClose={() => { setShowTaskModal(false); setEditTask(null); }}
+                onClose={closeTaskModal}
                 isMobile={false}
               />
-            </div>
+            </CalendarSideSheet>
           )}
 
           {/* Floating Create Event Button (mobile) */}

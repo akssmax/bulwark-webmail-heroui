@@ -13,6 +13,10 @@ export const HEROUI_VAR_MAP: ReadonlyArray<readonly [from: string, to: string]> 
   ['--color-primary-foreground', '--accent-foreground'],
   ['--color-card', '--surface'],
   ['--color-card-foreground', '--surface-foreground'],
+  // Selected tab pill: raised surface, not the same token as selected text.
+  ['--color-card', '--segment'],
+  ['--color-background', '--segment'],
+  ['--color-foreground', '--segment-foreground'],
   ['--color-popover', '--overlay'],
   ['--color-popover-foreground', '--overlay-foreground'],
   ['--color-destructive', '--danger'],

@@ -13,12 +13,18 @@ import {
 import {
   CalendarDate,
   CalendarDateTime,
+  DateFormatter,
   Time,
+  createCalendar,
+  fromDateToLocal,
+  getLocalTimeZone,
   parseDate,
   parseDateTime,
   parseTime,
+  toCalendar,
+  toCalendarDate as extractCalendarDate,
 } from "@internationalized/date";
-import type { DateValue } from "@internationalized/date";
+import type { CalendarIdentifier, DateValue } from "@internationalized/date";
 import { cn } from "@/lib/utils";
 
 /** React Aria date literal segments can differ between Node SSR and the browser. */
@@ -53,7 +59,7 @@ function fireInputChange(
   } as React.ChangeEvent<HTMLInputElement>);
 }
 
-function toCalendarDate(value?: string): CalendarDate | null {
+function parseStringToCalendarDate(value?: string): CalendarDate | null {
   if (!value) return null;
   try {
     return parseDate(value.slice(0, 10));
@@ -68,7 +74,7 @@ function toCalendarDateTime(value?: string): CalendarDateTime | null {
   try {
     return parseDateTime(normalized.replace(" ", "T").slice(0, 19));
   } catch {
-    const date = toCalendarDate(value);
+    const date = parseStringToCalendarDate(value);
     if (!date) return null;
     const timePart = value.includes("T") ? value.split("T")[1] : "00:00";
     const [h, m] = timePart.split(":").map(Number);
@@ -100,24 +106,127 @@ function formatTime(value: Time | null): string {
   return `${String(value.hour).padStart(2, "0")}:${String(value.minute).padStart(2, "0")}`;
 }
 
-export function AppCalendar({ "aria-label": ariaLabel }: { "aria-label"?: string }) {
-  const mounted = useClientMounted();
-  if (!mounted) {
-    return <div className="h-72 w-72 rounded-xl border border-border bg-surface" aria-hidden />;
+const FIRST_DAY_OF_WEEK = {
+  0: "sun",
+  1: "mon",
+  2: "tue",
+  3: "wed",
+  4: "thu",
+  5: "fri",
+  6: "sat",
+} as const;
+
+type FirstDayOfWeek = (typeof FIRST_DAY_OF_WEEK)[keyof typeof FIRST_DAY_OF_WEEK];
+
+function resolveFirstDayOfWeek(firstDayOfWeek?: number | FirstDayOfWeek): FirstDayOfWeek | undefined {
+  if (firstDayOfWeek == null) return undefined;
+  if (typeof firstDayOfWeek === "number") {
+    return FIRST_DAY_OF_WEEK[firstDayOfWeek as keyof typeof FIRST_DAY_OF_WEEK];
   }
+  return firstDayOfWeek;
+}
+
+/** Convert a JS `Date` to a locale-aware `CalendarDate` for HeroUI calendars. */
+export function jsDateToCalendarDate(date: Date, locale: string): CalendarDate {
+  const calendarIdentifier = new DateFormatter(locale).resolvedOptions()
+    .calendar as CalendarIdentifier;
+  const calendar = createCalendar(calendarIdentifier);
+  const zoned = fromDateToLocal(date);
+  return toCalendar(extractCalendarDate(zoned), calendar) as CalendarDate;
+}
+
+/** Convert a HeroUI `CalendarDate` back to a JS `Date`. */
+export function calendarDateToJsDate(value: DateValue): Date {
+  if ("timeZone" in value) {
+    return value.toDate();
+  }
+  return value.toDate(getLocalTimeZone());
+}
+
+function formatGregorianDateKey(date: Date): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
+export interface AppCalendarProps {
+  "aria-label"?: string;
+  className?: string;
+  placeholderClassName?: string;
+  value?: CalendarDate | null;
+  onChange?: (date: CalendarDate) => void;
+  focusedValue?: CalendarDate | null;
+  onFocusChange?: (date: CalendarDate) => void;
+  firstDayOfWeek?: number | FirstDayOfWeek;
+  eventDates?: Set<string>;
+  yearPicker?: boolean;
+}
+
+export function AppCalendar({
+  "aria-label": ariaLabel,
+  className,
+  placeholderClassName,
+  value,
+  onChange,
+  focusedValue,
+  onFocusChange,
+  firstDayOfWeek,
+  eventDates,
+  yearPicker = true,
+}: AppCalendarProps) {
+  const mounted = useClientMounted();
+
+  if (!mounted) {
+    return (
+      <div
+        className={cn("h-72 w-72 rounded-xl border border-border bg-surface", placeholderClassName)}
+        aria-hidden
+      />
+    );
+  }
+
+  const hasEvent = (date: DateValue) => {
+    if (!eventDates?.size) return false;
+    return eventDates.has(formatGregorianDateKey(calendarDateToJsDate(date)));
+  };
+
   return (
-    <Calendar aria-label={ariaLabel ?? "Choose date"}>
+    <Calendar
+      aria-label={ariaLabel ?? "Choose date"}
+      className={className}
+      value={value}
+      onChange={onChange}
+      focusedValue={focusedValue}
+      onFocusChange={onFocusChange}
+      firstDayOfWeek={resolveFirstDayOfWeek(firstDayOfWeek)}
+    >
       <Calendar.Header>
-        <Calendar.Heading />
         <Calendar.NavButton slot="previous" />
+        {yearPicker ? (
+          <Calendar.YearPickerTrigger>
+            <Calendar.YearPickerTriggerHeading />
+            <Calendar.YearPickerTriggerIndicator />
+          </Calendar.YearPickerTrigger>
+        ) : (
+          <Calendar.Heading />
+        )}
         <Calendar.NavButton slot="next" />
       </Calendar.Header>
       <Calendar.Grid>
         <Calendar.GridHeader>
           {(day) => <Calendar.HeaderCell>{day}</Calendar.HeaderCell>}
         </Calendar.GridHeader>
-        <Calendar.GridBody>{(date) => <Calendar.Cell date={date} />}</Calendar.GridBody>
+        <Calendar.GridBody>
+          {(date) => (
+            <Calendar.Cell date={date}>
+              {hasEvent(date) ? <Calendar.CellIndicator /> : null}
+            </Calendar.Cell>
+          )}
+        </Calendar.GridBody>
       </Calendar.Grid>
+      {yearPicker ? (
+        <Calendar.YearPickerGrid>
+          <Calendar.YearPickerGridBody />
+        </Calendar.YearPickerGrid>
+      ) : null}
     </Calendar>
   );
 }
@@ -141,7 +250,7 @@ export function DatePickerField({
   name,
   "aria-label": ariaLabel,
 }: FieldProps) {
-  const parsed = toCalendarDate(value);
+  const parsed = parseStringToCalendarDate(value);
   return (
     <ClientDateField label={label} className={className}>
       <DatePicker

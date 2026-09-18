@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { Search, Star, FileText } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import { Star, FileText } from 'lucide-react';
+import { SearchField } from '@/components/ui/search-field';
 import { Button } from '@/components/ui/button';
 import { AppModal } from '@/components/ui/modal';
 import { useTemplateStore } from '@/stores/template-store';
@@ -129,16 +129,15 @@ export function TemplatePicker({ isOpen, onClose, onSelect }: TemplatePickerProp
         bodyClassName="overflow-y-auto max-h-[calc(70vh-120px)] p-2"
       >
         <div className="px-2 pb-2 border-b border-border mb-2">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={t('search_placeholder')}
-              className="ps-9 h-9"
-              autoFocus
-            />
-          </div>
+          <SearchField
+            value={searchQuery}
+            onChange={setSearchQuery}
+            onClear={() => setSearchQuery('')}
+            placeholder={t('search_placeholder')}
+            aria-label={t('search_placeholder')}
+            inputClassName="h-9"
+            autoFocus
+          />
         </div>
 
         {templates.length === 0 && (

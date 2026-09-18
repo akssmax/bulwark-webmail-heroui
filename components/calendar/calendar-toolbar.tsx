@@ -3,7 +3,8 @@
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Dropdown } from "@/components/ui/dropdown";
-import { ChevronLeft, ChevronRight, Plus, Upload, CalendarDays, Globe, ChevronDown, ArrowLeft, Menu } from "lucide-react";
+import { SegmentedTabs } from "@/components/ui/segmented-tabs";
+import { ChevronLeft, ChevronRight, Plus, Upload, CalendarDays, Globe, ChevronDown, ArrowLeft, Menu, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { startOfWeek } from "date-fns";
 import { cn } from "@/lib/utils";
 import type { CalendarViewMode } from "@/stores/calendar-store";
@@ -31,6 +32,9 @@ interface CalendarToolbarProps {
   enableCalendarTasks?: boolean;
   /** Show a burger button at the start that opens the (overlay) sidebar. */
   onMenuClick?: () => void;
+  /** Desktop inline sidebar visibility (narrow layouts use onMenuClick instead). */
+  sidebarOpen?: boolean;
+  onSidebarToggle?: () => void;
 }
 
 export function CalendarToolbar({
@@ -52,6 +56,8 @@ export function CalendarToolbar({
   onToggleVisibility,
   enableCalendarTasks,
   onMenuClick,
+  sidebarOpen,
+  onSidebarToggle,
 }: CalendarToolbarProps) {
   const t = useTranslations("calendar");
   const {
@@ -65,6 +71,11 @@ export function CalendarToolbar({
   const views: CalendarViewMode[] = enableCalendarTasks
     ? ["month", "week", "day", "agenda", "tasks"]
     : ["month", "week", "day", "agenda"];
+  const viewOptions = views.map((v) => ({
+    value: v,
+    label: t(`views.${v}`),
+    hint: t(`views.${v}_hint`),
+  }));
   // The views scroll freely (#759): while the user has scrolled away from
   // the selected day, the title describes what is on screen instead.
   const titleDate = visibleDate ?? selectedDate;
@@ -225,21 +236,12 @@ export function CalendarToolbar({
 
           {/* Row 2: View switcher pills + calendar toggle */}
           <div className="flex items-center gap-1.5">
-            <div className="flex flex-1 border border-border rounded-md overflow-hidden">
-              {views.map((v) => (
-                <Button
-                  key={v}
-                  variant={v === viewMode ? "default" : "ghost"}
-                  onClick={() => onViewModeChange(v)}
-                  className={cn(
-                    "flex-1 py-1.5 h-auto min-h-0 rounded-none text-xs font-medium touch-manipulation",
-                    v !== viewMode && "text-muted-foreground",
-                  )}
-                >
-                  {t(`views.${v}`)}
-                </Button>
-              ))}
-            </div>
+            <SegmentedTabs
+              value={viewMode}
+              onChange={(value) => onViewModeChange(value as CalendarViewMode)}
+              options={viewOptions}
+              className="flex-1 w-full min-w-0 text-xs touch-manipulation"
+            />
 
             {calendars && selectedCalendarIds && onToggleVisibility && (
               <Dropdown>
@@ -263,6 +265,23 @@ export function CalendarToolbar({
       {/* ── DESKTOP TOOLBAR ── */}
       {!isMobile && (
         <div className="flex items-center gap-1">
+          {onSidebarToggle && (
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={onSidebarToggle}
+              className="h-8 w-8 me-1"
+              title={sidebarOpen ? t("nav_close_sidebar") : t("nav_open_sidebar")}
+              aria-label={sidebarOpen ? t("nav_close_sidebar") : t("nav_open_sidebar")}
+              aria-pressed={sidebarOpen}
+            >
+              {sidebarOpen ? (
+                <PanelLeftClose className="w-4 h-4" />
+              ) : (
+                <PanelLeftOpen className="w-4 h-4" />
+              )}
+            </Button>
+          )}
           <Button variant="outline" size="sm" onClick={onToday} className="h-8 me-1">
             {t("views.today")}
           </Button>
@@ -285,30 +304,23 @@ export function CalendarToolbar({
       <div className="flex-1" />
 
       {!isMobile && (
-        <div className="flex h-8 border border-border rounded-md overflow-hidden">
-          {views.map((v) => (
-            <Button
-              key={v}
-              variant={v === viewMode ? "default" : "ghost"}
-              onClick={() => onViewModeChange(v)}
-              title={t(`views.${v}_hint`)}
-              className={cn(
-                "inline-flex items-center px-3 h-8 min-h-0 rounded-none text-xs font-medium",
-                v !== viewMode && "text-muted-foreground",
-              )}
-            >
-              {t(`views.${v}`)}
-            </Button>
-          ))}
-        </div>
+        <SegmentedTabs
+          value={viewMode}
+          onChange={(value) => onViewModeChange(value as CalendarViewMode)}
+          options={viewOptions}
+          className="h-8 text-xs"
+        />
       )}
 
       {(onImport || onSubscribe) && !isMobile && (
         <Dropdown>
-          <Dropdown.Trigger className="inline-flex items-center gap-1 h-8 px-3 rounded-md border border-border bg-background text-sm font-medium hover:bg-muted">
-            <Upload className="w-4 h-4" />
-            {t("import.title")}
-            <ChevronDown className="w-3 h-3" />
+          <Dropdown.Trigger
+            className="inline-flex min-w-0 max-w-full items-center gap-1 h-8 px-3 rounded-md border border-border bg-background text-sm font-medium hover:bg-muted"
+            aria-label={t("import.title")}
+          >
+            <Upload className="w-4 h-4 shrink-0" />
+            <span className="truncate">{t("import.title")}</span>
+            <ChevronDown className="w-3 h-3 shrink-0" />
           </Dropdown.Trigger>
           <Dropdown.Popover className="min-w-[180px]">
             <Dropdown.Menu aria-label={t("import.title")}>

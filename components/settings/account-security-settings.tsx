@@ -6,9 +6,10 @@ import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import QRCode from 'qrcode';
 import * as OTPAuth from 'otpauth';
-import { Shield, Key, Smartphone, Lock, Trash2, Plus, Eye, EyeOff, Copy, Check, Monitor, Terminal, QrCode, Unlock } from "lucide-react";
+import { Shield, Key, Smartphone, Lock, Trash2, Plus, Copy, Check, Monitor, Terminal, QrCode, Unlock } from "lucide-react";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { PasswordField } from '@/components/ui/password-field';
 import { AppSelect } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { SettingsSection, SettingItem, ToggleSwitch } from './settings-section';
@@ -26,8 +27,6 @@ function PasswordChangeSection() {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [showCurrent, setShowCurrent] = useState(false);
-  const [showNew, setShowNew] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -65,50 +64,24 @@ function PasswordChangeSection() {
       <form onSubmit={handleSubmit} className="space-y-3">
         <div>
           <label className="text-xs text-muted-foreground mb-1 block">{t('password.current')}</label>
-          <div className="relative">
-            <Input
-              type={showCurrent ? 'text' : 'password'}
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-              required
-              autoComplete="current-password"
-              className="pe-10"
-            />
-            <Button
-              type="button"
-              size="icon"
-              variant="ghost"
-              onClick={() => setShowCurrent(!showCurrent)}
-              className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
-              aria-label={showCurrent ? 'Hide password' : 'Show password'}
-            >
-              {showCurrent ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            </Button>
-          </div>
+          <PasswordField
+            value={currentPassword}
+            onChange={setCurrentPassword}
+            required
+            autoComplete="current-password"
+            aria-label={t('password.current')}
+          />
         </div>
         <div>
           <label className="text-xs text-muted-foreground mb-1 block">{t('password.new')}</label>
-          <div className="relative">
-            <Input
-              type={showNew ? 'text' : 'password'}
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              required
-              minLength={8}
-              autoComplete="new-password"
-              className="pe-10"
-            />
-            <Button
-              type="button"
-              size="icon"
-              variant="ghost"
-              onClick={() => setShowNew(!showNew)}
-              className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
-              aria-label={showNew ? 'Hide password' : 'Show password'}
-            >
-              {showNew ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            </Button>
-          </div>
+          <PasswordField
+            value={newPassword}
+            onChange={setNewPassword}
+            required
+            minLength={8}
+            autoComplete="new-password"
+            aria-label={t('password.new')}
+          />
         </div>
         <div>
           <label className="text-xs text-muted-foreground mb-1 block">{t('password.confirm')}</label>

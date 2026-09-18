@@ -2,12 +2,13 @@
 import { Loader } from "@/components/ui/loader";
 
 import { useEffect, useState } from 'react';
-import { Puzzle, ArrowLeft, Eye, EyeOff } from "lucide-react";
+import { Puzzle, ArrowLeft } from "lucide-react";
 import { apiFetch } from '@/lib/browser-navigation';
 import { usePluginSlotOffers } from '@/hooks/use-plugin-slot-offers';
 import { PluginIframeSlot } from '@/components/plugins/plugin-iframe-slot';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { PasswordField } from '@/components/ui/password-field';
 import { AppSelect } from '@/components/ui/select';
 
 interface ConfigField {
@@ -47,7 +48,6 @@ export function PluginConfigPanel({ pluginId, onBack }: Props) {
   const [formValues, setFormValues] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [revealSecrets, setRevealSecrets] = useState<Record<string, boolean>>({});
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
@@ -253,25 +253,13 @@ export function PluginConfigPanel({ pluginId, onBack }: Props) {
                     className="h-9"
                   />
                 ) : field.type === 'secret' ? (
-                  <div className="relative">
-                    <Input
-                      type={revealSecrets[key] ? 'text' : 'password'}
-                      value={formValues[key] ?? ''}
-                      onChange={(e) => setFormValues(prev => ({ ...prev, [key]: e.target.value }))}
-                      placeholder={config[key] ? '••••••••  (unchanged)' : (field.placeholder || '')}
-                      className="h-9 pe-10 font-mono"
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setRevealSecrets(prev => ({ ...prev, [key]: !prev[key] }))}
-                      className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 text-muted-foreground hover:text-foreground"
-                      aria-label={revealSecrets[key] ? 'Hide' : 'Show'}
-                    >
-                      {revealSecrets[key] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </Button>
-                  </div>
+                  <PasswordField
+                    value={formValues[key] ?? ''}
+                    onChange={(value) => setFormValues(prev => ({ ...prev, [key]: value }))}
+                    placeholder={config[key] ? '••••••••  (unchanged)' : (field.placeholder || '')}
+                    inputClassName="h-9 font-mono"
+                    aria-label={field.label}
+                  />
                 ) : (
                   <Input
                     type={field.type === 'number' ? 'number' : 'text'}

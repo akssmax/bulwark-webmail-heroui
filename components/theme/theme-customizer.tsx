@@ -20,6 +20,13 @@ import {
   accentHueTrackGradient,
   baseChromaTrackGradient,
 } from "@/lib/theme/generate-customizer-theme";
+import {
+  GRAY_PALETTES,
+  grayPaletteToDraft,
+  matchGrayPalette,
+  type GrayPaletteId,
+} from "@/lib/theme/gray-palettes";
+import { NeutralPaletteSelect } from "@/components/theme/neutral-palette-picker";
 import { useThemeStore } from "@/stores/theme-store";
 
 async function exportThemeZip(draft: Omit<CustomThemeDraft, "enabled">) {
@@ -45,7 +52,7 @@ function CustomizerField({
   children: ReactNode;
 }) {
   return (
-    <div className={cn("flex min-w-[148px] flex-col gap-1.5", className)}>
+    <div className={cn("flex min-w-0 flex-col gap-1.5", className)}>
       <Label className="text-xs font-medium text-muted-foreground">{label}</Label>
       {children}
     </div>
@@ -69,14 +76,11 @@ function HueSlider({
       step={1}
       value={value}
       onChange={(v) => onChange(Array.isArray(v) ? v[0] : v)}
-      className="w-full min-w-[148px]"
+      className="slider--gradient-track w-full min-w-[148px]"
     >
-      <Slider.Track
-        className="h-2 rounded-full"
-        style={{ background: accentHueTrackGradient() }}
-      >
-        <Slider.Fill className="bg-transparent" />
-        <Slider.Thumb className="size-4 border-2 border-background bg-foreground shadow-md" />
+      <Slider.Track style={{ background: accentHueTrackGradient() }}>
+        <Slider.Fill />
+        <Slider.Thumb />
       </Slider.Track>
     </Slider>
   );
@@ -99,14 +103,11 @@ function BaseSlider({
       step={0.0001}
       value={value}
       onChange={(v) => onChange(Array.isArray(v) ? v[0] : v)}
-      className="w-full min-w-[148px]"
+      className="slider--gradient-track w-full min-w-[148px]"
     >
-      <Slider.Track
-        className="h-2 rounded-full"
-        style={{ background: baseChromaTrackGradient(hue) }}
-      >
-        <Slider.Fill className="bg-transparent" />
-        <Slider.Thumb className="size-4 border-2 border-background bg-foreground shadow-md" />
+      <Slider.Track style={{ background: baseChromaTrackGradient(hue) }}>
+        <Slider.Fill />
+        <Slider.Thumb />
       </Slider.Track>
     </Slider>
   );
@@ -120,9 +121,13 @@ function readCustomizerFromSearchParams(params: URLSearchParams): Partial<Custom
   const fieldRadius = params.get("fieldRadius");
   const font = params.get("font");
   const preset = params.get("preset");
+  const gray = params.get("gray");
 
   if (accentHue != null && accentHue !== "") patch.accentHue = Number(accentHue);
   if (base != null && base !== "") patch.baseChroma = Number(base);
+  if (gray && GRAY_PALETTES.some((palette) => palette.id === gray)) {
+    Object.assign(patch, grayPaletteToDraft(gray as GrayPaletteId));
+  }
   if (radius) {
     const presetRadius = RADIUS_PRESETS.find((item) => item.id === radius);
     if (presetRadius) patch.radius = presetRadius.value;
@@ -156,6 +161,7 @@ function writeCustomizerToSearchParams(draft: CustomThemeDraft, params: URLSearc
     FONT_PRESETS.find((item) => item.value === draft.fontSans)?.id ?? "geist",
   );
   params.set("preset", draft.presetId);
+  params.set("gray", draft.grayPalette);
 }
 
 export function ThemeCustomizer({
@@ -253,9 +259,15 @@ export function ThemeCustomizer({
     draft.fieldRadiusScale,
     draft.fontSans,
     draft.presetId,
+    draft.grayPalette,
+    draft.neutralHue,
     router,
     searchParams,
   ]);
+
+  const activeGrayPalette =
+    draft.grayPalette ??
+    matchGrayPalette(draft.backgroundLight, draft.backgroundDark);
 
   const effectivePreset =
     draft.presetId === "custom" && draft.enabled ? "custom" : (activeThemeId ?? draft.presetId);
@@ -267,8 +279,8 @@ export function ThemeCustomizer({
         className,
       )}
     >
-      <div className="mx-auto flex max-w-6xl flex-wrap items-end gap-x-5 gap-y-3 px-4 py-3 sm:px-6">
-        <CustomizerField label="Accent" className="flex-[1.1_1_160px]">
+      <div className="mx-auto flex max-w-6xl flex-nowrap items-end gap-x-3 overflow-visible px-4 py-3 sm:gap-x-4 sm:px-6">
+        <CustomizerField label="Accent" className="min-w-[140px] flex-[1.2_1_140px]">
           <HueSlider
             aria-label="Accent hue"
             value={draft.accentHue}
@@ -276,15 +288,22 @@ export function ThemeCustomizer({
           />
         </CustomizerField>
 
-        <CustomizerField label="Base" className="flex-[1.1_1_160px]">
+        <CustomizerField label="Base" className="min-w-[140px] flex-[1.2_1_140px]">
           <BaseSlider
-            hue={draft.accentHue}
+            hue={draft.neutralHue}
             value={draft.baseChroma}
             onChange={(baseChroma) => patchLive({ baseChroma })}
           />
         </CustomizerField>
 
-        <CustomizerField label="Font family" className="w-[132px]">
+        <CustomizerField label="Gray" className="w-[136px] shrink-0">
+          <NeutralPaletteSelect
+            value={activeGrayPalette}
+            onChange={(id) => patchLive(grayPaletteToDraft(id))}
+          />
+        </CustomizerField>
+
+        <CustomizerField label="Font family" className="w-[124px] shrink-0">
           <AppSelect
             aria-label="Font family"
             value={fontId}
@@ -299,7 +318,7 @@ export function ThemeCustomizer({
           />
         </CustomizerField>
 
-        <CustomizerField label="Radius" className="w-[120px]">
+        <CustomizerField label="Radius" className="w-[112px] shrink-0">
           <AppSelect
             aria-label="Radius"
             value={radiusId}
@@ -314,7 +333,7 @@ export function ThemeCustomizer({
           />
         </CustomizerField>
 
-        <CustomizerField label="Radius form" className="w-[120px]">
+        <CustomizerField label="Radius form" className="w-[112px] shrink-0">
           <AppSelect
             aria-label="Radius form"
             value={fieldRadiusId}
@@ -329,7 +348,7 @@ export function ThemeCustomizer({
           />
         </CustomizerField>
 
-        <CustomizerField label="Theme" className="w-[132px]">
+        <CustomizerField label="Theme" className="w-[124px] shrink-0">
           <AppSelect
             aria-label="Theme preset"
             value={effectivePreset === null ? "custom" : String(effectivePreset)}
@@ -338,7 +357,7 @@ export function ThemeCustomizer({
           />
         </CustomizerField>
 
-        <div className="ms-auto flex items-center gap-1 pb-0.5">
+        <div className="ms-auto flex shrink-0 items-center gap-1 pb-0.5">
           <Button
             variant="ghost"
             size="sm"

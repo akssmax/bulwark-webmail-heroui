@@ -22,4 +22,26 @@ describe('heroui-bridge', () => {
     const out = withHeroUIAliases(['  --color-primary: #000;']);
     expect(out.some((line) => line.includes('--accent: #000'))).toBe(true);
   });
+
+  it('maps card to the selected-tab pill and foreground to the pill label', () => {
+    const lines = emitHeroUIBridgeFromVars({
+      '--color-card': '#ffffff',
+      '--color-background': '#f8fafc',
+      '--color-foreground': '#0f172a',
+    });
+    const css = lines.join('\n');
+    expect(css).toContain('--segment: #ffffff');
+    expect(css).not.toContain('--segment: #f8fafc');
+    expect(css).toContain('--segment-foreground: #0f172a');
+  });
+
+  it('falls back to background for the pill when card is absent', () => {
+    const lines = emitHeroUIBridgeFromVars({
+      '--color-background': '#f8fafc',
+      '--color-foreground': '#0f172a',
+    });
+    const css = lines.join('\n');
+    expect(css).toContain('--segment: #f8fafc');
+    expect(css).toContain('--segment-foreground: #0f172a');
+  });
 });

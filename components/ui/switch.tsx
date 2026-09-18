@@ -32,11 +32,10 @@ export function Switch({
       data-testid={testId}
       className={cn(className)}
     >
-      <HeroSwitch.Control>
-        <HeroSwitch.Thumb />
-      </HeroSwitch.Control>
       <HeroSwitch.Content>
-        {ariaLabel ? <span className="sr-only">{ariaLabel}</span> : null}
+        <HeroSwitch.Control>
+          <HeroSwitch.Thumb />
+        </HeroSwitch.Control>
       </HeroSwitch.Content>
     </HeroSwitch>
   );

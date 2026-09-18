@@ -52,16 +52,13 @@ export function AppSelect({
       isDisabled={disabled}
       aria-label={ariaLabel}
       aria-labelledby={ariaLabelledBy}
+      placeholder={placeholder}
       className={cn("w-full", className)}
       fullWidth
       data-testid={dataTestId}
     >
       <Select.Trigger className="h-8 min-h-8 text-sm">
-        <Select.Value>
-          {({ selectedText, defaultChildren }) =>
-            selectedText || placeholder || defaultChildren
-          }
-        </Select.Value>
+        <Select.Value />
         <Select.Indicator />
       </Select.Trigger>
       <Select.Popover>

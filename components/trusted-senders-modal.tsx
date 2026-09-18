@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { AppModal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SearchField } from "@/components/ui/search-field";
 
 interface TrustedSendersModalProps {
   isOpen: boolean;
@@ -186,16 +187,13 @@ export function TrustedSendersModal({ isOpen, onClose }: TrustedSendersModalProp
     >
       {showSearch && (
         <div className="px-6 py-3 border-b border-border flex-shrink-0">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              type="text"
-              placeholder={t("search_placeholder")}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="ps-9"
-            />
-          </div>
+          <SearchField
+            placeholder={t("search_placeholder")}
+            aria-label={t("search_placeholder")}
+            value={searchQuery}
+            onChange={setSearchQuery}
+            onClear={() => setSearchQuery("")}
+          />
         </div>
       )}
 

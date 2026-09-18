@@ -259,8 +259,13 @@ export function Avatar({ name, email, contactPhotoUri, size = "md", className, d
     ? (isFavicon ? "#ffffff" : "transparent")
     : (fallbackColor ?? getBackgroundColor());
 
+  // Radix Avatar keeps imageLoadingStatus="loaded" after Image unmounts (e.g. favicon
+  // rejected on load). Reset internal state whenever the resolved source changes.
+  const avatarKey = imgSrc ?? "initials";
+
   return (
     <HeroAvatar
+      key={avatarKey}
       size={size}
       className={cn("overflow-hidden font-semibold text-white", sizeClasses[size], className)}
       style={{ backgroundColor: fallbackBg }}

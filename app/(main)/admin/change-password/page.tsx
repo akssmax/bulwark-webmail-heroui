@@ -2,10 +2,10 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Lock } from 'lucide-react';
 import { apiFetch } from '@/lib/browser-navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { PasswordField } from '@/components/ui/password-field';
 
 export default function ChangePasswordPage() {
   const router = useRouter();
@@ -60,17 +60,15 @@ export default function ChangePasswordPage() {
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-1.5">
           <label className="text-sm font-medium text-foreground">Current Password</label>
-          <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none z-10" />
-            <Input
-              type="password"
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-              required
-              className="h-9 ps-9"
-              autoComplete="current-password"
-            />
-          </div>
+          <PasswordField
+            value={currentPassword}
+            onChange={setCurrentPassword}
+            required
+            inputClassName="h-9"
+            autoComplete="current-password"
+            showLock
+            aria-label="Current Password"
+          />
         </div>
 
         <div className="space-y-1.5">
