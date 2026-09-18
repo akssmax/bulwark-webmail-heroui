@@ -100,17 +100,17 @@ function CalendarSideSheet({
   children: ReactNode;
 }) {
   return (
-    <>
+    <div className="absolute inset-0 z-40">
       <button
         type="button"
-        className="absolute inset-0 z-30 bg-black/20"
+        className="absolute inset-0 bg-black/20"
         aria-label={closeLabel}
         onClick={onClose}
       />
-      <div className="absolute inset-y-0 end-0 z-40 flex w-[400px] max-w-full flex-col border-s border-border bg-background shadow-xl overflow-hidden animate-slide-in-from-right">
+      <div className="absolute inset-y-0 end-0 flex w-[400px] max-w-full flex-col border-s border-border bg-background shadow-xl overflow-hidden animate-slide-in-from-right">
         {children}
       </div>
-    </>
+    </div>
   );
 }
 
@@ -1560,7 +1560,7 @@ export function CalendarApp({ linkSegments }: CalendarAppProps = {}) {
   };
 
   return (
-    <div className={cn("flex flex-col bg-background overflow-hidden pt-[env(safe-area-inset-top)]", isEmbedded ? "h-full" : "h-dvh")}>
+    <div className={cn("relative flex flex-col bg-background overflow-hidden pt-[env(safe-area-inset-top)]", isEmbedded ? "h-full" : "h-dvh")}>
       <AppTopBannerSlot />
       {refreshIndicator}
       <div className={cn("relative flex flex-1 min-h-0 overflow-hidden", isMobile && "flex-col")}>
@@ -1735,53 +1735,13 @@ export function CalendarApp({ linkSegments }: CalendarAppProps = {}) {
           <div
             key={swipeKey}
             className={cn(
-              "flex flex-1 min-w-0",
+              "flex min-w-0 w-full flex-1",
               isMobile && swipeDirection === 'left' && "animate-slide-in-right",
               isMobile && swipeDirection === 'right' && "animate-slide-in-left",
             )}
           >
             {renderView()}
           </div>
-
-          {/* Desktop event sidesheet */}
-          {!isMobile && showEventModal && (
-            <CalendarSideSheet closeLabel={t("form.cancel")} onClose={closeEventModal}>
-              <EventModal
-                key={editEvent?.id ?? 'new'}
-                event={editEvent}
-                calendars={displayCalendars}
-                defaultDate={defaultModalDate}
-                defaultEndDate={defaultModalEndDate}
-                defaultAllDay={defaultModalAllDay}
-                defaultCalendarId={defaultCalendarIdForCreate}
-                onSave={handleSaveEvent}
-                onDelete={handleDeleteEvent}
-                onDuplicate={handleDuplicateEvent}
-                onRsvp={handleRsvp}
-                onClose={closeEventModal}
-                onPreviewChange={setPendingPreview}
-                currentUserEmails={currentUserEmails}
-                isSubscriptionCalendar={isSubscriptionCalendar}
-                isMobile={false}
-                overlay
-              />
-            </CalendarSideSheet>
-          )}
-
-          {/* Desktop task sidesheet */}
-          {!isMobile && showTaskModal && (
-            <CalendarSideSheet closeLabel={t("form.cancel")} onClose={closeTaskModal}>
-              <TaskModal
-                key={editTask?.id ?? 'new-task'}
-                task={editTask}
-                calendars={displayCalendars}
-                onSave={handleSaveTask}
-                onDelete={handleDeleteTask}
-                onClose={closeTaskModal}
-                isMobile={false}
-              />
-            </CalendarSideSheet>
-          )}
 
           {/* Floating Create Event Button (mobile) */}
           {isMobile && (
@@ -1795,6 +1755,45 @@ export function CalendarApp({ linkSegments }: CalendarAppProps = {}) {
           )}
         </div>
       </div>
+      )}
+
+      {/* Desktop event/task sidesheet — overlay on the calendar pane, not a flex sibling of the grid. */}
+      {!isMobile && showEventModal && (
+        <CalendarSideSheet closeLabel={t("form.cancel")} onClose={closeEventModal}>
+          <EventModal
+            key={editEvent?.id ?? 'new'}
+            event={editEvent}
+            calendars={displayCalendars}
+            defaultDate={defaultModalDate}
+            defaultEndDate={defaultModalEndDate}
+            defaultAllDay={defaultModalAllDay}
+            defaultCalendarId={defaultCalendarIdForCreate}
+            onSave={handleSaveEvent}
+            onDelete={handleDeleteEvent}
+            onDuplicate={handleDuplicateEvent}
+            onRsvp={handleRsvp}
+            onClose={closeEventModal}
+            onPreviewChange={setPendingPreview}
+            currentUserEmails={currentUserEmails}
+            isSubscriptionCalendar={isSubscriptionCalendar}
+            isMobile={false}
+            overlay
+          />
+        </CalendarSideSheet>
+      )}
+
+      {!isMobile && showTaskModal && (
+        <CalendarSideSheet closeLabel={t("form.cancel")} onClose={closeTaskModal}>
+          <TaskModal
+            key={editTask?.id ?? 'new-task'}
+            task={editTask}
+            calendars={displayCalendars}
+            onSave={handleSaveTask}
+            onDelete={handleDeleteTask}
+            onClose={closeTaskModal}
+            isMobile={false}
+          />
+        </CalendarSideSheet>
       )}
 
       {/* Mobile Bottom Navigation */}

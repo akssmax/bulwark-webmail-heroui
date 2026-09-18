@@ -239,24 +239,28 @@ export function CalendarMonthView({
     }
   }, [t]);
 
+  const monthColumnsClass = "grid w-full grid-cols-7 [grid-template-columns:repeat(7,minmax(0,1fr))]";
+
   return (
     <div className="flex flex-col flex-1 overflow-hidden" role="grid" aria-label={formatFullDate(selectedDate)}>
-      <div className="grid grid-cols-7 border-b border-border" role="row">
-        {dayHeaderKeys.map((d) => (
-          <div key={d} role="columnheader" className={cn(
-            "text-center text-xs font-medium text-muted-foreground py-2 border-e border-border last:border-e-0",
-            isMobile && "py-1.5 text-xs"
-          )}>
-            {isMobile ? t(`days.${d}`).slice(0, 2) : t(`days.${d}`)}
-          </div>
-        ))}
-      </div>
-
       <div
         ref={scrollRef}
-        className="flex-1 flex flex-col overflow-y-auto [overflow-anchor:none]"
+        className="flex-1 flex flex-col overflow-y-auto [overflow-anchor:none] [scrollbar-gutter:stable]"
         onScroll={handleScroll}
       >
+        <div
+          className={cn(monthColumnsClass, "sticky top-0 z-20 border-b border-border bg-background")}
+          role="row"
+        >
+          {dayHeaderKeys.map((d) => (
+            <div key={d} role="columnheader" className={cn(
+              "min-w-0 text-center text-xs font-medium text-muted-foreground py-2 border-e border-border last:border-e-0",
+              isMobile && "py-1.5 text-xs"
+            )}>
+              {isMobile ? t(`days.${d}`).slice(0, 2) : t(`days.${d}`)}
+            </div>
+          ))}
+        </div>
         <div ref={topSentinelRef} data-testid="month-top-sentinel" className="h-px flex-shrink-0" />
         {weekSegments.map(({ week, segments, rowCount }) => (
           <div key={dayKey(week[0])} data-week={dayKey(week[0])} className="relative flex-shrink-0 border-b border-border" role="row" style={{
@@ -264,7 +268,7 @@ export function CalendarMonthView({
               ? Math.max(rowMinHeight, overlayTop + 4 + rowCount * rowHeight + 8)
               : rowMinHeight,
           }}>
-            <div className="grid grid-cols-7 h-full">
+            <div className={cn(monthColumnsClass, "h-full")}>
             {week.map((day, dayIndex) => {
               const inMonth = checkIsSameMonth(day, visibleMonthDate);
               const selected = checkIsSameDay(day, selectedDate);
@@ -288,7 +292,7 @@ export function CalendarMonthView({
                   onDragLeave={handleCellDragLeave}
                   onDrop={(e) => handleCellDrop(e, day)}
                   className={cn(
-                    "border-e border-border last:border-e-0 p-1 cursor-pointer transition-colors touch-manipulation",
+                    "min-w-0 border-e border-border last:border-e-0 p-1 cursor-pointer transition-colors touch-manipulation",
                     !inMonth && "bg-muted/30",
                     "hover:bg-muted/50",
                     selected && isMobile && "bg-primary/10",

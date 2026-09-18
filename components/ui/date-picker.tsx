@@ -217,7 +217,12 @@ export function AppCalendar({
         <Calendar.GridBody>
           {(date) => (
             <Calendar.Cell date={date}>
-              {hasEvent(date) ? <Calendar.CellIndicator /> : null}
+              {({ formattedDate }) => (
+                <>
+                  {formattedDate}
+                  {hasEvent(date) ? <Calendar.CellIndicator /> : null}
+                </>
+              )}
             </Calendar.Cell>
           )}
         </Calendar.GridBody>

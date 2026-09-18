@@ -51,7 +51,7 @@ export function SegmentedTabs({
   }, []);
 
   return (
-    <div ref={rootRef} className={cn("w-fit max-w-full", className)}>
+    <div ref={rootRef} className={cn("segmented-tabs h-8 w-fit max-w-full", className)}>
       <Tabs
         selectedKey={value}
         onSelectionChange={(key) => {

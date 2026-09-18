@@ -312,6 +312,28 @@ body {
   border: 1px solid var(--border);
 }
 
+/* SegmentedTabs is a toolbar control: match h-8 buttons (HeroUI default is
+   h-8 tabs + p-1 + border ≈ 40px). */
+.segmented-tabs .tabs,
+.segmented-tabs .tabs__list-container,
+.segmented-tabs [data-slot="tabs-list-container"],
+.segmented-tabs .tabs__list-container__scroller {
+  height: 100%;
+}
+
+.segmented-tabs .tabs__list,
+.segmented-tabs [data-slot="tabs-list"] {
+  height: 100%;
+  align-items: stretch;
+  padding: 0.125rem;
+}
+
+.segmented-tabs .tabs__tab,
+.segmented-tabs [data-slot="tabs-tab"] {
+  height: 100%;
+  min-height: 0;
+}
+
 /* Native <select> option lists are painted by the browser, not by the
    Tailwind classes on the control, so they only honour color-scheme and an
    explicit option colour. Themes whose --color-muted is translucent (Aurora
